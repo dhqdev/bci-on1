@@ -1,0 +1,11 @@
+# requirements.txt
+# Dependências necessárias para a automação Servopa + Todoist
+
+# Selenium - Automação de navegadores
+selenium>=4.15.0
+
+# WebDriver Manager - Gerenciamento automático de drivers
+webdriver-manager>=4.0.1
+
+# Tkinter já vem incluído no Python padrão
+# Para Linux/Ubuntu pode ser necessário: sudo apt-get install python3-tk
