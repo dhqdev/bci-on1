@@ -103,11 +103,6 @@ def login_servopa(driver=None, return_driver=False):
         else:
             print("Login efetuado (URL mudou para):", current_url)
 
-        # opcional: tira screenshot da página pós-login
-        out_screenshot = "servopa_post_login.png"
-        driver.save_screenshot(out_screenshot)
-        print("Screenshot salva em:", out_screenshot)
-        
         # Retorna o driver se solicitado
         if return_driver:
             return driver
@@ -119,9 +114,6 @@ def login_servopa(driver=None, return_driver=False):
 
     except TimeoutException as e:
         print("Timeout esperando elementos na página:", e)
-        if driver:
-            driver.save_screenshot("servopa_timeout.png")
-            print("Screenshot salva em servopa_timeout.png")
         return None if return_driver else None
     except WebDriverException as e:
         print("Erro no webdriver:", e)
@@ -177,19 +169,13 @@ def navigate_to_consorcio_selection_and_fill(driver, grupo_number):
         
         print(f"✓ Campo preenchido com sucesso: {grupo_number}")
         
-        # Tira screenshot do resultado final
-        driver.save_screenshot("servopa_consorcio_preenchido.png")
-        print("Screenshot final salva em: servopa_consorcio_preenchido.png")
-        
         return True
         
     except TimeoutException as e:
         print(f"Timeout ao navegar/preencher consórcio: {e}")
-        driver.save_screenshot("servopa_consorcio_error.png")
         return False
     except Exception as e:
         print(f"Erro ao navegar/preencher consórcio: {e}")
-        driver.save_screenshot("servopa_consorcio_error.png")
         return False
 
 if __name__ == "__main__":

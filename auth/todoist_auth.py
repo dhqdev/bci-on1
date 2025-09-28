@@ -132,9 +132,6 @@ def login_todoist_and_extract(driver, progress_callback=None):
             if progress_callback:
                 progress_callback(f"🎯 Número extraído com sucesso: {extracted_number}")
             
-            # Tira screenshot de confirmação
-            driver.save_screenshot("screenshots/todoist_task_found.png")
-            
             # Fecha aba do Todoist
             driver.close()
             driver.switch_to.window(original_window)

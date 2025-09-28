@@ -19,7 +19,6 @@ Sistema completo de automação com interface gráfica moderna que integra o sis
 - **Logs coloridos** com timestamps
 - **Barra de progresso** e status dos componentes
 - **Dados extraídos** exibidos dinamicamente
-- **Screenshots automáticos** para verificação
 
 ## 🚀 Como usar
 
@@ -67,8 +66,7 @@ Auto - BCi/
 ├── ⚙️ utils/                   # Utilitários e configurações
 │   ├── config.py              # Configurações globais
 │   └── __init__.py
-├── 📸 screenshots/             # Screenshots automáticos
-├── 📋 main_gui.py              # Executável principal (GUI)
+├──  main_gui.py              # Executável principal (GUI)
 ├── 📋 main.py                  # Executável linha de comando
 ├── 📄 requirements.txt         # Dependências
 └── 📖 README.md               # Esta documentação
@@ -92,7 +90,6 @@ Auto - BCi/
 - **Timeouts:** 20 segundos
 - **Delays entre ações:** 1-3 segundos
 - **Digitação natural:** 0.1s por caractere
-- **Screenshots automáticos:** Ativado
 
 ## 🔄 Fluxo de execução
 
@@ -103,7 +100,7 @@ Auto - BCi/
 4. **Busca Clientes** - Preenchimento do número e busca no sistema
 5. **Seleção Cliente** - Clique automático no primeiro cliente da lista
 6. **Navegação Lances** - Redirecionamento para página de lances
-7. **Finalização** - Screenshots e logs de confirmação
+7. **Finalização** - Logs de confirmação
 
 ### 📊 Monitoramento em Tempo Real
 - Status de cada componente (Servopa, Todoist, Cliente, Lances)
@@ -111,18 +108,9 @@ Auto - BCi/
 - Log colorido com timestamps
 - Dados extraídos exibidos dinamicamente
 
-## 🖼️ Screenshots gerados
-
-- `screenshots/servopa_login_success.png` - Login Servopa confirmado
-- `screenshots/todoist_task_found.png` - Tarefa encontrada no Todoist
-- `screenshots/clientes_encontrados.png` - Lista de clientes
-- `screenshots/cliente_selecionado.png` - Cliente selecionado
-- `screenshots/pagina_lances.png` - Página de lances carregada
-
-## 🛠️ Tratamento de erros
+## ️ Tratamento de erros
 
 - ✅ Timeouts configuráveis (20s padrão)
-- ✅ Screenshots automáticos em caso de erro
 - ✅ Mensagens detalhadas com timestamps
 - ✅ Interface visual para acompanhamento
 - ✅ Limpeza automática de recursos
@@ -152,7 +140,7 @@ Auto - BCi/
 - **Separação de responsabilidades** - Auth vs Automation vs UI
 - **Código reutilizável** - Funções independentes
 - **Configurações centralizadas** - Fácil manutenção
-- **Tratamento robusto de erros** - Screenshots e logs
+- **Tratamento robusto de erros** - Logs detalhados
 
 ### Extensibilidade
 - Fácil adição de novos sites

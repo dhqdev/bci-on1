@@ -132,19 +132,15 @@ def login_servopa(driver, progress_callback=None):
             if progress_callback:
                 progress_callback(f"✅ Login realizado com sucesso! Redirecionado para: {current_url}")
             
-            # Tira screenshot de confirmação
-            driver.save_screenshot("screenshots/servopa_login_success.png")
             return True
             
     except TimeoutException as e:
         if progress_callback:
             progress_callback(f"⏰ Timeout no login do Servopa: {e}")
-        driver.save_screenshot("screenshots/servopa_login_timeout.png")
         return False
     except Exception as e:
         if progress_callback:
             progress_callback(f"❌ Erro no login do Servopa: {e}")
-        driver.save_screenshot("screenshots/servopa_login_error.png")
         return False
 
 if __name__ == "__main__":

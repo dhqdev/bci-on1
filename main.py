@@ -54,7 +54,6 @@ def main():
         print("\n🎉 AUTOMAÇÃO COMPLETA FINALIZADA COM SUCESSO!")
         print(f"   ➤ Número extraído do Todoist: {extracted_number}")
         print(f"   ➤ Consórcio preenchido no Servopa")
-        print("   ➤ Screenshots salvas para verificação")
         
         return True
         

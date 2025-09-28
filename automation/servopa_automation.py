@@ -56,7 +56,6 @@ def navigate_to_consorcio_selection(driver, progress_callback=None):
     except Exception as e:
         if progress_callback:
             progress_callback(f"❌ Erro na navegação: {e}")
-        driver.save_screenshot("screenshots/navigation_error.png")
         return False
 
 def fill_grupo_and_search(driver, grupo_number, progress_callback=None):
@@ -108,16 +107,11 @@ def fill_grupo_and_search(driver, grupo_number, progress_callback=None):
         
         if progress_callback:
             progress_callback("✅ Busca por clientes realizada com sucesso")
-        
-        # Tira screenshot dos resultados
-        driver.save_screenshot("screenshots/clientes_encontrados.png")
-        
         return True
         
     except Exception as e:
         if progress_callback:
             progress_callback(f"❌ Erro ao buscar clientes: {e}")
-        driver.save_screenshot("screenshots/busca_error.png")
         return False
 
 def select_first_client(driver, progress_callback=None):
@@ -158,15 +152,11 @@ def select_first_client(driver, progress_callback=None):
         if progress_callback:
             progress_callback(f"✅ Cliente '{client_name}' selecionado com sucesso")
         
-        # Tira screenshot da seleção
-        driver.save_screenshot("screenshots/cliente_selecionado.png")
-        
         return client_name
         
     except Exception as e:
         if progress_callback:
             progress_callback(f"❌ Erro ao selecionar cliente: {e}")
-        driver.save_screenshot("screenshots/selecao_cliente_error.png")
         return None
 
 def navigate_to_lances(driver, progress_callback=None):
@@ -200,15 +190,11 @@ def navigate_to_lances(driver, progress_callback=None):
         if progress_callback:
             progress_callback("✅ Navegação para lances concluída")
         
-        # Tira screenshot da página de lances
-        driver.save_screenshot("screenshots/pagina_lances.png")
-        
         return True
         
     except Exception as e:
         if progress_callback:
             progress_callback(f"❌ Erro ao navegar para lances: {e}")
-        driver.save_screenshot("screenshots/lances_error.png")
         return False
 
 def complete_servopa_automation(driver, grupo_number, progress_callback=None):

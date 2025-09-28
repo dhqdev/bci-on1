@@ -14,7 +14,7 @@ Funcionalidades:
 - ✅ Busca e seleção de clientes
 - ✅ Navegação para página de lances
 - ✅ Interface visual em tempo real
-- ✅ Logs detalhados e screenshots
+- ✅ Logs detalhados
 
 Uso:
     python main_gui.py
