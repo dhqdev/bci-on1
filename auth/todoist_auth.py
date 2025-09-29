@@ -11,11 +11,12 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # Configurações do Todoist
 TODOIST_URL = "https://app.todoist.com/auth/login"
-TODOIST_EMAIL = "oscarifn6@gmail.com"
-TODOIST_PASSWORD = "spfctri12"
+# Credenciais padrão (serão substituídas pelas do arquivo JSON)
+DEFAULT_TODOIST_EMAIL = "oscarifn6@gmail.com"
+DEFAULT_TODOIST_PASSWORD = "spfctri12"
 TIMEOUT = 20
 
-def login_todoist_and_extract(driver, progress_callback=None):
+def login_todoist_and_extract(driver, progress_callback=None, credentials=None):
     """
     Faz login no Todoist e extrai número da tarefa
     
@@ -26,6 +27,7 @@ def login_todoist_and_extract(driver, progress_callback=None):
     Args:
         driver: Instância do WebDriver já existente
         progress_callback: Função para atualizar progresso na UI
+        credentials: Dict com 'usuario' e 'senha', ou None para usar padrão
         
     Returns:
         str: Número extraído da tarefa ou None se falhar
@@ -33,6 +35,17 @@ def login_todoist_and_extract(driver, progress_callback=None):
     original_window = None
     
     try:
+        # Usar credenciais fornecidas ou padrões
+        if credentials:
+            todoist_email = credentials.get('usuario', DEFAULT_TODOIST_EMAIL)
+            todoist_password = credentials.get('senha', DEFAULT_TODOIST_PASSWORD)
+            if progress_callback:
+                progress_callback(f"🔐 Credenciais Todoist recebidas - Usuario: {todoist_email}")
+        else:
+            todoist_email = DEFAULT_TODOIST_EMAIL
+            todoist_password = DEFAULT_TODOIST_PASSWORD
+            if progress_callback:
+                progress_callback(f"⚠️ Usando credenciais Todoist padrão - Usuario: {todoist_email}")
         # Salva janela original
         original_window = driver.current_window_handle
         
@@ -60,11 +73,11 @@ def login_todoist_and_extract(driver, progress_callback=None):
         email_input = wait.until(EC.presence_of_element_located((By.ID, "element-0")))
         
         if progress_callback:
-            progress_callback("✏️ Preenchendo email...")
+            progress_callback(f"✏️ Preenchendo email: {todoist_email[:15]}...")
         
         email_input.clear()
         time.sleep(0.5)
-        for char in TODOIST_EMAIL:
+        for char in todoist_email:
             email_input.send_keys(char)
             time.sleep(0.05)  # Digitação natural
         
@@ -81,7 +94,7 @@ def login_todoist_and_extract(driver, progress_callback=None):
         
         password_input.clear()
         time.sleep(0.5)
-        for char in TODOIST_PASSWORD:
+        for char in todoist_password:
             password_input.send_keys(char)
             time.sleep(0.05)  # Digitação natural
         

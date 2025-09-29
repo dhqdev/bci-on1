@@ -14,8 +14,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # Configurações do Servopa
 SERVOPA_LOGIN_URL = "https://www.consorcioservopa.com.br/vendas/login"
-SERVOPA_LOGIN = os.getenv("SERVOPA_LOGIN", "26.350.659/0001-61")
-SERVOPA_SENHA = os.getenv("SERVOPA_SENHA", "43418")
+# Credenciais padrão (serão substituídas pelas do arquivo JSON)
+DEFAULT_SERVOPA_LOGIN = "26.350.659/0001-61"
+DEFAULT_SERVOPA_SENHA = "43418"
 TIMEOUT = 20
 
 def create_driver(headless=False):
@@ -40,20 +41,33 @@ def create_driver(headless=False):
     
     return driver
 
-def login_servopa(driver, progress_callback=None):
+def login_servopa(driver, progress_callback=None, credentials=None):
     """
     Realiza login no sistema Servopa
     
     Args:
         driver: Instância do WebDriver
         progress_callback: Função para atualizar progresso na UI
+        credentials: Dict com 'usuario' e 'senha', ou None para usar padrão
         
     Returns:
         bool: True se login bem-sucedido, False caso contrário
     """
     try:
+        # Usar credenciais fornecidas ou padrões
+        if credentials:
+            servopa_login = credentials.get('usuario', DEFAULT_SERVOPA_LOGIN)
+            servopa_senha = credentials.get('senha', DEFAULT_SERVOPA_SENHA)
+            if progress_callback:
+                progress_callback(f"🔐 Credenciais recebidas - Usuario: {servopa_login}")
+        else:
+            servopa_login = DEFAULT_SERVOPA_LOGIN
+            servopa_senha = DEFAULT_SERVOPA_SENHA
+            if progress_callback:
+                progress_callback(f"⚠️ Usando credenciais padrão - Usuario: {servopa_login}")
+        
         if progress_callback:
-            progress_callback("🌐 Navegando para página de login do Servopa...")
+            progress_callback(f"🌐 Fazendo login com usuário: {servopa_login[:10]}...")
         
         driver.get(SERVOPA_LOGIN_URL)
         time.sleep(2)  # Pausa para carregamento natural
@@ -77,7 +91,7 @@ def login_servopa(driver, progress_callback=None):
         # Preenche CPF/CNPJ com delay natural
         cpf_input.clear()
         time.sleep(0.5)
-        for char in SERVOPA_LOGIN:
+        for char in servopa_login:
             cpf_input.send_keys(char)
             time.sleep(0.1)  # Simula digitação humana
         
@@ -86,7 +100,7 @@ def login_servopa(driver, progress_callback=None):
         # Preenche senha com delay natural
         senha_input.clear()
         time.sleep(0.5)
-        for char in SERVOPA_SENHA:
+        for char in servopa_senha:
             senha_input.send_keys(char)
             time.sleep(0.1)  # Simula digitação humana
         
