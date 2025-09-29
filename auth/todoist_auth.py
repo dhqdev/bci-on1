@@ -19,6 +19,10 @@ def login_todoist_and_extract(driver, progress_callback=None):
     """
     Faz login no Todoist e extrai número da tarefa
     
+    IMPORTANTE: Esta função mantém TODAS as abas abertas após a extração.
+    Ela apenas muda o foco de volta para a aba original do Servopa,
+    mas mantém a aba do Todoist aberta para verificação manual.
+    
     Args:
         driver: Instância do WebDriver já existente
         progress_callback: Função para atualizar progresso na UI
@@ -132,9 +136,24 @@ def login_todoist_and_extract(driver, progress_callback=None):
             if progress_callback:
                 progress_callback(f"🎯 Número extraído com sucesso: {extracted_number}")
             
-            # Fecha aba do Todoist
-            driver.close()
-            driver.switch_to.window(original_window)
+            # NÃO fecha aba do Todoist - apenas retorna à original
+            if progress_callback:
+                progress_callback("🔄 Retornando para aba do Servopa (mantendo Todoist aberto)")
+            
+            try:
+                # Apenas muda para aba original, SEM fechar a do Todoist
+                if original_window in driver.window_handles:
+                    driver.switch_to.window(original_window)
+                    if progress_callback:
+                        progress_callback("✅ Retornado para aba do Servopa - Todoist permanece aberto")
+                else:
+                    # Se janela original não existe mais, usa a primeira disponível
+                    driver.switch_to.window(driver.window_handles[0])
+                    if progress_callback:
+                        progress_callback("✅ Retornado para primeira aba disponível - Todoist permanece aberto")
+            except Exception as switch_error:
+                if progress_callback:
+                    progress_callback(f"⚠️ Erro ao mudar de aba: {switch_error}")
             
             return extracted_number
         else:
@@ -145,18 +164,43 @@ def login_todoist_and_extract(driver, progress_callback=None):
     except TimeoutException as e:
         if progress_callback:
             progress_callback(f"⏰ Timeout no Todoist: {e}")
+        
+        # NÃO fecha aba do Todoist - apenas tenta retornar à original
+        try:
+            if original_window in driver.window_handles:
+                driver.switch_to.window(original_window)
+                if progress_callback:
+                    progress_callback("🔄 Retornado para aba do Servopa após timeout")
+        except:
+            pass
+            
         return None
     except Exception as e:
         if progress_callback:
             progress_callback(f"❌ Erro no Todoist: {e}")
-        return None
-    finally:
-        # Garante retorno à janela original
+        
+        # NÃO fecha aba do Todoist - apenas tenta retornar à original
         try:
-            if original_window and len(driver.window_handles) > 1:
+            if original_window in driver.window_handles:
                 driver.switch_to.window(original_window)
+                if progress_callback:
+                    progress_callback("🔄 Retornado para aba do Servopa após erro")
         except:
             pass
+            
+        return None
+    finally:
+        # Garante retorno à janela original mantendo todas as abas abertas
+        try:
+            if len(driver.window_handles) > 1:
+                current_handle = driver.current_window_handle
+                if current_handle != original_window and original_window in driver.window_handles:
+                    driver.switch_to.window(original_window)
+                    if progress_callback:
+                        progress_callback("🔄 Garantindo retorno à janela do Servopa (todas as abas mantidas)")
+        except Exception as final_error:
+            if progress_callback:
+                progress_callback(f"⚠️ Aviso no cleanup final: {final_error}")
 
 if __name__ == "__main__":
     # Teste do módulo

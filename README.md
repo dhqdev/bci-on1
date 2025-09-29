@@ -1,102 +1,200 @@
-# 🤖 Automação Servopa + Todoist
+# 🤖 Sistema de Automação Servopa + Todoist v1.0# 🤖 Automação Servopa + Todoist
 
-Sistema completo de automação com interface gráfica moderna que integra o sistema Servopa com o Todoist para extrair números de tarefas e preencher automaticamente consórcios.
 
-## ✨ Funcionalidades
 
-### 🔐 Autenticação Automática
-- **Login no Servopa** (`https://www.consorcioservopa.com.br/vendas/login`)
-- **Login no Todoist** (`https://app.todoist.com/auth/login`) em nova aba
+Sistema completo de automação com interface moderna para integração entre Servopa e Todoist.Sistema completo de automação com interface gráfica moderna que integra o sistema Servopa com o Todoist para extrair números de tarefas e preencher automaticamente consórcios.
 
-### 🎯 Automação Completa
-1. **Extração automática** do número da tarefa "1550 - dia 8" do projeto "Lances Servopa Outubro Dia 8"
+
+
+## ✨ Características## ✨ Funcionalidades
+
+
+
+- 🎨 **Interface Moderna**: Design profissional com sistema de abas### 🔐 Autenticação Automática
+
+- 🔐 **Gerenciamento de Credenciais**: Aba dedicada para configurar senhas- **Login no Servopa** (`https://www.consorcioservopa.com.br/vendas/login`)
+
+- 📊 **Status em Tempo Real**: Cards visuais mostrando progresso de cada etapa- **Login no Todoist** (`https://app.todoist.com/auth/login`) em nova aba
+
+- 📝 **Log Detalhado**: Acompanhamento completo com cores e timestamps
+
+- 🚀 **Controles Completos**: Iniciar, parar e limpar automação### 🎯 Automação Completa
+
+- 🌐 **Gerenciamento de Navegadores**: Fechamento correto de abas1. **Extração automática** do número da tarefa "1550 - dia 8" do projeto "Lances Servopa Outubro Dia 8"
+
 2. **Busca de clientes** no sistema Servopa com o número extraído
-3. **Seleção automática** do primeiro cliente da lista
+
+## 🚀 Instalação Rápida3. **Seleção automática** do primeiro cliente da lista
+
 4. **Navegação automática** para a página de lances
 
+### Para Usuários sem Python Instalado
+
 ### 🖥️ Interface Moderna
-- **Interface gráfica** com acompanhamento em tempo real
-- **Logs coloridos** com timestamps
-- **Barra de progresso** e status dos componentes
-- **Dados extraídos** exibidos dinamicamente
+
+**Windows:**- **Interface gráfica** com acompanhamento em tempo real
+
+```bash- **Logs coloridos** com timestamps
+
+# Execute como administrador- **Barra de progresso** e status dos componentes
+
+install.bat- **Dados extraídos** exibidos dinamicamente
+
+```
 
 ## 🚀 Como usar
 
-### Instalação
-```bash
-pip install -r requirements.txt
-```
+**Linux/Mac:**
 
-### Execução com Interface Gráfica (Recomendado)
-```bash
-python main_gui.py
-```
+```bash### Instalação
+
+# Execute no terminal```bash
+
+bash install.shpip install -r requirements.txt
+
+``````
+
+
+
+Estes scripts instalam automaticamente:### Execução com Interface Gráfica (Recomendado)
+
+- Python 3.11+```bash
+
+- Google Chromepython main_gui.py
+
+- Todas as dependências necessárias```
+
+- Ambiente virtual configurado
 
 ### Execução via Linha de Comando
-```bash
-python main.py
-```
 
-### Testes Individuais
+### Para Usuários com Python```bash
+
+python main.py
+
+```bash```
+
+# Instalar dependências
+
+pip install -r requirements.txt### Testes Individuais
+
 ```bash
-# Apenas autenticação Servopa
-python auth/servopa_auth.py
+
+# Executar sistema# Apenas autenticação Servopa
+
+python main_gui.pypython auth/servopa_auth.py
+
+```
 
 # Apenas autenticação Todoist  
-python auth/todoist_auth.py
 
-# Apenas automação Servopa
+## 🎮 Como Usarpython auth/todoist_auth.py
+
+
+
+### 1. Instalação (Primeira vez)# Apenas automação Servopa
+
 python automation/servopa_automation.py
-```
 
-## 📁 Estrutura do Projeto
+**Método Fácil (Recomendado):**```
 
-```
+- Windows: Clique duas vezes em `install.bat`
+
+- Linux/Mac: Execute `bash install.sh` no terminal## 📁 Estrutura do Projeto
+
+
+
+### 2. Configurar Credenciais```
+
 Auto - BCi/
-├── 🔐 auth/                    # Módulos de autenticação
-│   ├── servopa_auth.py         # Login no Servopa
-│   ├── todoist_auth.py         # Login e extração Todoist
-│   └── __init__.py
+
+1. Execute o sistema: `python main_gui.py` ou clique em `run.bat`├── 🔐 auth/                    # Módulos de autenticação
+
+2. Vá para a aba "🔐 Credenciais"│   ├── servopa_auth.py         # Login no Servopa
+
+3. Preencha usuário e senha dos sites (dados já preenchidos automaticamente)│   ├── todoist_auth.py         # Login e extração Todoist
+
+4. Clique em "💾 Salvar Credenciais" se precisar alterar│   └── __init__.py
+
 ├── 🤖 automation/              # Módulos de automação
-│   ├── servopa_automation.py   # Automação completa Servopa
+
+### 3. Executar Automação│   ├── servopa_automation.py   # Automação completa Servopa
+
 │   └── __init__.py
-├── 🖥️ ui/                      # Interface gráfica
-│   ├── automation_gui.py       # Interface principal
-│   └── __init__.py
-├── ⚙️ utils/                   # Utilitários e configurações
+
+1. Vá para a aba "🚀 Automação"├── 🖥️ ui/                      # Interface gráfica
+
+2. Clique em "🚀 Iniciar Automação"│   ├── automation_gui.py       # Interface principal
+
+3. Acompanhe o progresso nos cards de status│   └── __init__.py
+
+4. Visualize logs detalhados na área inferior├── ⚙️ utils/                   # Utilitários e configurações
+
 │   ├── config.py              # Configurações globais
-│   └── __init__.py
+
+## 🔐 Gerenciamento de Credenciais│   └── __init__.py
+
 ├──  main_gui.py              # Executável principal (GUI)
-├── 📋 main.py                  # Executável linha de comando
+
+O sistema possui uma aba dedicada para gerenciar credenciais:├── 📋 main.py                  # Executável linha de comando
+
 ├── 📄 requirements.txt         # Dependências
-└── 📖 README.md               # Esta documentação
-```
 
-## ⚙️ Configurações
+- **Carregamento Automático**: Dados carregados automaticamente do `credentials.json`└── 📖 README.md               # Esta documentação
 
-### Credenciais Servopa
+- **Campos Seguros**: Senhas ocultadas por padrão```
+
+- **Toggle Visualização**: Botão para mostrar/ocultar senhas
+
+- **Salvamento Seguro**: Credenciais salvas localmente## ⚙️ Configurações
+
+
+
+## 🤖 Fluxo de Automação### Credenciais Servopa
+
 - **URL:** `https://www.consorcioservopa.com.br/vendas/login`
-- **Login:** `26.350.659/0001-61` (configurável via env SERVOPA_LOGIN)
-- **Senha:** `43418` (configurável via env SERVOPA_SENHA)
 
-### Credenciais Todoist
-- **URL:** `https://app.todoist.com/auth/login`
+1. **🌐 Login Servopa**: Acesso ao sistema Servopa- **Login:** `26.350.659/0001-61` (configurável via env SERVOPA_LOGIN)
+
+2. **📋 Extração Todoist**: Abre nova aba e extrai dados da tarefa- **Senha:** `43418` (configurável via env SERVOPA_SENHA)
+
+3. **👤 Seleção Cliente**: Busca e seleciona cliente no Servopa
+
+4. **🎯 Acesso Lances**: Navega para página de lances### Credenciais Todoist
+
+5. **✅ Finalização**: Mantém navegador aberto para verificação- **URL:** `https://app.todoist.com/auth/login`
+
 - **Email:** `oscarifn6@gmail.com`
-- **Senha:** `spfctri12`
-- **Projeto:** "Lances Servopa Outubro Dia 8"
-- **Tarefa:** "1550 - dia 8"
 
-### Configurações de Performance
-- **Timeouts:** 20 segundos
-- **Delays entre ações:** 1-3 segundos
+## 📁 Arquivos Principais- **Senha:** `spfctri12`
+
+- **Projeto:** "Lances Servopa Outubro Dia 8"
+
+- `main_gui.py` - Interface principal do sistema- **Tarefa:** "1550 - dia 8"
+
+- `run.bat` - Execução rápida (Windows)
+
+- `install.bat` - Instalação automática (Windows)  ### Configurações de Performance
+
+- `install.sh` - Instalação automática (Linux/Mac)- **Timeouts:** 20 segundos
+
+- `credentials.json` - Arquivo de credenciais (preenchido automaticamente)- **Delays entre ações:** 1-3 segundos
+
 - **Digitação natural:** 0.1s por caractere
+
+## 🛠️ Requisitos
 
 ## 🔄 Fluxo de execução
 
-### 🚀 Interface Gráfica
-1. **Inicialização** - Interface moderna é carregada
+- Python 3.8+
+
+- Google Chrome### 🚀 Interface Gráfica
+
+- Conexão com internet1. **Inicialização** - Interface moderna é carregada
+
 2. **Login Servopa** - Autenticação automática com delays naturais
-3. **Todoist** - Nova aba, login e extração do número da tarefa
+
+**Versão Atual: 1.0** - Interface moderna, credenciais integradas, automação completa3. **Todoist** - Nova aba, login e extração do número da tarefa
 4. **Busca Clientes** - Preenchimento do número e busca no sistema
 5. **Seleção Cliente** - Clique automático no primeiro cliente da lista
 6. **Navegação Lances** - Redirecionamento para página de lances
