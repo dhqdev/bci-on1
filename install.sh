@@ -7,6 +7,12 @@ echo "🤖 Instalação Automática do Sistema"
 echo "Sistema de Automação Servopa + Todoist"
 echo "=========================================="
 echo ""
+echo "⚠️  ATENÇÃO: Este script pode precisar de permissões de administrador"
+echo "    para instalar pacotes do sistema. Você pode ser solicitado a"
+echo "    digitar sua senha sudo durante a instalação."
+echo ""
+read -p "Pressione ENTER para continuar..."
+echo ""
 
 # Cores para output
 RED='\033[0;31m'
@@ -106,51 +112,86 @@ else
     fi
 fi
 
-# Verificar se venv está disponível
-if [[ "$MACHINE" == "Linux" ]]; then
-    if ! $PYTHON_CMD -c "import venv" &> /dev/null; then
-        print_warning "python3-venv não está instalado. Instalando..."
-        if command -v apt-get &> /dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y python3-venv
-        else
-            print_error "Não foi possível instalar python3-venv automaticamente. Instale manualmente com: sudo apt install python3-venv"
-            exit 1
-        fi
-        if ! $PYTHON_CMD -c "import venv" &> /dev/null; then
-            print_error "Falha ao instalar python3-venv"
-            exit 1
-        fi
-        print_success "python3-venv instalado!"
+# Verificar se python3-tk está disponível (necessário para GUI)
+if [[ "$MACHINE" == "Linux" ]] && ! $PYTHON_CMD -c "import tkinter" &> /dev/null; then
+    print_warning "python3-tk não encontrado. Pode ser necessário para a interface gráfica."
+    if command -v apt-get &> /dev/null; then
+        print_status "Instalando python3-tk..."
+        sudo apt-get install -y python3-tk
     fi
 fi
 
 echo ""
 
-# 2. Verificar/Instalar pip
-print_status "Verificando pip..."
+# 2. Verificar se python3-venv está disponível (necessário para ambientes gerenciados)
+print_status "Verificando suporte a ambientes virtuais..."
 
-if $PYTHON_CMD -m pip --version &> /dev/null; then
-    print_success "pip encontrado"
-else
-    print_status "Instalando pip..."
+if ! $PYTHON_CMD -c "import venv" &> /dev/null; then
+    print_warning "Módulo venv não encontrado. Instalando python3-venv..."
     
-    # Download e instala pip
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-    $PYTHON_CMD get-pip.py
-    rm get-pip.py
+    if [[ "$MACHINE" == "Linux" ]]; then
+        # Ubuntu/Debian
+        if command -v apt-get &> /dev/null; then
+            echo ""
+            print_status "Atualizando lista de pacotes..."
+            sudo apt-get update -qq
+            print_status "Instalando python3-venv e python3-full..."
+            sudo apt-get install -y python3-venv python3-full
+        # CentOS/RHEL/Fedora
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y python3-venv
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y python3-venv
+        else
+            print_error "Não foi possível instalar python3-venv. Instale manualmente."
+            exit 1
+        fi
+    fi
     
-    if $PYTHON_CMD -m pip --version &> /dev/null; then
-        print_success "pip instalado com sucesso!"
-    else
-        print_error "Falha na instalação do pip"
+    # Verificar novamente
+    if ! $PYTHON_CMD -c "import venv" &> /dev/null; then
+        print_error "Falha ao instalar suporte a ambientes virtuais"
         exit 1
     fi
+    print_success "Suporte a ambientes virtuais instalado!"
+else
+    print_success "Suporte a ambientes virtuais encontrado!"
 fi
 
 echo ""
 
-# 3. Instalar Google Chrome
+# 3. Verificar tkinter (necessário para GUI)
+print_status "Verificando tkinter..."
+
+if $PYTHON_CMD -c "import tkinter" &> /dev/null; then
+    print_success "tkinter encontrado!"
+else
+    print_warning "tkinter não encontrado. Instalando..."
+    
+    if [[ "$MACHINE" == "Linux" ]]; then
+        # Ubuntu/Debian
+        if command -v apt-get &> /dev/null; then
+            print_status "Instalando python3-tk..."
+            sudo apt-get install -y python3-tk
+        # CentOS/RHEL/Fedora
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y python3-tkinter
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y python3-tkinter
+        fi
+    fi
+    
+    if $PYTHON_CMD -c "import tkinter" &> /dev/null; then
+        print_success "tkinter instalado!"
+    else
+        print_warning "tkinter não pôde ser instalado automaticamente."
+        print_warning "Você pode instalá-lo manualmente com: sudo apt install python3-tk"
+    fi
+fi
+
+echo ""
+
+# 4. Instalar Google Chrome
 print_status "Verificando Google Chrome..."
 
 if command -v google-chrome &> /dev/null; then
@@ -196,42 +237,87 @@ fi
 
 echo ""
 
-# 4. Criar ambiente virtual
+# 5. Criar ambiente virtual
 print_status "Criando ambiente virtual..."
 
 if [ -d "venv" ]; then
-    print_warning "Ambiente virtual já existe. Removendo..."
+    print_warning "Ambiente virtual já existe. Removendo para criar novo..."
     rm -rf venv
 fi
 
-$PYTHON_CMD -m venv venv
+# Criar ambiente virtual
+print_status "Criando novo ambiente virtual Python..."
+if ! $PYTHON_CMD -m venv venv 2>/dev/null; then
+    print_error "Falha ao criar ambiente virtual!"
+    
+    if [[ "$MACHINE" == "Linux" ]]; then
+        print_status "Tentando instalar python3-venv e python3-full..."
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y python3-venv python3-full python3.12-venv
+        fi
+    fi
+    
+    # Tentar novamente
+    print_status "Tentando criar ambiente virtual novamente..."
+    if ! $PYTHON_CMD -m venv venv 2>/dev/null; then
+        print_error "Não foi possível criar ambiente virtual."
+        print_error "Execute manualmente: sudo apt install python3.12-venv"
+        exit 1
+    fi
+fi
 
-if [ ! -f "venv/bin/python" ]; then
-    print_error "Falha ao criar ambiente virtual. Verifique se python3-venv está instalado."
+# Verificar se o ambiente virtual foi criado corretamente
+if [ ! -f "venv/bin/python" ] && [ ! -f "venv/Scripts/python.exe" ]; then
+    print_error "Ambiente virtual não foi criado corretamente!"
     exit 1
 fi
 
-VENV_PYTHON="./venv/bin/python"
-VENV_PIP="./venv/bin/pip"
+print_success "Ambiente virtual criado com sucesso!"
 
-print_success "Ambiente virtual criado!"
-
-echo ""
-
-# 5. Instalar dependências Python
-print_status "Instalando dependências Python..."
-
-# Atualizar pip no ambiente virtual
-$VENV_PIP install --upgrade pip
-
-# Instalar dependências
-$VENV_PIP install selenium webdriver-manager requests beautifulsoup4
-
-print_success "Dependências Python instaladas!"
+# Definir caminhos do ambiente virtual baseado no OS
+if [ -f "venv/bin/python" ]; then
+    VENV_PYTHON="./venv/bin/python"
+    VENV_PIP="./venv/bin/pip"
+else
+    VENV_PYTHON="./venv/Scripts/python"
+    VENV_PIP="./venv/Scripts/pip"
+fi
 
 echo ""
 
-# 6. Verificar estrutura de arquivos necessários
+# 6. Atualizar pip no ambiente virtual (isso sempre funciona dentro do venv)
+print_status "Atualizando pip no ambiente virtual..."
+
+if ! $VENV_PIP install --upgrade pip > /dev/null 2>&1; then
+    print_warning "Não foi possível atualizar pip, mas continuando..."
+fi
+
+print_success "pip pronto no ambiente virtual!"
+
+echo ""
+
+# 7. Instalar dependências Python no ambiente virtual
+print_status "Instalando dependências Python no ambiente virtual..."
+
+# Instalar dependências uma por uma para melhor diagnóstico
+dependencies=("selenium" "webdriver-manager" "requests" "beautifulsoup4")
+
+for dep in "${dependencies[@]}"; do
+    print_status "Instalando $dep..."
+    if $VENV_PIP install "$dep" > /dev/null 2>&1; then
+        print_success "$dep instalado!"
+    else
+        print_error "Falha ao instalar $dep"
+        exit 1
+    fi
+done
+
+print_success "Todas as dependências Python foram instaladas!"
+
+echo ""
+
+# 8. Verificar estrutura de arquivos necessários
 print_status "Verificando estrutura de arquivos..."
 
 required_files=(
@@ -267,7 +353,7 @@ fi
 
 echo ""
 
-# 7. Testar instalação
+# 9. Testar instalação
 print_status "Testando instalação..."
 
 # Teste rápido de importações
@@ -307,20 +393,28 @@ echo "=========================================="
 print_success "🎉 INSTALAÇÃO CONCLUÍDA COM SUCESSO!"
 echo "=========================================="
 echo ""
-print_status "Como executar o sistema:"
+echo "📋 Resumo da Instalação:"
+echo "   ✓ Python $PYTHON_VERSION"
+echo "   ✓ Ambiente virtual criado em ./venv"
+echo "   ✓ Todas as dependências instaladas"
+echo "   ✓ Selenium, WebDriver, Requests, BeautifulSoup"
 echo ""
-echo "1. Ativar ambiente virtual:"
-if [[ "$MACHINE" == "Mac" ]] || [[ "$MACHINE" == "Linux" ]]; then
-    echo "   source venv/bin/activate"
-else
-    echo "   venv/bin/activate"
-fi
+echo "=========================================="
+echo "🚀 COMO EXECUTAR O SISTEMA"
+echo "=========================================="
 echo ""
-echo "2. Executar o sistema:"
+echo "Opção 1 - Usando o script automático (RECOMENDADO):"
+echo ""
+echo "   bash run.sh"
+echo ""
+echo "Opção 2 - Manualmente:"
+echo ""
+echo "   source venv/bin/activate"
 echo "   python main_gui.py"
 echo ""
-print_status "Para desativar o ambiente virtual:"
-echo "   deactivate"
+echo "=========================================="
+echo ""
+print_success "Sistema instalado e pronto para uso! 🎉"
 echo ""
 
 # Criar script de execução rápida
