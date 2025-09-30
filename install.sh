@@ -106,6 +106,25 @@ else
     fi
 fi
 
+# Verificar se venv está disponível
+if [[ "$MACHINE" == "Linux" ]]; then
+    if ! $PYTHON_CMD -c "import venv" &> /dev/null; then
+        print_warning "python3-venv não está instalado. Instalando..."
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y python3-venv
+        else
+            print_error "Não foi possível instalar python3-venv automaticamente. Instale manualmente com: sudo apt install python3-venv"
+            exit 1
+        fi
+        if ! $PYTHON_CMD -c "import venv" &> /dev/null; then
+            print_error "Falha ao instalar python3-venv"
+            exit 1
+        fi
+        print_success "python3-venv instalado!"
+    fi
+fi
+
 echo ""
 
 # 2. Verificar/Instalar pip
@@ -187,9 +206,13 @@ fi
 
 $PYTHON_CMD -m venv venv
 
-if [[ "$MACHINE" == "Mac" ]] || [[ "$MACHINE" == "Linux" ]]; then
-    source venv/bin/activate
+if [ ! -f "venv/bin/python" ]; then
+    print_error "Falha ao criar ambiente virtual. Verifique se python3-venv está instalado."
+    exit 1
 fi
+
+VENV_PYTHON="./venv/bin/python"
+VENV_PIP="./venv/bin/pip"
 
 print_success "Ambiente virtual criado!"
 
@@ -199,10 +222,10 @@ echo ""
 print_status "Instalando dependências Python..."
 
 # Atualizar pip no ambiente virtual
-$PYTHON_CMD -m pip install --upgrade pip
+$VENV_PIP install --upgrade pip
 
 # Instalar dependências
-$PYTHON_CMD -m pip install selenium webdriver-manager requests beautifulsoup4
+$VENV_PIP install selenium webdriver-manager requests beautifulsoup4
 
 print_success "Dependências Python instaladas!"
 
@@ -248,7 +271,7 @@ echo ""
 print_status "Testando instalação..."
 
 # Teste rápido de importações
-$PYTHON_CMD -c "
+$VENV_PYTHON -c "
 import sys
 try:
     import selenium
@@ -294,7 +317,7 @@ else
 fi
 echo ""
 echo "2. Executar o sistema:"
-echo "   $PYTHON_CMD main_gui.py"
+echo "   python main_gui.py"
 echo ""
 print_status "Para desativar o ambiente virtual:"
 echo "   deactivate"
