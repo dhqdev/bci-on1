@@ -257,7 +257,7 @@ class ModernAutomationGUI:
         self.add_log_message("⏹️ Solicitação de parada recebida")
         
     def run_automation(self):
-        """Executa automação"""
+        """Executa automação completa com ciclo entre sites"""
         driver = None
         try:
             if not self.automation_running:
@@ -270,7 +270,8 @@ class ModernAutomationGUI:
             
             from auth.servopa_auth import create_driver, login_servopa
             from auth.todoist_auth import login_todoist_and_extract
-            from automation.servopa_automation import complete_servopa_automation
+            from utils.todoist_board_extractor import navigate_to_board_project, extract_complete_board
+            from automation.cycle_orchestrator import executar_ciclo_completo
             
             # Obtém credenciais
             credentials = {
@@ -294,8 +295,8 @@ class ModernAutomationGUI:
             self.progress_callback(f"🔐 Usando Servopa: {credentials['servopa']['usuario']}")
             self.progress_callback(f"🔐 Usando Todoist: {credentials['todoist']['usuario']}")
             
-            self.progress_callback("🚀 Iniciando automação...")
-            self.update_progress(10, "Iniciando navegador...")
+            self.progress_callback("🚀 Iniciando sistema de automação completo...")
+            self.update_progress(5, "Iniciando navegador...")
             
             if not self.automation_running:
                 return
@@ -303,53 +304,146 @@ class ModernAutomationGUI:
             driver = create_driver()
             
             try:
-                # Login Servopa
+                # ========== ETAPA 1: LOGIN SERVOPA ==========
                 if not self.automation_running:
                     return
                     
-                self.update_progress(20, "Login Servopa...")
+                self.progress_callback("=" * 60)
+                self.progress_callback("ETAPA 1: LOGIN NO SERVOPA")
+                self.progress_callback("=" * 60)
+                
+                self.update_progress(10, "Fazendo login no Servopa...")
                 self.update_status('servopa', '⏳ Login')
                 
                 if login_servopa(driver, self.progress_callback, credentials['servopa']):
-                    self.update_status('servopa', '✅ OK')
-                    self.update_progress(40, "Servopa OK")
+                    self.update_status('servopa', '✅ Conectado')
+                    self.update_progress(20, "Servopa conectado")
+                    self.progress_callback("✅ Login Servopa concluído!")
                 else:
                     raise Exception("Falha no login Servopa")
                 
+                # ========== ETAPA 2: LOGIN TODOIST (NOVA ABA) ==========
+                if not self.automation_running:
+                    return
+                
+                self.progress_callback("")
+                self.progress_callback("=" * 60)
+                self.progress_callback("ETAPA 2: LOGIN NO TODOIST (NOVA ABA)")
+                self.progress_callback("=" * 60)
+                
+                self.update_progress(30, "Abrindo Todoist em nova aba...")
+                self.update_status('todoist', '⏳ Login')
+                
+                # Salva janela original do Servopa
+                servopa_window = driver.current_window_handle
+                
+                # Abre nova aba para Todoist
+                driver.execute_script("window.open('');")
+                driver.switch_to.window(driver.window_handles[-1])
+                
+                # Faz login no Todoist
+                from auth.todoist_auth import TODOIST_URL, TIMEOUT
+                from selenium.webdriver.common.by import By
+                from selenium.webdriver.support.ui import WebDriverWait
+                from selenium.webdriver.support import expected_conditions as EC
+                
+                driver.get(TODOIST_URL)
+                time.sleep(3)
+                
+                wait = WebDriverWait(driver, TIMEOUT)
+                
                 # Login Todoist
+                email_input = wait.until(EC.presence_of_element_located((By.ID, "element-0")))
+                email_input.clear()
+                for char in credentials['todoist']['usuario']:
+                    email_input.send_keys(char)
+                    time.sleep(0.05)
+                
+                time.sleep(1)
+                
+                password_input = wait.until(EC.presence_of_element_located((By.ID, "element-2")))
+                password_input.clear()
+                for char in credentials['todoist']['senha']:
+                    password_input.send_keys(char)
+                    time.sleep(0.05)
+                
+                time.sleep(1)
+                
+                login_button = wait.until(EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, "button[type='submit']")
+                ))
+                login_button.click()
+                
+                self.progress_callback("⏳ Aguardando login processar...")
+                time.sleep(10)
+                
+                self.update_status('todoist', '✅ Conectado')
+                self.update_progress(40, "Todoist conectado")
+                self.progress_callback("✅ Login Todoist concluído!")
+                
+                # ========== ETAPA 3: NAVEGAR PARA BOARD E EXTRAIR ==========
                 if not self.automation_running:
                     return
-                    
-                self.update_progress(50, "Extraindo Todoist...")
-                self.update_status('todoist', '⏳ Extraindo')
                 
-                numero_grupo = login_todoist_and_extract(driver, self.progress_callback, credentials['todoist'])
-                if numero_grupo:
-                    self.update_status('todoist', '✅ OK')
-                    self.update_progress(70, f"Número {numero_grupo}")
-                else:
-                    raise Exception("Falha extração Todoist")
+                self.progress_callback("")
+                self.progress_callback("=" * 60)
+                self.progress_callback("ETAPA 3: EXTRAINDO BOARD DO TODOIST")
+                self.progress_callback("=" * 60)
                 
-                # Automação Servopa
+                self.update_progress(50, "Navegando para board...")
+                
+                # Navega para o projeto do board
+                if not navigate_to_board_project(driver, self.progress_callback):
+                    raise Exception("Falha ao navegar para o board")
+                
+                self.update_progress(60, "Extraindo dados do board...")
+                
+                # Extrai estrutura completa do board
+                board_data = extract_complete_board(driver, self.progress_callback)
+                
+                if not board_data or not board_data['sections']:
+                    raise Exception("Falha ao extrair dados do board ou board vazio")
+                
+                total_tasks = sum(len(s['tasks']) for s in board_data['sections'])
+                
+                self.update_status('todoist', '✅ Extraído')
+                self.update_progress(70, f"Board extraído: {total_tasks} tarefas")
+                self.progress_callback(f"✅ Board extraído: {len(board_data['sections'])} colunas, {total_tasks} tarefas")
+                
+                # ========== ETAPA 4: CICLO COMPLETO ==========
                 if not self.automation_running:
                     return
-                    
-                self.update_progress(80, "Executando automação...")
-                result = complete_servopa_automation(driver, numero_grupo, self.progress_callback)
                 
-                if result['success']:
+                self.progress_callback("")
+                self.progress_callback("=" * 60)
+                self.progress_callback("ETAPA 4: EXECUTANDO CICLO COMPLETO")
+                self.progress_callback("=" * 60)
+                
+                self.update_progress(75, "Iniciando ciclo de automação...")
+                self.update_status('cliente', '⏳ Processando')
+                self.update_status('lances', '⏳ Processando')
+                
+                # Executa ciclo completo
+                stats = executar_ciclo_completo(driver, board_data, self.progress_callback)
+                
+                if stats:
                     self.update_status('cliente', '✅ OK')
                     self.update_status('lances', '✅ OK')
                     
-                    self.update_progress(100, "Concluído!")
-                    self.progress_callback("🎉 AUTOMAÇÃO COMPLETA!")
-                    self.general_status.config(text="✅ Concluído", fg='green')
+                    self.update_progress(100, "Ciclo concluído!")
+                    self.progress_callback("")
+                    self.progress_callback("🎉 AUTOMAÇÃO COMPLETA FINALIZADA!")
+                    self.progress_callback(f"✅ {stats['completed']}/{stats['total_tasks']} tarefas concluídas")
+                    self.progress_callback(f"❌ {stats['failed']} falhas")
+                    self.general_status.config(text=f"✅ Concluído: {stats['completed']}/{stats['total_tasks']}", fg='green')
                 else:
-                    raise Exception("Falha na automação")
+                    raise Exception("Falha no ciclo de automação")
                     
             finally:
                 if self.automation_running:
-                    self.progress_callback("🔒 Navegador mantido aberto")
+                    self.progress_callback("")
+                    self.progress_callback("🔒 Navegador mantido aberto para verificação")
+                    self.progress_callback("   (Feche manualmente quando terminar)")
                 else:
                     self.progress_callback("⏹️ Automação interrompida")
                     if driver:
@@ -359,11 +453,12 @@ class ModernAutomationGUI:
                             pass
                 
         except Exception as e:
-            self.progress_callback(f"❌ Erro: {e}")
+            self.progress_callback(f"❌ Erro crítico: {e}")
             self.general_status.config(text="❌ Erro", fg='red')
             if driver:
                 try:
-                    driver.quit()
+                    # Mantém aberto para debug
+                    self.progress_callback("🔒 Navegador mantido aberto para análise do erro")
                 except:
                     pass
         finally:

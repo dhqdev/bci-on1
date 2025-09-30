@@ -11,6 +11,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # Configurações do Todoist
 TODOIST_URL = "https://app.todoist.com/auth/login"
+TODOIST_APP_URL = "https://app.todoist.com/app/today"
 # Credenciais padrão (serão substituídas pelas do arquivo JSON)
 DEFAULT_TODOIST_EMAIL = "oscarifn6@gmail.com"
 DEFAULT_TODOIST_PASSWORD = "spfctri12"
