@@ -1,8 +1,72 @@
-# 🤖 Sistema de Automação Servopa + Todoist v1.0# 🤖 Automação Servopa + Todoist
+# 🤖 Sistema de Automação Servopa + Todoist v4.0 - CICLO COMPLETO
 
+## 🎉 NOVA VERSÃO 4.0 - CICLO COMPLETO IMPLEMENTADO!
 
+Sistema completo de automação com **ciclo inteligente** entre Servopa e Todoist!
 
-Sistema completo de automação com interface moderna para integração entre Servopa e Todoist.Sistema completo de automação com interface gráfica moderna que integra o sistema Servopa com o Todoist para extrair números de tarefas e preencher automaticamente consórcios.
+### ✨ O que mudou?
+
+✅ **Extrai TODAS as colunas e linhas** do board do Todoist  
+✅ **Processa coluna por coluna, linha por linha**  
+✅ **Alterna automaticamente** entre Servopa e Todoist  
+✅ **Marca checkboxes** como concluído após cada lance  
+✅ **Mantém ambas as abas abertas** durante todo o processo  
+✅ **Relatório completo** com estatísticas ao final  
+
+---
+
+## 🚀 Início Rápido
+
+### 1️⃣ Verificar Instalação
+```bash
+python verify_installation.py
+```
+
+### 2️⃣ Instalar (se necessário)
+```bash
+# Windows: execute como administrador
+install.bat
+
+# Linux/Mac
+bash install.sh
+```
+
+### 3️⃣ Configurar
+```bash
+python main_gui.py
+```
+- Ir para aba "🔐 Credenciais"
+- Preencher Servopa e Todoist
+- Clicar "💾 Salvar"
+
+### 4️⃣ Executar
+- Ir para aba "🚀 Automação"
+- Clicar "🚀 Iniciar"
+- Acompanhar logs em tempo real
+
+**Pronto!** 🎉
+
+---
+
+## 📚 Documentação Completa
+
+### 🎯 Para Começar
+- ⚡ **[QUICKSTART.md](QUICKSTART.md)** - 3 passos para começar (2 minutos)
+- 🔧 **[verify_installation.py](verify_installation.py)** - Verifica instalação
+
+### 👤 Para Usuários
+- 📘 **[README_V4.md](README_V4.md)** - Guia completo do usuário
+- 📋 **[SUMMARY.md](SUMMARY.md)** - Resumo executivo
+
+### Para Desenvolvedores
+- 🔧 **[TECHNICAL_DOCS.md](TECHNICAL_DOCS.md)** - Documentação técnica
+- 📝 **[CHANGELOG.md](CHANGELOG.md)** - Histórico de mudanças
+- 📂 **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Estrutura do projeto
+
+### 🧪 Scripts
+- 🔬 **[test_cycle_complete.py](test_cycle_complete.py)** - Teste completo
+
+---
 
 
 
