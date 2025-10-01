@@ -93,7 +93,11 @@ install_system_dependencies() {
         if command -v apt-get &> /dev/null; then
             PKG_MANAGER="apt-get"
             print_info "Usando apt-get (Debian/Ubuntu)"
-            sudo apt-get update -qq
+            
+            # Atualizar lista de pacotes (ignorando erros de GPG de outros repos)
+            sudo apt-get update 2>&1 | grep -v "GPG" | grep -v "NO_PUBKEY" | grep -v "não está assinado" || true
+            
+            # Instalar pacotes necessários
             sudo apt-get install -y \
                 python3 \
                 python3-pip \
@@ -408,6 +412,10 @@ main() {
     echo "  3. Configurar ambiente virtual Python"
     echo "  4. Instalar todas as dependências"
     echo "  5. Criar scripts de execução"
+    echo ""
+    
+    print_info "⚠️  NOTA: Erros de GPG de outros repositórios (Spotify, MongoDB)"
+    print_info "    serão ignorados e NÃO afetarão a instalação."
     echo ""
     
     read -p "$(echo -e ${CYAN}Deseja continuar? [S/n]:${NC} )" -n 1 -r
