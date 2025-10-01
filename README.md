@@ -216,18 +216,27 @@ No seu Todoist:
 
 **Linux/Mac:**
 \`\`\`bash
+# Opção 1: Execute de qualquer lugar (o script encontra o projeto automaticamente)
+bash ~/auto-oxbci/update.sh
+
+# Opção 2: Entre no diretório e execute
 cd ~/auto-oxbci
 ./update.sh
 \`\`\`
 
 **Windows:**
 \`\`\`batch
+REM Opção 1: Execute de qualquer lugar
+%USERPROFILE%\auto-oxbci\update.bat
+
+REM Opção 2: Entre no diretório e execute
 cd %USERPROFILE%\auto-oxbci
 update.bat
 \`\`\`
 
 **O que o atualizador faz automaticamente:**
 
+✅ **Detecta automaticamente o diretório do projeto** (funciona de qualquer lugar!)  
 ✅ Verifica se há atualizações disponíveis  
 ✅ Faz backup das suas configurações (\`credentials.json\`)  
 ✅ Salva mudanças locais (git stash)  
@@ -367,11 +376,15 @@ bash install.sh            # Linux/Mac - se já clonou
 install.bat                # Windows - se já clonou
 
 # ========== EXECUTAR ==========
-./run.sh                   # Linux/Mac
+bash ~/auto-oxbci/run.sh   # Linux/Mac - de qualquer lugar!
+./run.sh                   # Linux/Mac - dentro do diretório
+
 run.bat                    # Windows
 
 # ========== ATUALIZAR ==========
-./update.sh                # Linux/Mac - atualiza do GitHub
+bash ~/auto-oxbci/update.sh   # Linux/Mac - de qualquer lugar!
+./update.sh                   # Linux/Mac - dentro do diretório
+
 update.bat                 # Windows - atualiza do GitHub
 
 # ========== TESTES ==========
@@ -379,6 +392,8 @@ python verify_installation.py     # Verificar instalação
 python test_credentials.py        # Testar credenciais
 python test_cycle_complete.py     # Testar ciclo completo
 \`\`\`
+
+📖 **[Guia Completo de Atualização](UPDATE_GUIDE.md)** - Tudo sobre como atualizar e resolver problemas
 
 ---
 

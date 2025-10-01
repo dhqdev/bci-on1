@@ -72,7 +72,11 @@ O instalador automático:
 # O projeto será instalado em:
 ~/auto-oxbci
 
-# Para executar:
+# Para executar (pode executar de qualquer lugar!):
+# Opção 1: Execute diretamente de qualquer lugar
+bash ~/auto-oxbci/run.sh
+
+# Opção 2: Entre no diretório e execute
 cd ~/auto-oxbci
 ./run.sh
 ```
@@ -85,7 +89,10 @@ REM O projeto será instalado em:
 
 REM Para executar:
 REM Opção 1: Clique no atalho "Auto OXBCI" na área de trabalho
-REM Opção 2: Execute run.bat
+REM Opção 2: Execute diretamente de qualquer lugar
+%USERPROFILE%\auto-oxbci\run.bat
+
+REM Opção 3: Entre no diretório e execute
 cd %USERPROFILE%\auto-oxbci
 run.bat
 ```

@@ -46,6 +46,60 @@ print_info() {
     echo -e "${CYAN}ℹ${NC} $1"
 }
 
+# Detectar e navegar para o diretório do projeto
+detect_and_navigate_to_project() {
+    print_step "Detectando diretório do projeto..."
+    
+    # Obter o diretório onde o script está localizado
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+    
+    # Se o script está no diretório auto-oxbci, usar esse diretório
+    if [ -f "$SCRIPT_DIR/main_gui.py" ] && [ -d "$SCRIPT_DIR/.git" ]; then
+        cd "$SCRIPT_DIR"
+        print_success "Encontrado em: $SCRIPT_DIR"
+        return 0
+    fi
+    
+    # Procurar em possíveis localizações
+    POSSIBLE_PATHS=(
+        "$HOME/auto-oxbci"
+        "$HOME/Área de trabalho/auto-oxbci"
+        "$HOME/Desktop/auto-oxbci"
+        "$HOME/Downloads/auto-oxbci"
+        "$HOME/Documents/auto-oxbci"
+        "./auto-oxbci"
+        "../auto-oxbci"
+    )
+    
+    for path in "${POSSIBLE_PATHS[@]}"; do
+        if [ -d "$path" ] && [ -f "$path/main_gui.py" ] && [ -d "$path/.git" ]; then
+            cd "$path"
+            print_success "Projeto encontrado em: $path"
+            return 0
+        fi
+    done
+    
+    # Última tentativa: procurar recursivamente a partir do diretório home
+    print_info "Procurando projeto no diretório home..."
+    PROJECT_PATH=$(find "$HOME" -maxdepth 4 -type d -name "auto-oxbci" 2>/dev/null | head -1)
+    
+    if [ -n "$PROJECT_PATH" ] && [ -f "$PROJECT_PATH/main_gui.py" ] && [ -d "$PROJECT_PATH/.git" ]; then
+        cd "$PROJECT_PATH"
+        print_success "Projeto encontrado em: $PROJECT_PATH"
+        return 0
+    fi
+    
+    # Não encontrado
+    print_error "Não foi possível encontrar o diretório do projeto auto-oxbci!"
+    echo ""
+    print_info "Por favor, navegue até o diretório do projeto e execute novamente:"
+    echo ""
+    echo "  cd /caminho/para/auto-oxbci"
+    echo "  ./update.sh"
+    echo ""
+    exit 1
+}
+
 # Verificar se está no diretório correto
 check_directory() {
     if [ ! -d ".git" ]; then
@@ -59,6 +113,8 @@ check_directory() {
         print_info "Execute este script dentro do diretório auto-oxbci"
         exit 1
     fi
+    
+    print_success "Diretório do projeto verificado: $(pwd)"
 }
 
 # Verificar conexão com internet
@@ -262,8 +318,13 @@ show_summary() {
 main() {
     print_banner
     
+    # Detectar e navegar para o diretório do projeto
+    detect_and_navigate_to_project
+    echo ""
+    
     # Verificações iniciais
     check_directory
+    echo ""
     check_internet
     
     echo ""
