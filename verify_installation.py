@@ -41,15 +41,23 @@ def verify_dependencies():
     """Verifica dependências instaladas"""
     print("\n📦 Verificando dependências...")
     
-    dependencies = {
+    # Dependências obrigatórias
+    required_dependencies = {
         'selenium': 'Selenium',
         'webdriver_manager': 'WebDriver Manager',
         'tkinter': 'Tkinter (GUI)'
     }
     
+    # Dependências opcionais (para funcionalidades específicas)
+    optional_dependencies = {
+        'requests': 'Requests (HTTP)',
+        'bs4': 'BeautifulSoup4 (HTML parsing)'
+    }
+    
     all_ok = True
     
-    for module, name in dependencies.items():
+    # Verifica dependências obrigatórias
+    for module, name in required_dependencies.items():
         try:
             if module == 'tkinter':
                 import tkinter
@@ -59,6 +67,15 @@ def verify_dependencies():
         except ImportError:
             print_check(name, False)
             all_ok = False
+    
+    # Verifica dependências opcionais (não falha se ausentes)
+    for module, name in optional_dependencies.items():
+        try:
+            __import__(module)
+            print_check(f"{name} (opcional)", True)
+        except ImportError:
+            print_check(f"{name} (opcional) - ausente", False)
+            print(f"   ℹ️  {name} não é obrigatório para funcionamento básico")
     
     return all_ok
 

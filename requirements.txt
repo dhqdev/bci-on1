@@ -7,5 +7,14 @@ selenium>=4.15.0
 # WebDriver Manager - Gerenciamento automático de drivers
 webdriver-manager>=4.0.1
 
+# Requests - Comunicação HTTP
+requests>=2.31.0
+
+# BeautifulSoup4 - Parsing HTML (usado nos scripts de verificação)
+beautifulsoup4>=4.12.0
+
+# Python-dotenv - Gerenciamento de variáveis de ambiente
+python-dotenv>=1.0.0
+
 # Tkinter já vem incluído no Python padrão
 # Para Linux/Ubuntu pode ser necessário: sudo apt-get install python3-tk

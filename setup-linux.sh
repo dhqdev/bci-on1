@@ -264,10 +264,15 @@ install_python_dependencies() {
         pip install selenium webdriver-manager requests beautifulsoup4 python-dotenv
     fi
     
-    # Verificar se beautifulsoup4 foi instalado
-    if ! python -c "from bs4 import BeautifulSoup" 2>/dev/null; then
-        print_warning "BeautifulSoup4 não detectado, instalando novamente..."
-        pip install --upgrade beautifulsoup4
+    # Verificar dependências principais
+    if ! python -c "import selenium" 2>/dev/null; then
+        print_warning "Selenium não detectado, instalando novamente..."
+        pip install --upgrade selenium
+    fi
+    
+    if ! python -c "from webdriver_manager.chrome import ChromeDriverManager" 2>/dev/null; then
+        print_warning "WebDriver Manager não detectado, instalando novamente..."
+        pip install --upgrade webdriver-manager
     fi
     
     print_success "Dependências Python instaladas!"
@@ -279,43 +284,52 @@ verify_installation() {
     
     source venv/bin/activate
     
-    # Teste de importações
+    # Teste de importações essenciais
     $PYTHON_CMD -c "
 import sys
 errors = []
 
+# Dependências obrigatórias
 try:
     import selenium
+    print('✓ Selenium: OK')
 except ImportError as e:
     errors.append(f'Selenium: {e}')
 
 try:
     from webdriver_manager.chrome import ChromeDriverManager
+    print('✓ WebDriver Manager: OK')
 except ImportError as e:
     errors.append(f'WebDriver Manager: {e}')
 
 try:
     import tkinter
+    print('✓ Tkinter: OK')
 except ImportError as e:
     errors.append(f'Tkinter: {e}')
 
+# Dependências opcionais (não causam falha)
 try:
     import requests
-except ImportError as e:
-    errors.append(f'Requests: {e}')
+    print('✓ Requests: OK')
+except ImportError:
+    print('⚠ Requests: Ausente (opcional)')
 
 try:
     from bs4 import BeautifulSoup
-except ImportError as e:
-    errors.append(f'BeautifulSoup: {e}')
+    print('✓ BeautifulSoup: OK')
+except ImportError:
+    print('⚠ BeautifulSoup: Ausente (opcional)')
 
 if errors:
+    print('')
     print('Erros encontrados:')
     for error in errors:
         print(f'  - {error}')
     sys.exit(1)
 else:
-    print('OK')
+    print('')
+    print('✅ Todas as dependências essenciais verificadas!')
     sys.exit(0)
     " 2>&1
     
