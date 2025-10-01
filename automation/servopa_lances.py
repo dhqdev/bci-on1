@@ -103,7 +103,7 @@ def selecionar_cota(driver, cota_number, progress_callback=None):
     
     Args:
         driver: Instância do WebDriver
-        cota_number: Número da cota (ex: "1123")
+        cota_number: Número da cota (ex: "303" ou "1123")
         progress_callback: Função para atualizar progresso na UI
         
     Returns:
@@ -112,8 +112,12 @@ def selecionar_cota(driver, cota_number, progress_callback=None):
     try:
         wait = WebDriverWait(driver, TIMEOUT)
         
+        # IMPORTANTE: Normaliza o número da cota para 4 dígitos com zeros à esquerda
+        # Ex: "303" vira "0303", "1123" continua "1123"
+        cota_normalizada = str(cota_number).zfill(4)
+        
         if progress_callback:
-            progress_callback(f"🔍 Procurando cota {cota_number} na tabela...")
+            progress_callback(f"🔍 Procurando cota {cota_number} (normalizada: {cota_normalizada}) na tabela...")
         
         # Aguarda tabela carregar
         time.sleep(2)
@@ -127,7 +131,10 @@ def selecionar_cota(driver, cota_number, progress_callback=None):
             return None
         
         if progress_callback:
-            progress_callback(f"📊 {len(rows)} linhas encontradas, procurando cota {cota_number}...")
+            progress_callback(f"📊 {len(rows)} linhas encontradas, procurando cota {cota_normalizada}...")
+        
+        # Lista para debug - mostra todas as cotas encontradas
+        cotas_encontradas = []
         
         # Procura a linha com a cota específica
         for row in rows:
@@ -140,7 +147,11 @@ def selecionar_cota(driver, cota_number, progress_callback=None):
                     cota_cell = cells[4]  # Coluna "Cota"
                     cota_value = cota_cell.text.strip()
                     
-                    if cota_value == cota_number:
+                    # Adiciona à lista de debug
+                    cotas_encontradas.append(cota_value)
+                    
+                    # Compara com a cota normalizada
+                    if cota_value == cota_normalizada:
                         # Encontrou a cota!
                         nome_cliente = cells[0].text.strip()
                         valor = cells[1].text.strip()
@@ -169,7 +180,10 @@ def selecionar_cota(driver, cota_number, progress_callback=None):
         
         # Se chegou aqui, não encontrou a cota
         if progress_callback:
-            progress_callback(f"❌ Cota {cota_number} não encontrada na tabela")
+            progress_callback(f"❌ Cota {cota_normalizada} não encontrada na tabela")
+            progress_callback(f"📋 Cotas disponíveis: {', '.join(cotas_encontradas[:10])}")  # Mostra até 10 cotas
+            if len(cotas_encontradas) > 10:
+                progress_callback(f"   ... e mais {len(cotas_encontradas) - 10} cotas")
         
         return None
         

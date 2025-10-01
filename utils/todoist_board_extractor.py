@@ -325,6 +325,49 @@ def navigate_to_board_project(driver, progress_callback=None):
         return False
 
 
+def navigate_to_board_project_dia16(driver, progress_callback=None):
+    """
+    Navega para o projeto do board 'Lances Servopa Outubro Dia 16'
+    
+    Args:
+        driver: Instância do WebDriver já logado no Todoist
+        progress_callback: Função para atualizar progresso na UI
+        
+    Returns:
+        bool: True se navegou com sucesso
+    """
+    try:
+        wait = WebDriverWait(driver, TIMEOUT)
+        
+        if progress_callback:
+            progress_callback("🔍 Procurando projeto 'Lances Servopa Outubro Dia 16'...")
+        
+        # Procura o link do projeto
+        project_link = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//span[contains(text(), 'Lances Servopa Outubro Dia 16')]")
+        ))
+        
+        if progress_callback:
+            progress_callback("📂 Abrindo projeto do board Dia 16...")
+        
+        project_link.click()
+        time.sleep(4)  # Aguarda carregamento completo
+        
+        if progress_callback:
+            progress_callback("✅ Board Dia 16 aberto com sucesso")
+        
+        return True
+        
+    except TimeoutException:
+        if progress_callback:
+            progress_callback("❌ Timeout ao procurar projeto Dia 16")
+        return False
+    except Exception as e:
+        if progress_callback:
+            progress_callback(f"❌ Erro ao navegar para projeto: {e}")
+        return False
+
+
 if __name__ == "__main__":
     # Teste do módulo
     print("Este módulo deve ser importado e usado com uma instância do WebDriver")

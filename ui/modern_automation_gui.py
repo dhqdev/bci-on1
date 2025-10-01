@@ -19,8 +19,10 @@ class ModernAutomationGUI:
         
         # Estado da aplicação
         self.automation_running = False
+        self.automation_running_dia16 = False
         self.credentials_file = 'credentials.json'
         self.driver = None  # Armazena referência do driver
+        self.driver_dia16 = None  # Armazena referência do driver para Dia 16
         
         # Variáveis para credenciais
         self.servopa_login_var = tk.StringVar()
@@ -50,8 +52,10 @@ class ModernAutomationGUI:
         self.notebook.pack(fill='both', expand=True, padx=10, pady=10)
         
         self.create_automation_tab()
+        self.create_automation_tab_dia16()
         self.create_credentials_tab()
         self.create_history_tab()
+        self.create_history_tab_dia16()
         
     def create_automation_tab(self):
         """Aba de automação"""
@@ -112,6 +116,66 @@ class ModernAutomationGUI:
         
         self.general_status = tk.Label(button_frame, text="Sistema pronto", font=('Arial', 10, 'bold'), fg='#28a745')
         self.general_status.pack(side='right', padx=10)
+    
+    def create_automation_tab_dia16(self):
+        """Aba de automação para Dia 16"""
+        tab_frame = tk.Frame(self.notebook)
+        self.notebook.add(tab_frame, text='🚀 Lances Dia 16')
+        
+        # Status cards
+        status_frame = tk.LabelFrame(tab_frame, text="Status", font=('Arial', 12, 'bold'))
+        status_frame.pack(fill='x', padx=10, pady=5)
+        
+        cards_container = tk.Frame(status_frame)
+        cards_container.pack(fill='x', padx=5, pady=5)
+        
+        # Cards de status
+        self.status_cards_dia16 = {}
+        for i, (text, key) in enumerate([("Servopa", "servopa"), ("Todoist", "todoist"), ("Cliente", "cliente"), ("Lances", "lances")]):
+            card = tk.Frame(cards_container, bg='white', relief='solid', bd=1, width=150, height=60)
+            card.pack_propagate(False)
+            card.grid(row=0, column=i, padx=3, pady=3, sticky='ew')
+            
+            tk.Label(card, text=text, font=('Arial', 9, 'bold'), bg='white').pack(pady=5)
+            status_label = tk.Label(card, text="Aguardando", font=('Arial', 8), bg='white', fg='gray')
+            status_label.pack()
+            self.status_cards_dia16[key] = status_label
+            
+        for i in range(4):
+            cards_container.grid_columnconfigure(i, weight=1)
+        
+        # Progresso
+        progress_frame = tk.LabelFrame(tab_frame, text="Progresso", font=('Arial', 12, 'bold'))
+        progress_frame.pack(fill='x', padx=10, pady=5)
+        
+        self.progress_bar_dia16 = ttk.Progressbar(progress_frame, mode='determinate')
+        self.progress_bar_dia16.pack(fill='x', padx=10, pady=5)
+        
+        self.progress_label_dia16 = tk.Label(progress_frame, text="Sistema pronto", font=('Arial', 10))
+        self.progress_label_dia16.pack(pady=2)
+        
+        # Log
+        log_frame = tk.LabelFrame(tab_frame, text="Log", font=('Arial', 12, 'bold'))
+        log_frame.pack(fill='both', expand=True, padx=10, pady=5)
+        
+        self.log_text_dia16 = scrolledtext.ScrolledText(log_frame, height=15, font=('Consolas', 9),
+                                                bg='#1e1e1e', fg='#d4d4d4', wrap=tk.WORD)
+        self.log_text_dia16.pack(fill='both', expand=True, padx=5, pady=5)
+        
+        # Botões
+        button_frame = tk.Frame(tab_frame)
+        button_frame.pack(fill='x', padx=10, pady=5)
+        
+        self.start_button_dia16 = tk.Button(button_frame, text="🚀 Iniciar Lances Dia 16", font=('Arial', 10, 'bold'),
+                                    bg='#28a745', fg='white', command=self.start_automation_dia16, padx=20)
+        self.start_button_dia16.pack(side='left', padx=5)
+        
+        self.stop_button_dia16 = tk.Button(button_frame, text="⏸️ Parar", font=('Arial', 10, 'bold'),
+                                   bg='#dc3545', fg='white', command=self.stop_automation_dia16, padx=20, state='disabled')
+        self.stop_button_dia16.pack(side='left', padx=5)
+        
+        self.general_status_dia16 = tk.Label(button_frame, text="Sistema pronto", font=('Arial', 10, 'bold'), fg='#28a745')
+        self.general_status_dia16.pack(side='right', padx=10)
         
     def create_credentials_tab(self):
         """Aba de credenciais"""
@@ -280,6 +344,91 @@ class ModernAutomationGUI:
         # Carrega histórico existente
         self.load_history()
     
+    def create_history_tab_dia16(self):
+        """Aba de histórico - Já feito do dia 16"""
+        tab_frame = tk.Frame(self.notebook)
+        self.notebook.add(tab_frame, text='📊 Já feito do dia 16')
+        
+        # Arquivo para salvar histórico
+        self.history_file_dia16 = 'history_dia16.json'
+        self.history_data_dia16 = []
+        
+        # Header com informações
+        header_frame = tk.Frame(tab_frame, bg='#e9ecef', height=60)
+        header_frame.pack(fill='x', padx=10, pady=5)
+        header_frame.pack_propagate(False)
+        
+        tk.Label(header_frame, text="📊 Registro de Lances Processados - Dia 16",
+                font=('Arial', 14, 'bold'), bg='#e9ecef').pack(pady=5)
+        
+        info_container = tk.Frame(header_frame, bg='#e9ecef')
+        info_container.pack(fill='x', padx=10)
+        
+        self.history_stats_label_dia16 = tk.Label(info_container,
+                                            text="Total: 0 | ✅ Sucesso: 0 | ❌ Erro: 0",
+                                            font=('Arial', 10), bg='#e9ecef')
+        self.history_stats_label_dia16.pack(side='left')
+        
+        # Botões de ação
+        button_container = tk.Frame(tab_frame)
+        button_container.pack(fill='x', padx=10, pady=5)
+        
+        tk.Button(button_container, text="🔄 Atualizar", font=('Arial', 9, 'bold'),
+                 bg='#007bff', fg='white', command=self.refresh_history_dia16, padx=15).pack(side='left', padx=3)
+        
+        tk.Button(button_container, text="📥 Exportar Excel", font=('Arial', 9, 'bold'),
+                 bg='#28a745', fg='white', command=self.export_to_excel_dia16, padx=15).pack(side='left', padx=3)
+        
+        tk.Button(button_container, text="🗑️ Limpar Histórico", font=('Arial', 9, 'bold'),
+                 bg='#dc3545', fg='white', command=self.clear_history_dia16, padx=15).pack(side='left', padx=3)
+        
+        # Frame para a tabela com scrollbars
+        table_frame = tk.Frame(tab_frame)
+        table_frame.pack(fill='both', expand=True, padx=10, pady=5)
+        
+        # Scrollbars
+        vsb = ttk.Scrollbar(table_frame, orient="vertical")
+        vsb.pack(side='right', fill='y')
+        
+        hsb = ttk.Scrollbar(table_frame, orient="horizontal")
+        hsb.pack(side='bottom', fill='x')
+        
+        # Treeview (Tabela)
+        columns = ('hora', 'grupo', 'cota', 'nome', 'valor_lance', 'status', 'observacao')
+        self.history_tree_dia16 = ttk.Treeview(table_frame, columns=columns, show='headings',
+                                        yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        
+        # Configura scrollbars
+        vsb.config(command=self.history_tree_dia16.yview)
+        hsb.config(command=self.history_tree_dia16.xview)
+        
+        # Define cabeçalhos e larguras
+        headers = {
+            'hora': ('Hora', 80),
+            'grupo': ('Grupo', 80),
+            'cota': ('Cota', 80),
+            'nome': ('Nome Cliente', 200),
+            'valor_lance': ('Valor Lance', 100),
+            'status': ('Status', 100),
+            'observacao': ('Observação', 250)
+        }
+        
+        for col, (header, width) in headers.items():
+            self.history_tree_dia16.heading(col, text=header, command=lambda c=col: self.sort_history_column_dia16(c))
+            self.history_tree_dia16.column(col, width=width, anchor='center' if col != 'nome' and col != 'observacao' else 'w')
+        
+        self.history_tree_dia16.pack(fill='both', expand=True)
+        
+        # Estilo zebrado e por status
+        self.history_tree_dia16.tag_configure('success', background='#d4edda')
+        self.history_tree_dia16.tag_configure('error', background='#f8d7da')
+        self.history_tree_dia16.tag_configure('stopped', background='#fff3cd')
+        self.history_tree_dia16.tag_configure('odd', background='#f8f9fa')
+        self.history_tree_dia16.tag_configure('even', background='white')
+        
+        # Carrega histórico existente
+        self.load_history_dia16()
+    
     def load_history(self):
         """Carrega histórico do arquivo JSON"""
         try:
@@ -421,6 +570,149 @@ class ModernAutomationGUI:
             self.refresh_history()
             messagebox.showinfo("Sucesso", "Histórico limpo com sucesso!")
     
+    # ========== MÉTODOS PARA DIA 16 ==========
+    
+    def load_history_dia16(self):
+        """Carrega histórico do Dia 16 do arquivo JSON"""
+        try:
+            if os.path.exists(self.history_file_dia16):
+                with open(self.history_file_dia16, 'r', encoding='utf-8') as f:
+                    self.history_data_dia16 = json.load(f)
+                print(f"✅ Histórico Dia 16 carregado: {len(self.history_data_dia16)} registros")
+            else:
+                self.history_data_dia16 = []
+                print(f"⚠️ Arquivo de histórico Dia 16 não existe: {self.history_file_dia16}")
+            
+            self.refresh_history_dia16()
+        except Exception as e:
+            print(f"❌ Erro ao carregar histórico Dia 16: {e}")
+            messagebox.showerror("Erro", f"Erro ao carregar histórico Dia 16: {e}")
+            self.history_data_dia16 = []
+    
+    def save_history_dia16(self):
+        """Salva histórico do Dia 16 no arquivo JSON"""
+        try:
+            with open(self.history_file_dia16, 'w', encoding='utf-8') as f:
+                json.dump(self.history_data_dia16, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Erro ao salvar histórico Dia 16: {e}")
+    
+    def add_history_entry_dia16(self, grupo, cota, nome, valor_lance, status, observacao=""):
+        """Adiciona entrada ao histórico do Dia 16"""
+        entry = {
+            'hora': datetime.now().strftime('%H:%M:%S'),
+            'data': datetime.now().strftime('%Y-%m-%d'),
+            'grupo': str(grupo),
+            'cota': str(cota),
+            'nome': nome,
+            'valor_lance': valor_lance,
+            'status': status,
+            'observacao': observacao
+        }
+        
+        self.history_data_dia16.append(entry)
+        self.save_history_dia16()
+        
+        # Atualiza a tabela na interface (thread-safe)
+        self.root.after(0, self.refresh_history_dia16)
+    
+    def refresh_history_dia16(self):
+        """Atualiza a exibição da tabela de histórico do Dia 16"""
+        try:
+            # Limpa tabela
+            for item in self.history_tree_dia16.get_children():
+                self.history_tree_dia16.delete(item)
+            
+            # Adiciona dados
+            success_count = 0
+            error_count = 0
+            stopped_count = 0
+            
+            print(f"📊 Atualizando histórico Dia 16 com {len(self.history_data_dia16)} registros...")
+            
+            for idx, entry in enumerate(reversed(self.history_data_dia16)):
+                hora = entry.get('hora', '')
+                grupo = entry.get('grupo', '')
+                cota = entry.get('cota', '')
+                nome = entry.get('nome', '')
+                valor_lance = entry.get('valor_lance', '')
+                status = entry.get('status', '')
+                observacao = entry.get('observacao', '')
+                
+                # Determina cor baseado no status
+                if '⏹️' in status or 'parado' in status.lower():
+                    stopped_count += 1
+                    tag = 'stopped'
+                elif 'sucesso' in status.lower() or '✅' in status:
+                    success_count += 1
+                    tag = 'success'
+                elif 'erro' in status.lower() or '❌' in status or 'falha' in status.lower():
+                    error_count += 1
+                    tag = 'error'
+                else:
+                    tag = 'odd' if idx % 2 else 'even'
+                
+                self.history_tree_dia16.insert('', 'end', values=(hora, grupo, cota, nome, valor_lance, status, observacao),
+                                        tags=(tag,))
+            
+            # Atualiza estatísticas
+            total = len(self.history_data_dia16)
+            stats_text = f"Total: {total} | ✅ Sucesso: {success_count}"
+            if stopped_count > 0:
+                stats_text += f" | ⏹️ Parado: {stopped_count}"
+            stats_text += f" | ❌ Erro: {error_count}"
+            
+            self.history_stats_label_dia16.config(text=stats_text)
+            print(f"✅ Histórico Dia 16 atualizado: {stats_text}")
+            
+        except Exception as e:
+            print(f"❌ Erro ao atualizar histórico Dia 16: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def sort_history_column_dia16(self, col):
+        """Ordena tabela por coluna - Dia 16"""
+        items = [(self.history_tree_dia16.set(item, col), item) for item in self.history_tree_dia16.get_children('')]
+        items.sort()
+        
+        for index, (val, item) in enumerate(items):
+            self.history_tree_dia16.move(item, '', index)
+    
+    def export_to_excel_dia16(self):
+        """Exporta histórico do Dia 16 para Excel/CSV"""
+        try:
+            import csv
+            from tkinter import filedialog
+            
+            if not self.history_data_dia16:
+                messagebox.showwarning("Aviso", "Não há dados para exportar!")
+                return
+            
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+                initialfile=f"historico_dia16_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            )
+            
+            if filename:
+                with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
+                    writer = csv.DictWriter(f, fieldnames=['data', 'hora', 'grupo', 'cota', 'nome', 
+                                                           'valor_lance', 'status', 'observacao'])
+                    writer.writeheader()
+                    writer.writerows(self.history_data_dia16)
+                
+                messagebox.showinfo("Sucesso", f"Dados exportados para:\n{filename}")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao exportar: {e}")
+    
+    def clear_history_dia16(self):
+        """Limpa todo o histórico do Dia 16"""
+        if messagebox.askyesno("Confirmar", "Deseja realmente limpar TODO o histórico do Dia 16?\n\nEsta ação não pode ser desfeita!"):
+            self.history_data_dia16 = []
+            self.save_history_dia16()
+            self.refresh_history_dia16()
+            messagebox.showinfo("Sucesso", "Histórico Dia 16 limpo com sucesso!")
+    
     def setup_queue_processor(self):
         """Processa mensagens da queue"""
         def process():
@@ -464,6 +756,28 @@ class ModernAutomationGUI:
     def progress_callback(self, message):
         """Callback para progresso"""
         self.message_queue.put({'type': 'log', 'content': message})
+    
+    def add_log_message_dia16(self, message):
+        """Adiciona mensagem ao log do Dia 16"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        self.log_text_dia16.insert(tk.END, f"[{timestamp}] {message}\n")
+        self.log_text_dia16.see(tk.END)
+        
+    def update_progress_dia16(self, value, message=""):
+        """Atualiza progresso do Dia 16"""
+        self.progress_bar_dia16['value'] = value
+        if message:
+            self.progress_label_dia16.config(text=message)
+        self.root.update_idletasks()
+        
+    def update_status_dia16(self, component, status):
+        """Atualiza status do Dia 16"""
+        if component in self.status_cards_dia16:
+            self.status_cards_dia16[component].config(text=status)
+    
+    def progress_callback_dia16(self, message):
+        """Callback para progresso do Dia 16"""
+        self.root.after(0, lambda: self.add_log_message_dia16(message))
         
     def start_automation(self):
         """Inicia automação"""
@@ -495,6 +809,37 @@ class ModernAutomationGUI:
                 self.add_log_message(f"⚠️ Erro ao fechar navegador: {e}")
         
         self.general_status.config(text="⏹️ Parado", fg='gray')
+    
+    def start_automation_dia16(self):
+        """Inicia automação do Dia 16"""
+        self.automation_running_dia16 = True
+        self.start_button_dia16.config(state='disabled')
+        self.stop_button_dia16.config(state='normal')
+        self.general_status_dia16.config(text="🚀 Executando...", fg='orange')
+        
+        self.automation_thread_dia16 = threading.Thread(target=self.run_automation_dia16)
+        self.automation_thread_dia16.daemon = True
+        self.automation_thread_dia16.start()
+        
+    def stop_automation_dia16(self):
+        """Para automação do Dia 16 e fecha navegador"""
+        self.automation_running_dia16 = False
+        self.start_button_dia16.config(state='normal')
+        self.stop_button_dia16.config(state='disabled')
+        self.general_status_dia16.config(text="⏹️ Parando...", fg='red')
+        self.add_log_message_dia16("⏹️ Solicitação de parada recebida")
+        
+        # Fecha o navegador se existir
+        if self.driver_dia16:
+            try:
+                self.add_log_message_dia16("🔒 Fechando navegador...")
+                self.driver_dia16.quit()
+                self.driver_dia16 = None
+                self.add_log_message_dia16("✅ Navegador fechado com sucesso")
+            except Exception as e:
+                self.add_log_message_dia16(f"⚠️ Erro ao fechar navegador: {e}")
+        
+        self.general_status_dia16.config(text="⏹️ Parado", fg='gray')
         
     def run_automation(self):
         """Executa automação completa com ciclo entre sites"""
@@ -717,6 +1062,228 @@ class ModernAutomationGUI:
             self.automation_running = False
             self.start_button.config(state='normal')
             self.stop_button.config(state='disabled')
+    
+    def run_automation_dia16(self):
+        """Executa automação completa do Dia 16 com ciclo entre sites"""
+        driver = None
+        try:
+            if not self.automation_running_dia16:
+                return
+                
+            # Importa módulos
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            
+            from auth.servopa_auth import create_driver, login_servopa
+            from auth.todoist_auth import login_todoist_and_extract
+            from utils.todoist_board_extractor import navigate_to_board_project_dia16, extract_complete_board
+            from automation.cycle_orchestrator import executar_ciclo_completo
+            
+            # Obtém credenciais
+            credentials = {
+                'servopa': {
+                    'usuario': self.servopa_login_var.get().strip(),
+                    'senha': self.servopa_senha_var.get().strip()
+                },
+                'todoist': {
+                    'usuario': self.todoist_login_var.get().strip(),
+                    'senha': self.todoist_senha_var.get().strip()
+                }
+            }
+            
+            # Valida credenciais
+            if not credentials['servopa']['usuario'] or not credentials['servopa']['senha']:
+                raise Exception("Credenciais do Servopa não informadas")
+            if not credentials['todoist']['usuario'] or not credentials['todoist']['senha']:
+                raise Exception("Credenciais do Todoist não informadas")
+            
+            # Log das credenciais (mascarando senha)
+            self.progress_callback_dia16(f"🔐 Usando Servopa: {credentials['servopa']['usuario']}")
+            self.progress_callback_dia16(f"🔐 Usando Todoist: {credentials['todoist']['usuario']}")
+            
+            self.progress_callback_dia16("🚀 Iniciando sistema de automação DIA 16...")
+            self.update_progress_dia16(5, "Iniciando navegador...")
+            
+            if not self.automation_running_dia16:
+                return
+            
+            driver = create_driver()
+            self.driver_dia16 = driver  # Armazena referência global
+            
+            try:
+                # ========== ETAPA 1: LOGIN SERVOPA ==========
+                if not self.automation_running_dia16:
+                    return
+                    
+                self.progress_callback_dia16("=" * 60)
+                self.progress_callback_dia16("ETAPA 1: LOGIN NO SERVOPA")
+                self.progress_callback_dia16("=" * 60)
+                
+                self.update_progress_dia16(10, "Fazendo login no Servopa...")
+                self.update_status_dia16('servopa', '⏳ Login')
+                
+                if login_servopa(driver, self.progress_callback_dia16, credentials['servopa']):
+                    self.update_status_dia16('servopa', '✅ Conectado')
+                    self.update_progress_dia16(20, "Servopa conectado")
+                    self.progress_callback_dia16("✅ Login Servopa concluído!")
+                else:
+                    raise Exception("Falha no login Servopa")
+                
+                # ========== ETAPA 2: LOGIN TODOIST (NOVA ABA) ==========
+                if not self.automation_running_dia16:
+                    return
+                
+                self.progress_callback_dia16("")
+                self.progress_callback_dia16("=" * 60)
+                self.progress_callback_dia16("ETAPA 2: LOGIN NO TODOIST (NOVA ABA)")
+                self.progress_callback_dia16("=" * 60)
+                
+                self.update_progress_dia16(30, "Abrindo Todoist em nova aba...")
+                self.update_status_dia16('todoist', '⏳ Login')
+                
+                # Salva janela original do Servopa
+                servopa_window = driver.current_window_handle
+                
+                # Abre nova aba para Todoist
+                driver.execute_script("window.open('');")
+                driver.switch_to.window(driver.window_handles[-1])
+                
+                # Faz login no Todoist
+                from auth.todoist_auth import TODOIST_URL, TIMEOUT
+                from selenium.webdriver.common.by import By
+                from selenium.webdriver.support.ui import WebDriverWait
+                from selenium.webdriver.support import expected_conditions as EC
+                
+                driver.get(TODOIST_URL)
+                time.sleep(3)
+                
+                wait = WebDriverWait(driver, TIMEOUT)
+                
+                # Login Todoist
+                email_input = wait.until(EC.presence_of_element_located((By.ID, "element-0")))
+                email_input.clear()
+                for char in credentials['todoist']['usuario']:
+                    email_input.send_keys(char)
+                    time.sleep(0.05)
+                
+                time.sleep(1)
+                
+                password_input = wait.until(EC.presence_of_element_located((By.ID, "element-2")))
+                password_input.clear()
+                for char in credentials['todoist']['senha']:
+                    password_input.send_keys(char)
+                    time.sleep(0.05)
+                
+                time.sleep(1)
+                
+                login_button = wait.until(EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, "button[type='submit']")
+                ))
+                login_button.click()
+                
+                self.progress_callback_dia16("⏳ Aguardando login processar...")
+                time.sleep(10)
+                
+                self.update_status_dia16('todoist', '✅ Conectado')
+                self.update_progress_dia16(40, "Todoist conectado")
+                self.progress_callback_dia16("✅ Login Todoist concluído!")
+                
+                # ========== ETAPA 3: NAVEGAR PARA BOARD DIA 16 E EXTRAIR ==========
+                if not self.automation_running_dia16:
+                    return
+                
+                self.progress_callback_dia16("")
+                self.progress_callback_dia16("=" * 60)
+                self.progress_callback_dia16("ETAPA 3: EXTRAINDO BOARD DIA 16 DO TODOIST")
+                self.progress_callback_dia16("=" * 60)
+                
+                self.update_progress_dia16(50, "Navegando para board Dia 16...")
+                
+                # Navega para o projeto do board DIA 16
+                if not navigate_to_board_project_dia16(driver, self.progress_callback_dia16):
+                    raise Exception("Falha ao navegar para o board Dia 16")
+                
+                self.update_progress_dia16(60, "Extraindo dados do board Dia 16...")
+                
+                # Extrai estrutura completa do board
+                board_data = extract_complete_board(driver, self.progress_callback_dia16)
+                
+                if not board_data or not board_data['sections']:
+                    raise Exception("Falha ao extrair dados do board Dia 16 ou board vazio")
+                
+                total_tasks = sum(len(s['tasks']) for s in board_data['sections'])
+                
+                self.update_status_dia16('todoist', '✅ Extraído')
+                self.update_progress_dia16(70, f"Board Dia 16 extraído: {total_tasks} tarefas")
+                self.progress_callback_dia16(f"✅ Board Dia 16 extraído: {len(board_data['sections'])} colunas, {total_tasks} tarefas")
+                
+                # ========== ETAPA 4: CICLO COMPLETO ==========
+                if not self.automation_running_dia16:
+                    return
+                
+                self.progress_callback_dia16("")
+                self.progress_callback_dia16("=" * 60)
+                self.progress_callback_dia16("ETAPA 4: EXECUTANDO CICLO COMPLETO DIA 16")
+                self.progress_callback_dia16("=" * 60)
+                
+                self.update_progress_dia16(75, "Iniciando ciclo de automação Dia 16...")
+                self.update_status_dia16('cliente', '⏳ Processando')
+                self.update_status_dia16('lances', '⏳ Processando')
+                
+                # Executa ciclo completo com callback de histórico e função de verificação
+                stats = executar_ciclo_completo(
+                    driver, 
+                    board_data, 
+                    self.progress_callback_dia16, 
+                    self.add_history_entry_dia16,
+                    lambda: self.automation_running_dia16  # Função que verifica se deve continuar
+                )
+                
+                if stats:
+                    self.update_status_dia16('cliente', '✅ OK')
+                    self.update_status_dia16('lances', '✅ OK')
+                    
+                    self.update_progress_dia16(100, "Ciclo Dia 16 concluído!")
+                    self.progress_callback_dia16("")
+                    self.progress_callback_dia16("🎉 AUTOMAÇÃO DIA 16 COMPLETA FINALIZADA!")
+                    self.progress_callback_dia16(f"✅ {stats['completed']}/{stats['total_tasks']} tarefas concluídas")
+                    self.progress_callback_dia16(f"❌ {stats['failed']} falhas")
+                    self.general_status_dia16.config(text=f"✅ Concluído: {stats['completed']}/{stats['total_tasks']}", fg='green')
+                else:
+                    raise Exception("Falha no ciclo de automação Dia 16")
+                    
+            finally:
+                if self.automation_running_dia16:
+                    self.progress_callback_dia16("")
+                    self.progress_callback_dia16("🔒 Navegador mantido aberto para verificação")
+                    self.progress_callback_dia16("   (Feche manualmente quando terminar)")
+                else:
+                    self.progress_callback_dia16("⏹️ Automação Dia 16 interrompida")
+                    if self.driver_dia16:
+                        try:
+                            self.progress_callback_dia16("🔒 Fechando navegador...")
+                            self.driver_dia16.quit()
+                            self.driver_dia16 = None
+                            self.progress_callback_dia16("✅ Navegador fechado")
+                        except Exception as e:
+                            self.progress_callback_dia16(f"⚠️ Aviso ao fechar navegador: {e}")
+                
+        except Exception as e:
+            self.progress_callback_dia16(f"❌ Erro crítico: {e}")
+            self.general_status_dia16.config(text="❌ Erro", fg='red')
+            if self.driver_dia16:
+                try:
+                    self.progress_callback_dia16("🔒 Fechando navegador devido ao erro...")
+                    self.driver_dia16.quit()
+                    self.driver_dia16 = None
+                    self.progress_callback_dia16("✅ Navegador fechado")
+                except Exception as cleanup_error:
+                    self.progress_callback_dia16(f"⚠️ Aviso ao fechar navegador: {cleanup_error}")
+        finally:
+            self.automation_running_dia16 = False
+            self.start_button_dia16.config(state='normal')
+            self.stop_button_dia16.config(state='disabled')
             
     def run(self):
         """Executa interface"""
