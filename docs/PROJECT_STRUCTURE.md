@@ -1,11 +1,11 @@
-# 📂 ESTRUTURA DO PROJETO - Sistema de Automação v4.0
+# 📂 ESTRUTURA DO PROJETO - Sistema de Automação
 
 ```
 auto-oxbci/
 │
-├── 📄 README.md                              ⭐ Começa aqui! (Atualizado v4.0)
+├── 📄 README.md                              ⭐ Começa aqui!
 ├── 📄 QUICKSTART.md                          ⚡ Guia rápido 3 passos
-├── 📄 README_V4.md                           📘 Guia completo usuário
+├── 📄 README_USER_GUIDE.md                   📘 Guia completo usuário
 ├── 📄 TECHNICAL_DOCS.md                      🔧 Documentação técnica
 ├── 📄 SUMMARY.md                             📋 Resumo executivo
 ├── 📄 CHANGELOG.md                           📝 Histórico mudanças
@@ -22,10 +22,7 @@ auto-oxbci/
 ├── 🔧 install.sh                             🐧 Instalador Linux/Mac
 ├── 🔧 run.bat                                ▶️ Executar Windows
 │
-├── 🖼️ servopa_consorcio_preenchido.png      📸 Screenshots
-├── 🖼️ servopa_post_login.png
-│
-├── 🗂️ auth/                                  🔐 AUTENTICAÇÃO
+├── ️ auth/                                  🔐 AUTENTICAÇÃO
 │   ├── __init__.py
 │   ├── servopa_auth.py                      🌐 Login Servopa + criar driver
 │   └── todoist_auth.py                      📋 Login Todoist + nova aba
@@ -33,27 +30,20 @@ auto-oxbci/
 ├── 🗂️ automation/                            🤖 AUTOMAÇÃO
 │   ├── __init__.py
 │   ├── servopa_automation.py                📦 Automação básica (legado)
-│   ├── servopa_lances.py                    ⭐ Automação completa lances (NOVO v4.0)
-│   └── cycle_orchestrator.py                ⭐ Orquestrador ciclo (NOVO v4.0)
+│   ├── servopa_lances.py                    ⭐ Automação completa lances
+│   └── cycle_orchestrator.py                ⭐ Orquestrador ciclo
 │
 ├── 🗂️ ui/                                    🖥️ INTERFACE GRÁFICA
 │   ├── __init__.py
 │   ├── automation_gui.py                    📦 Interface antiga (legado)
-│   └── modern_automation_gui.py             ⭐ Interface moderna v4.0
+│   └── modern_automation_gui.py             ⭐ Interface moderna
 │
 ├── 🗂️ utils/                                 ⚙️ UTILITÁRIOS
 │   ├── __init__.py
 │   ├── config.py                            ⚙️ Configurações globais
 │   ├── auto_todolist_extractor.py           📦 Extrator antigo (legado)
 │   ├── todoist_simple_extractor.py          📦 Extrator simples (vazio)
-│   └── todoist_board_extractor.py           ⭐ Extrator completo board (NOVO v4.0)
-│
-├── 🗂️ screenshots/                           📸 CAPTURAS DE TELA
-│   ├── cliente_selecionado.png
-│   ├── clientes_encontrados.png
-│   ├── pagina_lances.png
-│   ├── servopa_login_success.png
-│   └── todoist_task_found.png
+│   └── todoist_board_extractor.py           ⭐ Extrator completo board
 │
 └── 🗂️ __pycache__/                           🔧 Cache Python (ignorar)
     └── ...
@@ -67,12 +57,12 @@ auto-oxbci/
 ```
 1. 📄 QUICKSTART.md         ← Começa aqui! (3 passos)
 2. 🚀 python main_gui.py    ← Execute isto
-3. 📘 README_V4.md          ← Guia completo (se precisar)
+3. 📘 README_USER_GUIDE.md  ← Guia completo (se precisar)
 ```
 
 ### 👨‍💻 Sou Desenvolvedor
 ```
-1. 📘 README_V4.md          ← Entenda o sistema
+1. 📘 README_USER_GUIDE.md  ← Entenda o sistema
 2. 🔧 TECHNICAL_DOCS.md     ← Arquitetura e código
 3. 🧪 test_cycle_complete.py ← Teste o sistema
 4. 📝 CHANGELOG.md          ← Veja mudanças
@@ -82,7 +72,7 @@ auto-oxbci/
 
 ## 📦 MÓDULOS PRINCIPAIS
 
-### ⭐ NOVOS (v4.0)
+### ⭐ MÓDULOS PRINCIPAIS
 
 #### `utils/todoist_board_extractor.py`
 ```python
@@ -360,7 +350,7 @@ login_todoist_and_extract()   # Login em nova aba
 ```
 README.md                    - Índice principal
 QUICKSTART.md               - Início rápido
-README_V4.md                - Guia completo
+README_USER_GUIDE.md        - Guia completo
 TECHNICAL_DOCS.md           - Docs técnicas
 SUMMARY.md                  - Resumo executivo
 CHANGELOG.md                - Histórico
@@ -397,7 +387,7 @@ install.sh
 
 ---
 
-## 🏆 RESUMO v4.0
+## 🏆 RESUMO DO PROJETO
 
 ### ✅ Implementado
 - 3 novos módulos principais
@@ -419,4 +409,4 @@ install.sh
 
 ---
 
-**v4.0** | **Setembro 2025** | **Ciclo Completo Implementado** 🎉
+**Versão 1.0** | **Outubro 2025** | **Sistema Completo Funcional** 🎉

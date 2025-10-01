@@ -26,7 +26,6 @@ TODOIST_CONFIG = {
 GENERAL_CONFIG = {
     'TIMEOUT': 20,
     'HEADLESS': False,
-    'SCREENSHOTS_DIR': 'screenshots',
     'DELAYS': {
         'NATURAL_TYPING': 0.1,
         'BETWEEN_ACTIONS': 1,

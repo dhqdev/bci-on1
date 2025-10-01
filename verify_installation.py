@@ -171,7 +171,7 @@ def verify_documentation():
     docs = {
         'README.md': 'README principal',
         'QUICKSTART.md': 'Guia rápido',
-        'README_V4.md': 'Guia completo v4.0',
+        'README_USER_GUIDE.md': 'Guia completo do usuário',
         'TECHNICAL_DOCS.md': 'Documentação técnica',
         'SUMMARY.md': 'Resumo executivo'
     }
@@ -188,10 +188,10 @@ def verify_documentation():
 
 def main():
     """Função principal"""
-    print_header("VERIFICAÇÃO DE INSTALAÇÃO - v4.0")
+    print_header("VERIFICAÇÃO DE INSTALAÇÃO - v1.0")
     
     print("\n📋 Este script verifica se tudo está instalado corretamente")
-    print("   para o Sistema de Automação Servopa + Todoist v4.0")
+    print("   para o Sistema de Automação Servopa + Todoist")
     
     results = {}
     
@@ -222,7 +222,7 @@ def main():
         print("   3. Clique em 'Iniciar' na aba Automação")
         print("\n📚 Documentação:")
         print("   • QUICKSTART.md - Guia rápido")
-        print("   • README_V4.md - Guia completo")
+        print("   • README_USER_GUIDE.md - Guia completo")
         return 0
     else:
         print("❌ Alguns problemas encontrados!")

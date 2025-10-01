@@ -136,7 +136,7 @@
 ### 📚 Documentação
 
 #### Novos Documentos
-1. **`README_V4.md`** (350+ linhas)
+1. **`README_USER_GUIDE.md`** (350+ linhas)
    - Guia completo do usuário
    - Fluxo detalhado de automação
    - Estrutura do board do Todoist
@@ -298,7 +298,6 @@ O sistema agora gera estatísticas completas:
 - ✅ Testes modulares possíveis
 - ✅ Logs detalhados para debug
 - ✅ Navegador mantido aberto
-- ✅ Screenshots possíveis em cada etapa
 
 ### 📈 Métricas
 
@@ -365,7 +364,7 @@ utils/todoist_board_extractor.py    - 221 linhas
 automation/servopa_lances.py        - 264 linhas
 automation/cycle_orchestrator.py    - 262 linhas
 test_cycle_complete.py              - 200 linhas
-README_V4.md                        - 350 linhas
+README_USER_GUIDE.md                - 350 linhas
 TECHNICAL_DOCS.md                   - 600 linhas
 QUICKSTART.md                       - 150 linhas
 SUMMARY.md                          - 300 linhas

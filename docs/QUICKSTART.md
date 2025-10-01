@@ -181,7 +181,7 @@ Antes de clicar "Iniciar", certifique-se:
    - Considere dividir em lotes
 
 3. **Quer automatizar mais?**
-   - Veja README_V4.md para recursos avançados
+   - Veja README_USER_GUIDE.md para recursos avançados
    - TECHNICAL_DOCS.md para desenvolvedores
 
 ---
@@ -189,7 +189,7 @@ Antes de clicar "Iniciar", certifique-se:
 ## 📞 Precisa de Ajuda?
 
 1. **Logs na interface** - Tudo que acontece está lá
-2. **README_V4.md** - Documentação completa
+2. **README_USER_GUIDE.md** - Documentação completa
 3. **TECHNICAL_DOCS.md** - Detalhes técnicos
 4. **test_cycle_complete.py** - Teste passo a passo
 
@@ -216,4 +216,4 @@ python main_gui.py
 
 ---
 
-**v4.0** | **Setembro 2025** | **Status: Produção ✅**
+**v1.0** | **Outubro 2025** | **Status: Produção ✅**

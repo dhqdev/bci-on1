@@ -1,8 +1,8 @@
-# 🤖 Sistema de Automação Servopa + Todoist v4.0 - CICLO COMPLETO
+# 🤖 Sistema de Automação Servopa + Todoist - CICLO COMPLETO
 
 Sistema completo de automação com ciclo inteligente entre Servopa e Todoist para processamento automático de lances de consórcios.
 
-## ✨ O que mudou na v4.0?
+## ✨ Funcionalidades Principais
 
 ### 🔄 **CICLO COMPLETO IMPLEMENTADO**
 Agora o sistema faz o ciclo completo:
@@ -163,7 +163,7 @@ auto-oxbci/
 │
 ├── 🖥️ ui/
 │   ├── automation_gui.py      # Interface antiga (legado)
-│   ├── modern_automation_gui.py # Interface moderna v4.0
+│   ├── modern_automation_gui.py # Interface moderna
 │   └── __init__.py
 │
 ├── ⚙️ utils/
@@ -178,7 +178,7 @@ auto-oxbci/
 └── 📖 README.md               # Esta documentação
 ```
 
-## 🆕 Novos Módulos v4.0
+## 🆕 Módulos do Sistema
 
 ### `utils/todoist_board_extractor.py`
 - ✅ Extrai **TODAS** as colunas (seções) do board

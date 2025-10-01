@@ -1,4 +1,4 @@
-# 📘 Documentação Técnica - Sistema de Automação v4.0
+# 📘 Documentação Técnica - Sistema de Automação
 
 ## Arquitetura do Sistema
 
@@ -536,11 +536,6 @@ print(f"DEBUG: Elemento encontrado = {element}")
 print(f"DEBUG: Texto = {element.text}")
 ```
 
-**Screenshot para debug:**
-```python
-driver.save_screenshot('debug.png')
-```
-
 **Pausar execução:**
 ```python
 input("DEBUG: Pressione ENTER para continuar...")
@@ -548,5 +543,5 @@ input("DEBUG: Pressione ENTER para continuar...")
 
 ---
 
-**Versão:** 4.0  
-**Última atualização:** Setembro 2025
+**Versão:** 1.0  
+**Última atualização:** Outubro 2025

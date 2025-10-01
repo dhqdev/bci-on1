@@ -1,4 +1,4 @@
-# 🎉 SISTEMA DE AUTOMAÇÃO V4.0 - RESUMO EXECUTIVO
+# 🎉 SISTEMA DE AUTOMAÇÃO - RESUMO EXECUTIVO
 
 ## ✅ IMPLEMENTAÇÃO COMPLETA
 
@@ -34,7 +34,7 @@ Sistema de automação completo com **ciclo inteligente** entre Servopa e Todois
 
 ### 📝 Documentação
 
-1. **`README_V4.md`** - Guia completo do usuário
+1. **`README_USER_GUIDE.md`** - Guia completo do usuário
 2. **`TECHNICAL_DOCS.md`** - Documentação técnica detalhada
 3. **`test_cycle_complete.py`** - Script de teste completo
 
@@ -183,7 +183,7 @@ utils/todoist_board_extractor.py       - Extrator do board
 automation/servopa_lances.py           - Automação de lances
 automation/cycle_orchestrator.py       - Orquestrador do ciclo
 test_cycle_complete.py                 - Script de teste
-README_V4.md                           - Guia do usuário
+README_USER_GUIDE.md                   - Guia do usuário
 TECHNICAL_DOCS.md                      - Documentação técnica
 SUMMARY.md                             - Este arquivo
 ```
@@ -218,7 +218,7 @@ auto-oxbci/
 ├── main.py
 ├── test_cycle_complete.py ⭐ NOVO
 ├── README.md (original)
-├── README_V4.md ⭐ NOVO
+├── README_USER_GUIDE.md ⭐ GUIA DO USUÁRIO
 ├── TECHNICAL_DOCS.md ⭐ NOVO
 ├── SUMMARY.md ⭐ NOVO
 └── requirements.txt
@@ -334,7 +334,7 @@ Para 9 tarefas:
 
 ## ✨ CONCLUSÃO
 
-O sistema v4.0 está **100% funcional** e implementa **TODAS** as funcionalidades solicitadas:
+O sistema está **100% funcional** e implementa **TODAS** as funcionalidades solicitadas:
 
 ✅ **Duas abas abertas** durante todo o processo  
 ✅ **Login automático** em ambos os sites  
@@ -356,4 +356,4 @@ O sistema está pronto para uso em produção!
 **Versão:** 4.0  
 **Data:** Setembro 2025  
 **Desenvolvido por:** Sistema de Automação Inteligente  
-**Documentação completa em:** README_V4.md e TECHNICAL_DOCS.md
+**Documentação completa em:** README_USER_GUIDE.md e TECHNICAL_DOCS.md

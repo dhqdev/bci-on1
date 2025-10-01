@@ -1,6 +1,6 @@
-# 🤖 Sistema de Automação Servopa + Todoist v4.0
+# 🤖 Sistema de Automação Servopa + Todoist
 
-![Version](https://img.shields.io/badge/version-4.0-blue)
+![Version](https://img.shields.io/badge/version-1.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11+-green)
 ![License](https://img.shields.io/badge/license-MIT-orange)
 ![Status](https://img.shields.io/badge/status-production-success)
@@ -354,7 +354,7 @@ setup-windows.bat          # Windows (como admin)
 
 ### 👤 Para Usuários
 
-- 📘 **[README_V4.md](docs/README_V4.md)** - Guia completo do usuário
+- 📘 **[README_USER_GUIDE.md](docs/README_USER_GUIDE.md)** - Guia completo do usuário
 - 📋 **[SUMMARY.md](docs/SUMMARY.md)** - Resumo executivo
 
 ### 👨‍💻 Para Desenvolvedores
@@ -408,12 +408,12 @@ python test_cycle_complete.py     # Testar ciclo completo
 
 **⭐ Se este projeto foi útil, deixe uma estrela no GitHub! ⭐**
 
-[🏠 Início](#-sistema-de-automação-servopa--todoist-v40) | [📥 Instalar](#-instalação-rápida) | [💻 Usar](#-como-usar) | [🔄 Atualizar](#-atualização)
+[🏠 Início](#-sistema-de-automação-servopa--todoist) | [📥 Instalar](#-instalação-rápida) | [💻 Usar](#-como-usar) | [🔄 Atualizar](#-atualização)
 
 ---
 
 **Feito com ❤️ por [dhqdev](https://github.com/dhqdev)**
 
-**Versão 4.0** | **Última atualização: Outubro 2025**
+**Versão 1.0** | **Última atualização: Outubro 2025**
 
 </div>
