@@ -34,7 +34,7 @@ def switch_to_window_with_url(driver, url_part, progress_callback=None):
         return False
 
 
-def executar_ciclo_completo(driver, board_data, progress_callback=None, history_callback=None, should_continue=None, resume_from=None):
+def executar_ciclo_completo(driver, board_data, progress_callback=None, history_callback=None, should_continue=None):
     """
     Executa o ciclo completo coluna por coluna, linha por linha
     
@@ -49,7 +49,7 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
           f. Muda para aba do Todoist
           g. Marca checkbox como concluído (individual)
           h. Volta para aba do Servopa
-          i. Registra no histórico (NOVO!)
+          i. Registra no histórico
        3. Ao terminar a coluna: marca TODOS os checkboxes da coluna
        4. Próxima coluna
     
@@ -59,7 +59,6 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
         progress_callback: Função para atualizar progresso na UI
         history_callback: Função para adicionar entrada ao histórico (grupo, cota, nome, valor, status, obs)
         should_continue: Função que retorna True se deve continuar, False se deve parar
-        resume_from: Dict com 'grupo' e 'cota' para continuar de onde parou (None = começa do início)
         
     Returns:
         dict: Estatísticas da execução
@@ -76,15 +75,10 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
         'results': []
     }
     
-    # Controle de continuação
-    found_resume_point = False if resume_from else True  # Se não tem resume_from, já começou
-    
     if progress_callback:
         progress_callback("=" * 60)
         progress_callback(f"🚀 INICIANDO CICLO COMPLETO")
         progress_callback(f"📊 {stats['total_sections']} colunas, {stats['total_tasks']} tarefas")
-        if resume_from:
-            progress_callback(f"🔄 Modo continuação: Pulando até Grupo {resume_from['grupo']} - Cota {resume_from['cota']}")
         progress_callback("=" * 60)
     
     # Percorre cada coluna (seção)
@@ -118,35 +112,6 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
             cota = task['cota']
             nome = task['nome']
             checkbox = task['checkbox_element']
-            
-            # ========== MODO CONTINUAÇÃO: PULA ATÉ ENCONTRAR O PONTO ==========
-            if not found_resume_point:
-                # Verifica se este é o item onde parou
-                if grupo == resume_from['grupo'] and cota == resume_from['cota']:
-                    found_resume_point = True  # Encontrou o ponto!
-                    
-                    # Verifica se deve pular ESTE item ou processá-lo
-                    skip_this = resume_from.get('skip_this_item', True)
-                    
-                    if skip_this:
-                        # Item com erro ou completado: PULA e vai pro próximo
-                        if progress_callback:
-                            progress_callback(f"🔍 Encontrado ponto de parada: Grupo {grupo} - Cota {cota}")
-                            progress_callback(f"⏭️ Pulando este item (já processado ou teve erro)")
-                        stats['skipped'] += 1
-                        continue
-                    else:
-                        # Item foi PARADO: PROCESSA este item novamente
-                        if progress_callback:
-                            progress_callback(f"🔍 Encontrado ponto de parada: Grupo {grupo} - Cota {cota}")
-                            progress_callback(f"🔄 Este item foi PARADO. Tentando processar novamente...")
-                        # NÃO faz continue, deixa processar normalmente
-                else:
-                    # Ainda não chegou no ponto, pula
-                    if progress_callback:
-                        progress_callback(f"⏭️ Pulando: Grupo {grupo} - Cota {cota} (já processado)")
-                    stats['skipped'] += 1
-                    continue
             
             if progress_callback:
                 progress_callback("")

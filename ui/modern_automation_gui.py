@@ -21,8 +21,6 @@ class ModernAutomationGUI:
         self.automation_running = False
         self.credentials_file = 'credentials.json'
         self.driver = None  # Armazena referência do driver
-        self.continue_mode = False  # Flag para modo de continuação
-        self.last_processed = {}  # Último item processado (grupo, cota)
         
         # Variáveis para credenciais
         self.servopa_login_var = tk.StringVar()
@@ -229,9 +227,6 @@ class ModernAutomationGUI:
         tk.Button(button_container, text="🔄 Atualizar", font=('Arial', 9, 'bold'),
                  bg='#007bff', fg='white', command=self.refresh_history, padx=15).pack(side='left', padx=3)
         
-        tk.Button(button_container, text="▶️ Continuar de onde parou", font=('Arial', 9, 'bold'),
-                 bg='#ff9800', fg='white', command=self.continue_from_last, padx=15).pack(side='left', padx=3)
-        
         tk.Button(button_container, text="📥 Exportar Excel", font=('Arial', 9, 'bold'),
                  bg='#28a745', fg='white', command=self.export_to_excel, padx=15).pack(side='left', padx=3)
         
@@ -291,12 +286,16 @@ class ModernAutomationGUI:
             if os.path.exists(self.history_file):
                 with open(self.history_file, 'r', encoding='utf-8') as f:
                     self.history_data = json.load(f)
+                print(f"✅ Histórico carregado: {len(self.history_data)} registros")
             else:
                 self.history_data = []
+                print(f"⚠️ Arquivo de histórico não existe: {self.history_file}")
             
             self.refresh_history()
         except Exception as e:
+            print(f"❌ Erro ao carregar histórico: {e}")
             messagebox.showerror("Erro", f"Erro ao carregar histórico: {e}")
+            self.history_data = []
     
     def save_history(self):
         """Salva histórico no arquivo JSON"""
@@ -327,48 +326,57 @@ class ModernAutomationGUI:
     
     def refresh_history(self):
         """Atualiza a exibição da tabela de histórico"""
-        # Limpa tabela
-        for item in self.history_tree.get_children():
-            self.history_tree.delete(item)
-        
-        # Adiciona dados
-        success_count = 0
-        error_count = 0
-        stopped_count = 0
-        
-        for idx, entry in enumerate(reversed(self.history_data)):  # Mais recentes primeiro
-            hora = entry.get('hora', '')
-            grupo = entry.get('grupo', '')
-            cota = entry.get('cota', '')
-            nome = entry.get('nome', '')
-            valor_lance = entry.get('valor_lance', '')
-            status = entry.get('status', '')
-            observacao = entry.get('observacao', '')
+        try:
+            # Limpa tabela
+            for item in self.history_tree.get_children():
+                self.history_tree.delete(item)
             
-            # Determina cor baseado no status
-            if '⏹️' in status or 'parado' in status.lower():
-                stopped_count += 1
-                tag = 'stopped'  # Laranja para parado
-            elif 'sucesso' in status.lower() or '✅' in status:
-                success_count += 1
-                tag = 'success'  # Verde para sucesso
-            elif 'erro' in status.lower() or '❌' in status or 'falha' in status.lower():
-                error_count += 1
-                tag = 'error'  # Vermelho para erro
-            else:
-                tag = 'odd' if idx % 2 else 'even'
+            # Adiciona dados
+            success_count = 0
+            error_count = 0
+            stopped_count = 0
             
-            self.history_tree.insert('', 'end', values=(hora, grupo, cota, nome, valor_lance, status, observacao),
-                                    tags=(tag,))
-        
-        # Atualiza estatísticas
-        total = len(self.history_data)
-        stats_text = f"Total: {total} | ✅ Sucesso: {success_count}"
-        if stopped_count > 0:
-            stats_text += f" | ⏹️ Parado: {stopped_count}"
-        stats_text += f" | ❌ Erro: {error_count}"
-        
-        self.history_stats_label.config(text=stats_text)
+            print(f"📊 Atualizando histórico com {len(self.history_data)} registros...")
+            
+            for idx, entry in enumerate(reversed(self.history_data)):  # Mais recentes primeiro
+                hora = entry.get('hora', '')
+                grupo = entry.get('grupo', '')
+                cota = entry.get('cota', '')
+                nome = entry.get('nome', '')
+                valor_lance = entry.get('valor_lance', '')
+                status = entry.get('status', '')
+                observacao = entry.get('observacao', '')
+                
+                # Determina cor baseado no status
+                if '⏹️' in status or 'parado' in status.lower():
+                    stopped_count += 1
+                    tag = 'stopped'  # Laranja para parado
+                elif 'sucesso' in status.lower() or '✅' in status:
+                    success_count += 1
+                    tag = 'success'  # Verde para sucesso
+                elif 'erro' in status.lower() or '❌' in status or 'falha' in status.lower():
+                    error_count += 1
+                    tag = 'error'  # Vermelho para erro
+                else:
+                    tag = 'odd' if idx % 2 else 'even'
+                
+                self.history_tree.insert('', 'end', values=(hora, grupo, cota, nome, valor_lance, status, observacao),
+                                        tags=(tag,))
+            
+            # Atualiza estatísticas
+            total = len(self.history_data)
+            stats_text = f"Total: {total} | ✅ Sucesso: {success_count}"
+            if stopped_count > 0:
+                stats_text += f" | ⏹️ Parado: {stopped_count}"
+            stats_text += f" | ❌ Erro: {error_count}"
+            
+            self.history_stats_label.config(text=stats_text)
+            print(f"✅ Histórico atualizado: {stats_text}")
+            
+        except Exception as e:
+            print(f"❌ Erro ao atualizar histórico: {e}")
+            import traceback
+            traceback.print_exc()
     
     def sort_history_column(self, col):
         """Ordena tabela por coluna"""
@@ -412,51 +420,6 @@ class ModernAutomationGUI:
             self.save_history()
             self.refresh_history()
             messagebox.showinfo("Sucesso", "Histórico limpo com sucesso!")
-    
-    def continue_from_last(self):
-        """Continua automação de onde parou (baseado no último registro do histórico)"""
-        if self.automation_running:
-            messagebox.showwarning("Aviso", "A automação já está em execução!")
-            return
-        
-        if not self.history_data:
-            messagebox.showinfo("Aviso", "Nenhum histórico encontrado.\n\nInicie a automação normalmente pela primeira vez.")
-            return
-        
-        # Pega último registro processado
-        last_entry = self.history_data[-1]
-        last_grupo = last_entry.get('grupo')
-        last_cota = last_entry.get('cota')
-        last_status = last_entry.get('status', '')
-        
-        # Verifica se foi PARADO ou teve ERRO
-        is_stopped = '⏹️' in last_status or 'parado' in last_status.lower()
-        
-        msg = f"🔄 Continuar de onde parou?\n\n"
-        msg += f"Último registro processado:\n"
-        msg += f"  • Grupo: {last_grupo}\n"
-        msg += f"  • Cota: {last_cota}\n"
-        msg += f"  • Nome: {last_entry.get('nome')}\n"
-        msg += f"  • Status: {last_entry.get('status')}\n\n"
-        
-        if is_stopped:
-            msg += f"⚠️ Este item foi PARADO antes de completar.\n"
-            msg += f"A automação irá tentar processar ESTE MESMO item novamente."
-        else:
-            msg += f"❌ Este item teve um erro ou foi completado.\n"
-            msg += f"A automação irá continuar a partir do PRÓXIMO item."
-        
-        if not messagebox.askyesno("Confirmar Continuação", msg):
-            return
-        
-        # Inicia automação com flag de continuação
-        self.continue_mode = True
-        self.last_processed = {
-            'grupo': last_grupo, 
-            'cota': last_cota,
-            'skip_this_item': not is_stopped  # Se parado, NÃO pula. Se erro, pula.
-        }
-        self.start_automation()
     
     def setup_queue_processor(self):
         """Processa mensagens da queue"""
@@ -701,24 +664,13 @@ class ModernAutomationGUI:
                 self.update_status('cliente', '⏳ Processando')
                 self.update_status('lances', '⏳ Processando')
                 
-                # Prepara dados de continuação se estiver em modo de continuação
-                resume_from = None
-                if self.continue_mode and self.last_processed:
-                    resume_from = self.last_processed
-                    self.progress_callback(f"🔄 MODO CONTINUAÇÃO ATIVADO")
-                    self.progress_callback(f"   Pulando até Grupo {resume_from['grupo']} - Cota {resume_from['cota']}")
-                    self.progress_callback("")
-                    # Reseta flags após uso
-                    self.continue_mode = False
-                
                 # Executa ciclo completo com callback de histórico e função de verificação
                 stats = executar_ciclo_completo(
                     driver, 
                     board_data, 
                     self.progress_callback, 
                     self.add_history_entry,
-                    lambda: self.automation_running,  # Função que verifica se deve continuar
-                    resume_from  # Ponto de continuação (grupo, cota) ou None
+                    lambda: self.automation_running  # Função que verifica se deve continuar
                 )
                 
                 if stats:

@@ -1,12 +1,16 @@
 #!/bin/bash
-# Script de execução rápida
+# Script de execução do sistema
+
+cd "$(dirname "$0")"
+
+echo "🚀 Iniciando Sistema de Automação Servopa + Todoist..."
+echo ""
 
 # Ativar ambiente virtual
-if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
-    source venv/Scripts/activate
-else
-    source venv/bin/activate
-fi
+source venv/bin/activate
 
 # Executar sistema
 python main_gui.py
+
+# Desativar ambiente virtual ao sair
+deactivate
