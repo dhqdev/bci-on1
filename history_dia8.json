@@ -1,0 +1,362 @@
+[
+  {
+    "hora": "10:17:30",
+    "data": "2025-10-01",
+    "grupo": "1550",
+    "cota": "1874",
+    "nome": "Gil Zanobia",
+    "valor_lance": "N/A%",
+    "status": "✅ Sucesso",
+    "observacao": "Lance registrado com sucesso"
+  },
+  {
+    "hora": "10:18:04",
+    "data": "2025-10-01",
+    "grupo": "1550",
+    "cota": "1065",
+    "nome": "Gil Zanobia",
+    "valor_lance": "N/A%",
+    "status": "✅ Sucesso",
+    "observacao": "Lance registrado com sucesso"
+  },
+  {
+    "hora": "10:18:37",
+    "data": "2025-10-01",
+    "grupo": "1550",
+    "cota": "1123",
+    "nome": "Josué",
+    "valor_lance": "N/A%",
+    "status": "✅ Sucesso",
+    "observacao": "Lance registrado com sucesso"
+  },
+  {
+    "hora": "10:19:18",
+    "data": "2025-10-01",
+    "grupo": "1552",
+    "cota": "1780",
+    "nome": "Luiz Carnelos",
+    "valor_lance": "N/A%",
+    "status": "✅ Sucesso",
+    "observacao": "Lance registrado com sucesso"
+  },
+  {
+    "hora": "10:19:51",
+    "data": "2025-10-01",
+    "grupo": "1552",
+    "cota": "1660",
+    "nome": "Luiz Carnelos",
+    "valor_lance": "N/A%",
+    "status": "✅ Sucesso",
+    "observacao": "Lance registrado com sucesso"
+  },
+  {
+    "hora": "10:19:57",
+    "data": "2025-10-01",
+    "grupo": "1552",
+    "cota": "1515",
+    "nome": "Luiz Carnelos",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Falha no processamento do lance: Desconhecido"
+  },
+  {
+    "hora": "10:19:57",
+    "data": "2025-10-01",
+    "grupo": "1552",
+    "cota": "1506",
+    "nome": "Manoel",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:57",
+    "data": "2025-10-01",
+    "grupo": "1552",
+    "cota": "1437",
+    "nome": "Ox Cash",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:57",
+    "data": "2025-10-01",
+    "grupo": "1552",
+    "cota": "1389",
+    "nome": "Luiz Carnelos",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:57",
+    "data": "2025-10-01",
+    "grupo": "1552",
+    "cota": "1288",
+    "nome": "Luiz Carnelos",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:57",
+    "data": "2025-10-01",
+    "grupo": "1552",
+    "cota": "1132",
+    "nome": "Luiz Carnelos",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:57",
+    "data": "2025-10-01",
+    "grupo": "1552",
+    "cota": "1802",
+    "nome": "Ox Cash",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:58",
+    "data": "2025-10-01",
+    "grupo": "1554",
+    "cota": "1838",
+    "nome": "André Santos",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:58",
+    "data": "2025-10-01",
+    "grupo": "1554",
+    "cota": "2406",
+    "nome": "Julio Vancini",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:58",
+    "data": "2025-10-01",
+    "grupo": "1554",
+    "cota": "4242",
+    "nome": "Ana Paula Alves",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:58",
+    "data": "2025-10-01",
+    "grupo": "1554",
+    "cota": "972",
+    "nome": "André Santos",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:58",
+    "data": "2025-10-01",
+    "grupo": "1554",
+    "cota": "2222",
+    "nome": "Edicleber",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:58",
+    "data": "2025-10-01",
+    "grupo": "1554",
+    "cota": "5387",
+    "nome": "Matheus Morandi",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:58",
+    "data": "2025-10-01",
+    "grupo": "1554",
+    "cota": "1212",
+    "nome": "Galvão",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:58",
+    "data": "2025-10-01",
+    "grupo": "1554",
+    "cota": "4256",
+    "nome": "João Carlos",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5667",
+    "nome": "Sagah Crescer",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5607",
+    "nome": "Sagah Crescer",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5517",
+    "nome": "Sagah Crescer",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5473",
+    "nome": "Sagah Crescer",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5432",
+    "nome": "Sagah Crescee",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5375",
+    "nome": "Sagah Crescer",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5333",
+    "nome": "Sagah Crescer",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5277",
+    "nome": "Sagah Crescer",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5225",
+    "nome": "Sagah Crescer",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5214",
+    "nome": "Sagah Crescer",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:19:59",
+    "data": "2025-10-01",
+    "grupo": "1556",
+    "cota": "5702",
+    "nome": "Sagah Crescer",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:20:00",
+    "data": "2025-10-01",
+    "grupo": "1557",
+    "cota": "3557",
+    "nome": "Marcos Roberto",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:20:00",
+    "data": "2025-10-01",
+    "grupo": "1557",
+    "cota": "2126",
+    "nome": "Arildo Silva",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:20:00",
+    "data": "2025-10-01",
+    "grupo": "1557",
+    "cota": "1504",
+    "nome": "Tiago Carvalho",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:20:00",
+    "data": "2025-10-01",
+    "grupo": "1557",
+    "cota": "1501",
+    "nome": "Nicolas",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  },
+  {
+    "hora": "10:20:00",
+    "data": "2025-10-01",
+    "grupo": "1557",
+    "cota": "806",
+    "nome": "Guilherme Biucci",
+    "valor_lance": "N/A",
+    "status": "❌ Erro",
+    "observacao": "Não foi possível mudar para aba do Servopa"
+  }
+]

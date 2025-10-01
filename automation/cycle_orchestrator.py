@@ -34,7 +34,7 @@ def switch_to_window_with_url(driver, url_part, progress_callback=None):
         return False
 
 
-def executar_ciclo_completo(driver, board_data, progress_callback=None):
+def executar_ciclo_completo(driver, board_data, progress_callback=None, history_callback=None):
     """
     Executa o ciclo completo coluna por coluna, linha por linha
     
@@ -49,6 +49,7 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None):
           f. Muda para aba do Todoist
           g. Marca checkbox como concluído (individual)
           h. Volta para aba do Servopa
+          i. Registra no histórico (NOVO!)
        3. Ao terminar a coluna: marca TODOS os checkboxes da coluna
        4. Próxima coluna
     
@@ -56,6 +57,7 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None):
         driver: Instância do WebDriver com ambas as abas abertas
         board_data: Dados extraídos do board (retorno de extract_complete_board)
         progress_callback: Função para atualizar progresso na UI
+        history_callback: Função para adicionar entrada ao histórico (grupo, cota, nome, valor, status, obs)
         
     Returns:
         dict: Estatísticas da execução
@@ -159,6 +161,18 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None):
                     
                     result['success'] = True
                     stats['completed'] += 1
+                    
+                    # ========== REGISTRA NO HISTÓRICO (SUCESSO) ==========
+                    if history_callback:
+                        valor_lance = lance_result.get('valor_lance', 'N/A')
+                        if lance_result.get('already_exists', False):
+                            observacao = "Lance já existia (protocolo anterior detectado)"
+                            status = "✅ Sucesso (já existia)"
+                        else:
+                            observacao = "Lance registrado com sucesso"
+                            status = "✅ Sucesso"
+                        
+                        history_callback(grupo, cota, nome, f"{valor_lance}%", status, observacao)
                 else:
                     raise Exception("Falha ao marcar checkbox no Todoist")
                 
@@ -176,6 +190,10 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None):
             except Exception as e:
                 stats['failed'] += 1
                 result['error'] = str(e)
+                
+                # ========== REGISTRA NO HISTÓRICO (ERRO) ==========
+                if history_callback:
+                    history_callback(grupo, cota, nome, "N/A", "❌ Erro", str(e)[:200])
                 
                 if progress_callback:
                     progress_callback(f"❌ Erro na tarefa {task_index}: {e}")

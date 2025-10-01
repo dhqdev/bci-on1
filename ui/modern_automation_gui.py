@@ -50,6 +50,7 @@ class ModernAutomationGUI:
         
         self.create_automation_tab()
         self.create_credentials_tab()
+        self.create_history_tab()
         
     def create_automation_tab(self):
         """Aba de automação"""
@@ -192,6 +193,211 @@ class ModernAutomationGUI:
             self.root.after(2000, lambda: self.creds_status.config(text=""))
         except Exception as e:
             self.creds_status.config(text=f"❌ Erro: {str(e)[:30]}", fg='red')
+    
+    def create_history_tab(self):
+        """Aba de histórico - Já feito do dia 8"""
+        tab_frame = tk.Frame(self.notebook)
+        self.notebook.add(tab_frame, text='📊 Já feito do dia 8')
+        
+        # Arquivo para salvar histórico
+        self.history_file = 'history_dia8.json'
+        self.history_data = []
+        
+        # Header com informações
+        header_frame = tk.Frame(tab_frame, bg='#e9ecef', height=60)
+        header_frame.pack(fill='x', padx=10, pady=5)
+        header_frame.pack_propagate(False)
+        
+        tk.Label(header_frame, text="📊 Registro de Lances Processados",
+                font=('Arial', 14, 'bold'), bg='#e9ecef').pack(pady=5)
+        
+        info_container = tk.Frame(header_frame, bg='#e9ecef')
+        info_container.pack(fill='x', padx=10)
+        
+        self.history_stats_label = tk.Label(info_container,
+                                            text="Total: 0 | ✅ Sucesso: 0 | ❌ Erro: 0",
+                                            font=('Arial', 10), bg='#e9ecef')
+        self.history_stats_label.pack(side='left')
+        
+        # Botões de ação
+        button_container = tk.Frame(tab_frame)
+        button_container.pack(fill='x', padx=10, pady=5)
+        
+        tk.Button(button_container, text="🔄 Atualizar", font=('Arial', 9, 'bold'),
+                 bg='#007bff', fg='white', command=self.refresh_history, padx=15).pack(side='left', padx=3)
+        
+        tk.Button(button_container, text="📥 Exportar Excel", font=('Arial', 9, 'bold'),
+                 bg='#28a745', fg='white', command=self.export_to_excel, padx=15).pack(side='left', padx=3)
+        
+        tk.Button(button_container, text="🗑️ Limpar Histórico", font=('Arial', 9, 'bold'),
+                 bg='#dc3545', fg='white', command=self.clear_history, padx=15).pack(side='left', padx=3)
+        
+        # Frame para a tabela com scrollbars
+        table_frame = tk.Frame(tab_frame)
+        table_frame.pack(fill='both', expand=True, padx=10, pady=5)
+        
+        # Scrollbars
+        vsb = ttk.Scrollbar(table_frame, orient="vertical")
+        vsb.pack(side='right', fill='y')
+        
+        hsb = ttk.Scrollbar(table_frame, orient="horizontal")
+        hsb.pack(side='bottom', fill='x')
+        
+        # Treeview (Tabela)
+        columns = ('hora', 'grupo', 'cota', 'nome', 'valor_lance', 'status', 'observacao')
+        self.history_tree = ttk.Treeview(table_frame, columns=columns, show='headings',
+                                        yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        
+        # Configura scrollbars
+        vsb.config(command=self.history_tree.yview)
+        hsb.config(command=self.history_tree.xview)
+        
+        # Define cabeçalhos e larguras
+        headers = {
+            'hora': ('Hora', 80),
+            'grupo': ('Grupo', 80),
+            'cota': ('Cota', 80),
+            'nome': ('Nome Cliente', 200),
+            'valor_lance': ('Valor Lance', 100),
+            'status': ('Status', 100),
+            'observacao': ('Observação', 250)
+        }
+        
+        for col, (header, width) in headers.items():
+            self.history_tree.heading(col, text=header, command=lambda c=col: self.sort_history_column(c))
+            self.history_tree.column(col, width=width, anchor='center' if col != 'nome' and col != 'observacao' else 'w')
+        
+        self.history_tree.pack(fill='both', expand=True)
+        
+        # Estilo zebrado
+        self.history_tree.tag_configure('success', background='#d4edda')
+        self.history_tree.tag_configure('error', background='#f8d7da')
+        self.history_tree.tag_configure('odd', background='#f8f9fa')
+        self.history_tree.tag_configure('even', background='white')
+        
+        # Carrega histórico existente
+        self.load_history()
+    
+    def load_history(self):
+        """Carrega histórico do arquivo JSON"""
+        try:
+            if os.path.exists(self.history_file):
+                with open(self.history_file, 'r', encoding='utf-8') as f:
+                    self.history_data = json.load(f)
+            else:
+                self.history_data = []
+            
+            self.refresh_history()
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao carregar histórico: {e}")
+    
+    def save_history(self):
+        """Salva histórico no arquivo JSON"""
+        try:
+            with open(self.history_file, 'w', encoding='utf-8') as f:
+                json.dump(self.history_data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Erro ao salvar histórico: {e}")
+    
+    def add_history_entry(self, grupo, cota, nome, valor_lance, status, observacao=""):
+        """Adiciona entrada ao histórico"""
+        entry = {
+            'hora': datetime.now().strftime('%H:%M:%S'),
+            'data': datetime.now().strftime('%Y-%m-%d'),
+            'grupo': str(grupo),
+            'cota': str(cota),
+            'nome': nome,
+            'valor_lance': valor_lance,
+            'status': status,
+            'observacao': observacao
+        }
+        
+        self.history_data.append(entry)
+        self.save_history()
+        
+        # Atualiza a tabela na interface (thread-safe)
+        self.root.after(0, self.refresh_history)
+    
+    def refresh_history(self):
+        """Atualiza a exibição da tabela de histórico"""
+        # Limpa tabela
+        for item in self.history_tree.get_children():
+            self.history_tree.delete(item)
+        
+        # Adiciona dados
+        success_count = 0
+        error_count = 0
+        
+        for idx, entry in enumerate(reversed(self.history_data)):  # Mais recentes primeiro
+            hora = entry.get('hora', '')
+            grupo = entry.get('grupo', '')
+            cota = entry.get('cota', '')
+            nome = entry.get('nome', '')
+            valor_lance = entry.get('valor_lance', '')
+            status = entry.get('status', '')
+            observacao = entry.get('observacao', '')
+            
+            # Conta estatísticas
+            if 'sucesso' in status.lower() or '✅' in status:
+                success_count += 1
+                tag = 'success'
+            elif 'erro' in status.lower() or '❌' in status or 'falha' in status.lower():
+                error_count += 1
+                tag = 'error'
+            else:
+                tag = 'odd' if idx % 2 else 'even'
+            
+            self.history_tree.insert('', 'end', values=(hora, grupo, cota, nome, valor_lance, status, observacao),
+                                    tags=(tag,))
+        
+        # Atualiza estatísticas
+        total = len(self.history_data)
+        self.history_stats_label.config(
+            text=f"Total: {total} | ✅ Sucesso: {success_count} | ❌ Erro: {error_count}"
+        )
+    
+    def sort_history_column(self, col):
+        """Ordena tabela por coluna"""
+        items = [(self.history_tree.set(item, col), item) for item in self.history_tree.get_children('')]
+        items.sort()
+        
+        for index, (val, item) in enumerate(items):
+            self.history_tree.move(item, '', index)
+    
+    def export_to_excel(self):
+        """Exporta histórico para Excel/CSV"""
+        try:
+            import csv
+            from tkinter import filedialog
+            
+            if not self.history_data:
+                messagebox.showwarning("Aviso", "Não há dados para exportar!")
+                return
+            
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+                initialfile=f"historico_dia8_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            )
+            
+            if filename:
+                with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
+                    writer = csv.DictWriter(f, fieldnames=['data', 'hora', 'grupo', 'cota', 'nome', 
+                                                           'valor_lance', 'status', 'observacao'])
+                    writer.writeheader()
+                    writer.writerows(self.history_data)
+                
+                messagebox.showinfo("Sucesso", f"Dados exportados para:\n{filename}")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao exportar: {e}")
+    
+    def clear_history(self):
+        """Limpa todo o histórico"""
+        if messagebox.askyesno("Confirmar", "Deseja realmente limpar TODO o histórico?\n\nEsta ação não pode ser desfeita!"):
+            self.history_data = []
+            self.save_history()
+            self.refresh_history()
+            messagebox.showinfo("Sucesso", "Histórico limpo com sucesso!")
     
     def setup_queue_processor(self):
         """Processa mensagens da queue"""
@@ -423,8 +629,8 @@ class ModernAutomationGUI:
                 self.update_status('cliente', '⏳ Processando')
                 self.update_status('lances', '⏳ Processando')
                 
-                # Executa ciclo completo
-                stats = executar_ciclo_completo(driver, board_data, self.progress_callback)
+                # Executa ciclo completo com callback de histórico
+                stats = executar_ciclo_completo(driver, board_data, self.progress_callback, self.add_history_entry)
                 
                 if stats:
                     self.update_status('cliente', '✅ OK')

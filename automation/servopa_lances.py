@@ -230,7 +230,7 @@ def executar_lance(driver, progress_callback=None):
         progress_callback: Função para atualizar progresso na UI
         
     Returns:
-        dict: {'success': bool, 'already_exists': bool, 'message': str}
+        dict: {'success': bool, 'already_exists': bool, 'message': str, 'valor_lance': str}
     """
     try:
         wait = WebDriverWait(driver, TIMEOUT)
@@ -322,7 +322,8 @@ def executar_lance(driver, progress_callback=None):
                         return {
                             'success': True,
                             'already_exists': True,
-                            'message': 'Lance já foi registrado anteriormente'
+                            'message': 'Lance já foi registrado anteriormente',
+                            'valor_lance': valor_lanfix
                         }
             
             # Se não encontrou popup, lance foi registrado com sucesso agora
@@ -333,7 +334,8 @@ def executar_lance(driver, progress_callback=None):
                 return {
                     'success': True,
                     'already_exists': False,
-                    'message': 'Lance registrado com sucesso'
+                    'message': 'Lance registrado com sucesso',
+                    'valor_lance': valor_lanfix
                 }
                 
         except Exception as popup_error:
@@ -344,7 +346,8 @@ def executar_lance(driver, progress_callback=None):
             return {
                 'success': True,
                 'already_exists': False,
-                'message': 'Lance registrado'
+                'message': 'Lance registrado',
+                'valor_lance': valor_lanfix
             }
         
     except Exception as e:
@@ -353,7 +356,8 @@ def executar_lance(driver, progress_callback=None):
         return {
             'success': False,
             'already_exists': False,
-            'message': f'Erro: {e}'
+            'message': f'Erro: {e}',
+            'valor_lance': 'N/A'
         }
 
 
