@@ -150,6 +150,11 @@ credentials.json
 *.secret
 *.key
 
+# History and local data files
+history_dia8.json
+history*.json
+*.history
+
 # OS files
 .DS_Store
 Thumbs.db

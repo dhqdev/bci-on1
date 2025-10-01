@@ -20,6 +20,9 @@ class ModernAutomationGUI:
         # Estado da aplicação
         self.automation_running = False
         self.credentials_file = 'credentials.json'
+        self.driver = None  # Armazena referência do driver
+        self.continue_mode = False  # Flag para modo de continuação
+        self.last_processed = {}  # Último item processado (grupo, cota)
         
         # Variáveis para credenciais
         self.servopa_login_var = tk.StringVar()
@@ -226,6 +229,9 @@ class ModernAutomationGUI:
         tk.Button(button_container, text="🔄 Atualizar", font=('Arial', 9, 'bold'),
                  bg='#007bff', fg='white', command=self.refresh_history, padx=15).pack(side='left', padx=3)
         
+        tk.Button(button_container, text="▶️ Continuar de onde parou", font=('Arial', 9, 'bold'),
+                 bg='#ff9800', fg='white', command=self.continue_from_last, padx=15).pack(side='left', padx=3)
+        
         tk.Button(button_container, text="📥 Exportar Excel", font=('Arial', 9, 'bold'),
                  bg='#28a745', fg='white', command=self.export_to_excel, padx=15).pack(side='left', padx=3)
         
@@ -269,9 +275,10 @@ class ModernAutomationGUI:
         
         self.history_tree.pack(fill='both', expand=True)
         
-        # Estilo zebrado
-        self.history_tree.tag_configure('success', background='#d4edda')
-        self.history_tree.tag_configure('error', background='#f8d7da')
+        # Estilo zebrado e por status
+        self.history_tree.tag_configure('success', background='#d4edda')  # Verde claro para sucesso
+        self.history_tree.tag_configure('error', background='#f8d7da')    # Vermelho claro para erro
+        self.history_tree.tag_configure('stopped', background='#fff3cd')  # Laranja claro para parado
         self.history_tree.tag_configure('odd', background='#f8f9fa')
         self.history_tree.tag_configure('even', background='white')
         
@@ -327,6 +334,7 @@ class ModernAutomationGUI:
         # Adiciona dados
         success_count = 0
         error_count = 0
+        stopped_count = 0
         
         for idx, entry in enumerate(reversed(self.history_data)):  # Mais recentes primeiro
             hora = entry.get('hora', '')
@@ -337,13 +345,16 @@ class ModernAutomationGUI:
             status = entry.get('status', '')
             observacao = entry.get('observacao', '')
             
-            # Conta estatísticas
-            if 'sucesso' in status.lower() or '✅' in status:
+            # Determina cor baseado no status
+            if '⏹️' in status or 'parado' in status.lower():
+                stopped_count += 1
+                tag = 'stopped'  # Laranja para parado
+            elif 'sucesso' in status.lower() or '✅' in status:
                 success_count += 1
-                tag = 'success'
+                tag = 'success'  # Verde para sucesso
             elif 'erro' in status.lower() or '❌' in status or 'falha' in status.lower():
                 error_count += 1
-                tag = 'error'
+                tag = 'error'  # Vermelho para erro
             else:
                 tag = 'odd' if idx % 2 else 'even'
             
@@ -352,9 +363,12 @@ class ModernAutomationGUI:
         
         # Atualiza estatísticas
         total = len(self.history_data)
-        self.history_stats_label.config(
-            text=f"Total: {total} | ✅ Sucesso: {success_count} | ❌ Erro: {error_count}"
-        )
+        stats_text = f"Total: {total} | ✅ Sucesso: {success_count}"
+        if stopped_count > 0:
+            stats_text += f" | ⏹️ Parado: {stopped_count}"
+        stats_text += f" | ❌ Erro: {error_count}"
+        
+        self.history_stats_label.config(text=stats_text)
     
     def sort_history_column(self, col):
         """Ordena tabela por coluna"""
@@ -398,6 +412,51 @@ class ModernAutomationGUI:
             self.save_history()
             self.refresh_history()
             messagebox.showinfo("Sucesso", "Histórico limpo com sucesso!")
+    
+    def continue_from_last(self):
+        """Continua automação de onde parou (baseado no último registro do histórico)"""
+        if self.automation_running:
+            messagebox.showwarning("Aviso", "A automação já está em execução!")
+            return
+        
+        if not self.history_data:
+            messagebox.showinfo("Aviso", "Nenhum histórico encontrado.\n\nInicie a automação normalmente pela primeira vez.")
+            return
+        
+        # Pega último registro processado
+        last_entry = self.history_data[-1]
+        last_grupo = last_entry.get('grupo')
+        last_cota = last_entry.get('cota')
+        last_status = last_entry.get('status', '')
+        
+        # Verifica se foi PARADO ou teve ERRO
+        is_stopped = '⏹️' in last_status or 'parado' in last_status.lower()
+        
+        msg = f"🔄 Continuar de onde parou?\n\n"
+        msg += f"Último registro processado:\n"
+        msg += f"  • Grupo: {last_grupo}\n"
+        msg += f"  • Cota: {last_cota}\n"
+        msg += f"  • Nome: {last_entry.get('nome')}\n"
+        msg += f"  • Status: {last_entry.get('status')}\n\n"
+        
+        if is_stopped:
+            msg += f"⚠️ Este item foi PARADO antes de completar.\n"
+            msg += f"A automação irá tentar processar ESTE MESMO item novamente."
+        else:
+            msg += f"❌ Este item teve um erro ou foi completado.\n"
+            msg += f"A automação irá continuar a partir do PRÓXIMO item."
+        
+        if not messagebox.askyesno("Confirmar Continuação", msg):
+            return
+        
+        # Inicia automação com flag de continuação
+        self.continue_mode = True
+        self.last_processed = {
+            'grupo': last_grupo, 
+            'cota': last_cota,
+            'skip_this_item': not is_stopped  # Se parado, NÃO pula. Se erro, pula.
+        }
+        self.start_automation()
     
     def setup_queue_processor(self):
         """Processa mensagens da queue"""
@@ -455,12 +514,24 @@ class ModernAutomationGUI:
         self.automation_thread.start()
         
     def stop_automation(self):
-        """Para automação"""
+        """Para automação e fecha navegador"""
         self.automation_running = False
         self.start_button.config(state='normal')
         self.stop_button.config(state='disabled')
         self.general_status.config(text="⏹️ Parando...", fg='red')
         self.add_log_message("⏹️ Solicitação de parada recebida")
+        
+        # Fecha o navegador se existir
+        if self.driver:
+            try:
+                self.add_log_message("🔒 Fechando navegador...")
+                self.driver.quit()
+                self.driver = None
+                self.add_log_message("✅ Navegador fechado com sucesso")
+            except Exception as e:
+                self.add_log_message(f"⚠️ Erro ao fechar navegador: {e}")
+        
+        self.general_status.config(text="⏹️ Parado", fg='gray')
         
     def run_automation(self):
         """Executa automação completa com ciclo entre sites"""
@@ -508,6 +579,7 @@ class ModernAutomationGUI:
                 return
             
             driver = create_driver()
+            self.driver = driver  # Armazena referência global
             
             try:
                 # ========== ETAPA 1: LOGIN SERVOPA ==========
@@ -629,8 +701,25 @@ class ModernAutomationGUI:
                 self.update_status('cliente', '⏳ Processando')
                 self.update_status('lances', '⏳ Processando')
                 
-                # Executa ciclo completo com callback de histórico
-                stats = executar_ciclo_completo(driver, board_data, self.progress_callback, self.add_history_entry)
+                # Prepara dados de continuação se estiver em modo de continuação
+                resume_from = None
+                if self.continue_mode and self.last_processed:
+                    resume_from = self.last_processed
+                    self.progress_callback(f"🔄 MODO CONTINUAÇÃO ATIVADO")
+                    self.progress_callback(f"   Pulando até Grupo {resume_from['grupo']} - Cota {resume_from['cota']}")
+                    self.progress_callback("")
+                    # Reseta flags após uso
+                    self.continue_mode = False
+                
+                # Executa ciclo completo com callback de histórico e função de verificação
+                stats = executar_ciclo_completo(
+                    driver, 
+                    board_data, 
+                    self.progress_callback, 
+                    self.add_history_entry,
+                    lambda: self.automation_running,  # Função que verifica se deve continuar
+                    resume_from  # Ponto de continuação (grupo, cota) ou None
+                )
                 
                 if stats:
                     self.update_status('cliente', '✅ OK')
@@ -652,21 +741,26 @@ class ModernAutomationGUI:
                     self.progress_callback("   (Feche manualmente quando terminar)")
                 else:
                     self.progress_callback("⏹️ Automação interrompida")
-                    if driver:
+                    if self.driver:
                         try:
-                            driver.quit()
-                        except:
-                            pass
+                            self.progress_callback("🔒 Fechando navegador...")
+                            self.driver.quit()
+                            self.driver = None
+                            self.progress_callback("✅ Navegador fechado")
+                        except Exception as e:
+                            self.progress_callback(f"⚠️ Aviso ao fechar navegador: {e}")
                 
         except Exception as e:
             self.progress_callback(f"❌ Erro crítico: {e}")
             self.general_status.config(text="❌ Erro", fg='red')
-            if driver:
+            if self.driver:
                 try:
-                    # Mantém aberto para debug
-                    self.progress_callback("🔒 Navegador mantido aberto para análise do erro")
-                except:
-                    pass
+                    self.progress_callback("🔒 Fechando navegador devido ao erro...")
+                    self.driver.quit()
+                    self.driver = None
+                    self.progress_callback("✅ Navegador fechado")
+                except Exception as cleanup_error:
+                    self.progress_callback(f"⚠️ Aviso ao fechar navegador: {cleanup_error}")
         finally:
             self.automation_running = False
             self.start_button.config(state='normal')
