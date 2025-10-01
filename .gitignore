@@ -166,3 +166,7 @@ Desktop.ini
 *.temp
 *.swp
 *.swo
+
+# Backup directories from update script
+.backup_*/
+.last_backup
