@@ -215,13 +215,45 @@ setup_repository() {
     PROJECT_DIR="$HOME/auto-oxbci"
     
     if [ -d "$PROJECT_DIR" ]; then
-        print_warning "Diretório já existe. Atualizando..."
+        print_warning "Diretório já existe!"
         cd "$PROJECT_DIR"
-        git pull origin main
+        
+        # Verificar se é um repositório git válido
+        if [ -d ".git" ]; then
+            print_info "Verificando atualizações..."
+            
+            # Fazer stash de mudanças locais se houver
+            if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+                print_warning "Detectadas mudanças locais. Salvando temporariamente..."
+                git stash push -m "Setup: backup automático $(date +%Y%m%d_%H%M%S)" 2>/dev/null || true
+            fi
+            
+            # Tentar atualizar
+            if git pull origin main 2>/dev/null; then
+                print_success "Repositório atualizado!"
+                
+                # Restaurar mudanças se houve stash
+                if git stash list | grep -q "Setup: backup automático"; then
+                    print_info "Restaurando mudanças locais..."
+                    git stash pop 2>/dev/null || print_warning "Algumas mudanças não puderam ser restauradas automaticamente"
+                fi
+            else
+                print_warning "Não foi possível atualizar automaticamente"
+                print_info "Usando versão local existente"
+            fi
+        else
+            print_warning "Diretório existe mas não é um repositório Git válido"
+            print_info "Usando diretório existente"
+        fi
     else
         print_info "Clonando repositório do GitHub..."
-        git clone "$REPO_URL" "$PROJECT_DIR"
-        cd "$PROJECT_DIR"
+        if git clone "$REPO_URL" "$PROJECT_DIR"; then
+            cd "$PROJECT_DIR"
+            print_success "Repositório clonado!"
+        else
+            print_error "Falha ao clonar repositório!"
+            exit 1
+        fi
     fi
     
     print_success "Repositório configurado em: $PROJECT_DIR"
