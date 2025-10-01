@@ -254,6 +254,23 @@ echo.
 echo [INFO] Sistema pronto para uso! 🚀
 echo.
 
+REM Ativar ambiente virtual automaticamente
+echo ==========================================
+echo [INFO] Ativando ambiente virtual automaticamente...
+echo ==========================================
+echo.
+
+if exist venv\Scripts\activate.bat (
+    call venv\Scripts\activate.bat
+    echo [✓] Ambiente virtual ativado!
+    echo.
+    echo [INFO] Você já está dentro do ambiente virtual Python.
+    echo [INFO] Agora você pode executar diretamente: python main_gui.py
+    echo.
+    echo [INFO] Para sair do ambiente virtual, digite: deactivate
+    echo.
+)
+
 REM Perguntar se quer executar agora
 set /p choice="Deseja executar o sistema agora? (s/n): "
 if /i "%choice%"=="s" (

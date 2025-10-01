@@ -417,6 +417,27 @@ echo ""
 print_success "Sistema instalado e pronto para uso! 🎉"
 echo ""
 
+# Ativar ambiente virtual automaticamente
+echo "=========================================="
+print_status "Ativando ambiente virtual automaticamente..."
+echo "=========================================="
+echo ""
+
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+    print_success "✓ Ambiente virtual ativado!"
+    echo ""
+    print_info "Você já está dentro do ambiente virtual Python."
+    print_info "Agora você pode executar diretamente: python main_gui.py"
+    echo ""
+    print_info "Para sair do ambiente virtual, digite: deactivate"
+    echo ""
+    
+    # Mostrar prompt do ambiente virtual
+    echo "Prompt atual: $(which python)"
+    echo ""
+fi
+
 # Criar script de execução rápida
 cat > run.sh << 'EOF'
 #!/bin/bash

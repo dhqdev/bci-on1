@@ -1,6 +1,25 @@
 # 🤖 Sistema de Automação Servopa + Todoist v4.0 - CICLO COMPLETO
 
-## 🎉 NOVA VERSÃO 4.0 - CICLO COMPLETO IMPLEMENTADO!
+## 🎉 NOVA VERSÃO 4.### 1️⃣ Instalar Dependências
+
+**Windows:**
+```bash
+install.bat
+```
+
+**Linux/Mac:**
+```bash
+bash install.sh
+```
+
+*O ambiente virtual será ativado automaticamente!*
+
+### 2️⃣ Verificar Instalação (Opcional)
+```bash
+python verify_installation.py
+```
+
+### 3️⃣ ConfigurarETO IMPLEMENTADO!
 
 Sistema completo de automação com **ciclo inteligente** entre Servopa e Todoist!
 
@@ -15,9 +34,77 @@ Sistema completo de automação com **ciclo inteligente** entre Servopa e Todois
 
 ---
 
-## 🚀 Início Rápido
+# 🤖 Sistema de Automação Servopa + Todoist v4.0 - CICLO COMPLETO
 
-### 1️⃣ Verificar Instalação
+## 🎉 NOVA VERSÃO 4.0 - CICLO COMPLETO IMPLEMENTADO!
+
+Sistema completo de automação com **ciclo inteligente** entre Servopa e Todoist!
+
+---
+
+## 🚀 Instalação Rápida em Um Comando (Novo!)
+
+### 🐧 **Linux / macOS**
+
+Copie e cole no terminal (instala tudo automaticamente):
+
+```bash
+wget https://raw.githubusercontent.com/dhqdev/auto-oxbci/main/setup-linux.sh && bash setup-linux.sh
+```
+
+**Alternativa com curl:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/dhqdev/auto-oxbci/main/setup-linux.sh | bash
+```
+
+### 🪟 **Windows**
+
+**Opção 1 - PowerShell (Como Administrador):**
+```powershell
+irm https://raw.githubusercontent.com/dhqdev/auto-oxbci/main/setup-windows.bat -OutFile setup.bat; .\setup.bat
+```
+
+**Opção 2 - Download Direto:**
+1. Baixe: [setup-windows.bat](https://raw.githubusercontent.com/dhqdev/auto-oxbci/main/setup-windows.bat)
+2. Clique com botão direito → **"Executar como administrador"**
+
+---
+
+### ✨ O que o instalador faz automaticamente:
+
+✅ Instala Python, Git, Google Chrome  
+✅ Clona o repositório do GitHub  
+✅ Configura ambiente virtual  
+✅ Instala todas as dependências  
+✅ Ativa ambiente virtual automaticamente  
+✅ Cria atalhos de execução  
+✅ Verifica tudo está funcionando  
+
+**📖 Documentação detalhada**: [INSTALL.md](INSTALL.md)
+
+---
+
+## 🎯 Após Instalação
+
+### Linux / macOS
+```bash
+cd ~/auto-oxbci
+./run.sh
+```
+
+### Windows
+```batch
+REM Clique no atalho "Auto OXBCI" na área de trabalho
+REM OU
+cd %USERPROFILE%\auto-oxbci
+run.bat
+```
+
+---
+
+## 📋 Se Já Tem o Projeto Clonado
+
+### 1️⃣ Instalar Dependências
 ```bash
 python verify_installation.py
 ```
