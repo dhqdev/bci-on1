@@ -249,13 +249,25 @@ install_python_dependencies() {
     source venv/bin/activate
     
     # Atualizar pip
+    print_info "Atualizando pip..."
     pip install --upgrade pip -q
     
     # Instalar dependências
     if [ -f "requirements.txt" ]; then
-        pip install -r requirements.txt -q
+        print_info "Instalando dependências do requirements.txt..."
+        pip install -r requirements.txt || {
+            print_warning "Falha ao instalar algumas dependências, tentando individualmente..."
+            pip install selenium webdriver-manager requests beautifulsoup4 python-dotenv
+        }
     else
-        pip install selenium webdriver-manager requests beautifulsoup4 python-dotenv -q
+        print_info "Instalando dependências essenciais..."
+        pip install selenium webdriver-manager requests beautifulsoup4 python-dotenv
+    fi
+    
+    # Verificar se beautifulsoup4 foi instalado
+    if ! python -c "from bs4 import BeautifulSoup" 2>/dev/null; then
+        print_warning "BeautifulSoup4 não detectado, instalando novamente..."
+        pip install --upgrade beautifulsoup4
     fi
     
     print_success "Dependências Python instaladas!"
