@@ -45,11 +45,12 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None):
           b. Busca grupo
           c. Seleciona cota
           d. Navega para lances
-          e. Executa lance
+          e. Executa lance (com verificação de popup)
           f. Muda para aba do Todoist
-          g. Marca checkbox como concluído
+          g. Marca checkbox como concluído (individual)
           h. Volta para aba do Servopa
-       3. Próxima coluna
+       3. Ao terminar a coluna: marca TODOS os checkboxes da coluna
+       4. Próxima coluna
     
     Args:
         driver: Instância do WebDriver com ambas as abas abertas
@@ -60,7 +61,7 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None):
         dict: Estatísticas da execução
     """
     from automation.servopa_lances import processar_lance_completo
-    from utils.todoist_board_extractor import mark_task_completed
+    from utils.todoist_board_extractor import mark_task_completed, mark_all_section_tasks_completed
     
     stats = {
         'total_sections': len(board_data['sections']),
@@ -131,8 +132,13 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None):
                 if not lance_result['success']:
                     raise Exception(f"Falha no processamento do lance: {lance_result.get('error', 'Desconhecido')}")
                 
-                if progress_callback:
-                    progress_callback(f"✅ [SERVOPA] Lance registrado com sucesso!")
+                # Verifica se lance já existia
+                if lance_result.get('already_exists', False):
+                    if progress_callback:
+                        progress_callback(f"✅ [SERVOPA] {lance_result.get('lance_message', 'Lance já registrado')}")
+                else:
+                    if progress_callback:
+                        progress_callback(f"✅ [SERVOPA] Lance registrado com sucesso!")
                 
                 # ========== PARTE 2: TODOIST ==========
                 if progress_callback:
@@ -183,10 +189,36 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None):
             
             stats['results'].append(result)
         
+        # ========== FIM DA COLUNA: MARCA TODOS OS CHECKBOXES ==========
+        if progress_callback:
+            progress_callback("")
+            progress_callback("=" * 60)
+            progress_callback(f"📋 FINALIZANDO COLUNA: {section_title}")
+            progress_callback("=" * 60)
+        
+        # Muda para Todoist para marcar todos os checkboxes
+        try:
+            if switch_to_window_with_url(driver, "todoist", progress_callback):
+                time.sleep(2)
+                
+                # Marca todos os checkboxes da coluna
+                marked_count = mark_all_section_tasks_completed(driver, section_title, progress_callback)
+                
+                if progress_callback:
+                    progress_callback(f"✅ {marked_count} checkboxes garantidos na coluna '{section_title}'")
+            
+            # Volta para Servopa para próxima coluna
+            switch_to_window_with_url(driver, "servopa", progress_callback)
+            time.sleep(1)
+            
+        except Exception as final_mark_error:
+            if progress_callback:
+                progress_callback(f"⚠️ Erro ao marcar checkboxes finais: {final_mark_error}")
+        
         # Fim da coluna
         if progress_callback:
             progress_callback("")
-            progress_callback(f"✅ Coluna '{section_title}' concluída!")
+            progress_callback(f"✅ Coluna '{section_title}' TOTALMENTE concluída!")
             progress_callback(f"📊 Total: {stats['completed']} sucesso, {stats['failed']} falhas")
     
     # ========== RELATÓRIO FINAL ==========

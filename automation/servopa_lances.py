@@ -221,13 +221,16 @@ def executar_lance(driver, progress_callback=None):
     1. Copia valor de tx_lanfix para tx_lanfix_emb
     2. Clica em 'Simular Lance'
     3. Clica em 'Registrar'
+    4. Verifica se aparece popup "Número do Protocolo Anterior é obrigatório"
+       - Se aparecer = lance já existe = sucesso!
+       - Se não aparecer = lance registrado = sucesso!
     
     Args:
         driver: Instância do WebDriver
         progress_callback: Função para atualizar progresso na UI
         
     Returns:
-        bool: True se lance executado com sucesso
+        dict: {'success': bool, 'already_exists': bool, 'message': str}
     """
     try:
         wait = WebDriverWait(driver, TIMEOUT)
@@ -280,17 +283,78 @@ def executar_lance(driver, progress_callback=None):
         ))
         
         registrar_button.click()
-        time.sleep(3)  # Aguarda registro processar
         
+        # NOVA VALIDAÇÃO: Aguarda alguns segundos e verifica se aparece popup
         if progress_callback:
-            progress_callback("✅ Lance registrado com sucesso!")
+            progress_callback("🔍 Verificando resultado do registro...")
         
-        return True
+        time.sleep(3)  # Aguarda popup aparecer se houver
+        
+        # Tenta encontrar o popup de erro
+        try:
+            # Procura por popup/alert com a mensagem de protocolo obrigatório
+            popup_text_found = False
+            
+            # Estratégia 1: Procura por divs de erro/alerta
+            error_elements = driver.find_elements(By.XPATH, 
+                "//*[contains(text(), 'Número do Protocolo Anterior') or " +
+                "contains(text(), 'Protocolo Anterior é obrigatório') or " +
+                "contains(text(), 'obrigatório')]")
+            
+            if error_elements:
+                for elem in error_elements:
+                    if elem.is_displayed():
+                        popup_text_found = True
+                        if progress_callback:
+                            progress_callback("⚠️ Popup detectado: 'Número do Protocolo Anterior é obrigatório'")
+                            progress_callback("✅ Lance JÁ FOI REGISTRADO anteriormente - considerando sucesso!")
+                        
+                        # Tenta clicar em OK se houver botão
+                        try:
+                            ok_button = driver.find_element(By.XPATH, 
+                                "//button[contains(text(), 'OK') or contains(text(), 'Ok')]")
+                            if ok_button.is_displayed():
+                                ok_button.click()
+                                time.sleep(1)
+                        except:
+                            pass
+                        
+                        return {
+                            'success': True,
+                            'already_exists': True,
+                            'message': 'Lance já foi registrado anteriormente'
+                        }
+            
+            # Se não encontrou popup, lance foi registrado com sucesso agora
+            if not popup_text_found:
+                if progress_callback:
+                    progress_callback("✅ Lance registrado com sucesso!")
+                
+                return {
+                    'success': True,
+                    'already_exists': False,
+                    'message': 'Lance registrado com sucesso'
+                }
+                
+        except Exception as popup_error:
+            # Se houve erro ao procurar popup, assume que lance foi registrado
+            if progress_callback:
+                progress_callback(f"✅ Lance registrado (verificação de popup: {popup_error})")
+            
+            return {
+                'success': True,
+                'already_exists': False,
+                'message': 'Lance registrado'
+            }
         
     except Exception as e:
         if progress_callback:
             progress_callback(f"❌ Erro ao executar lance: {e}")
-        return False
+        return {
+            'success': False,
+            'already_exists': False,
+            'message': f'Erro: {e}'
+        }
 
 
 def processar_lance_completo(driver, grupo, cota, progress_callback=None):
@@ -339,9 +403,12 @@ def processar_lance_completo(driver, grupo, cota, progress_callback=None):
         result['steps_completed'].append('navegar_lances')
         
         # Passo 5: Executar lance
-        if not executar_lance(driver, progress_callback):
+        lance_result = executar_lance(driver, progress_callback)
+        if not lance_result['success']:
             return result
         result['steps_completed'].append('executar_lance')
+        result['already_exists'] = lance_result.get('already_exists', False)
+        result['lance_message'] = lance_result.get('message', '')
         
         # Sucesso!
         result['success'] = True

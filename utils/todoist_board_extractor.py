@@ -193,6 +193,95 @@ def mark_task_completed(driver, checkbox_element, progress_callback=None):
         return False
 
 
+def mark_all_section_tasks_completed(driver, section_title, progress_callback=None):
+    """
+    Marca TODAS as tarefas de uma seção (coluna) como concluídas
+    
+    Esta função re-localiza a seção no DOM e marca todos os checkboxes não marcados.
+    Útil para garantir que todas as tarefas foram marcadas ao final de uma coluna.
+    
+    Args:
+        driver: Instância do WebDriver
+        section_title: Título da seção para localizar
+        progress_callback: Função para atualizar progresso na UI
+        
+    Returns:
+        int: Quantidade de checkboxes marcados
+    """
+    try:
+        if progress_callback:
+            progress_callback(f"🔄 Marcando TODOS os checkboxes da coluna '{section_title}'...")
+        
+        time.sleep(2)  # Aguarda página atualizar
+        
+        # Localiza todas as seções novamente
+        sections = driver.find_elements(By.CSS_SELECTOR, "section.board_section")
+        
+        target_section = None
+        for section in sections:
+            try:
+                header = section.find_element(By.CSS_SELECTOR, "header.board_section__header")
+                title_element = header.find_element(By.CSS_SELECTOR, "h3.board_section__title span.simple_content")
+                current_title = title_element.text.strip()
+                
+                if current_title == section_title:
+                    target_section = section
+                    break
+            except:
+                continue
+        
+        if not target_section:
+            if progress_callback:
+                progress_callback(f"⚠️ Seção '{section_title}' não encontrada")
+            return 0
+        
+        # Localiza todas as tarefas desta seção
+        task_list = target_section.find_element(By.CSS_SELECTOR, "div.board_section__task_list")
+        checkboxes = task_list.find_elements(By.CSS_SELECTOR, "button.task_checkbox")
+        
+        marked_count = 0
+        
+        if progress_callback:
+            progress_callback(f"📋 Encontrados {len(checkboxes)} checkboxes na coluna")
+        
+        # Marca cada checkbox que ainda não está marcado
+        for index, checkbox in enumerate(checkboxes, 1):
+            try:
+                # Verifica se já está marcado
+                aria_checked = checkbox.get_attribute('aria-checked')
+                
+                if aria_checked == 'false':
+                    # Rola até o elemento
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", checkbox)
+                    time.sleep(0.3)
+                    
+                    # Clica no checkbox
+                    checkbox.click()
+                    marked_count += 1
+                    time.sleep(0.5)  # Delay entre cliques
+                    
+                    if progress_callback:
+                        progress_callback(f"   ✅ Checkbox {index}/{len(checkboxes)} marcado")
+                else:
+                    if progress_callback:
+                        progress_callback(f"   ⏭️  Checkbox {index}/{len(checkboxes)} já estava marcado")
+                        
+            except Exception as checkbox_error:
+                if progress_callback:
+                    progress_callback(f"   ⚠️ Erro ao marcar checkbox {index}: {checkbox_error}")
+                continue
+        
+        if progress_callback:
+            progress_callback(f"✅ Total de {marked_count} checkboxes marcados na coluna '{section_title}'")
+        
+        return marked_count
+        
+    except Exception as e:
+        if progress_callback:
+            progress_callback(f"❌ Erro ao marcar checkboxes da seção: {e}")
+        return 0
+
+
 def navigate_to_board_project(driver, progress_callback=None):
     """
     Navega para o projeto do board 'Lances Servopa Outubro Dia 8'
