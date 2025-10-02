@@ -301,7 +301,7 @@ echo ""
 print_status "Instalando dependências Python no ambiente virtual..."
 
 # Instalar dependências uma por uma para melhor diagnóstico
-dependencies=("selenium" "webdriver-manager" "requests" "beautifulsoup4")
+dependencies=("selenium" "webdriver-manager" "requests" "beautifulsoup4" "schedule")
 
 for dep in "${dependencies[@]}"; do
     print_status "Instalando $dep..."
@@ -314,6 +314,78 @@ for dep in "${dependencies[@]}"; do
 done
 
 print_success "Todas as dependências Python foram instaladas!"
+
+echo ""
+
+# 7.5. Criar arquivo de configuração da Evolution API (se não existir)
+print_status "Verificando arquivo de configuração da Evolution API..."
+
+if [ ! -f "evolution_config.json" ]; then
+    print_status "Criando evolution_config.json..."
+    cat > evolution_config.json << 'EOFCONFIG'
+{
+  "api": {
+    "base_url": "https://zap.tekvosoft.com",
+    "instance_name": "david -tekvo",
+    "api_key": "634A7E882CE5-4314-8C5B-BC79C0A9EBBA"
+  },
+  "grupos": {
+    "grupo1": {
+      "nome": "Grupo 1 - Clientes Principal",
+      "contatos": [
+        {
+          "phone": "5519995378302",
+          "name": "João Silva"
+        },
+        {
+          "phone": "5519988776655",
+          "name": "Maria Santos"
+        }
+      ]
+    },
+    "grupo2": {
+      "nome": "Grupo 2 - Clientes Secundário",
+      "contatos": [
+        {
+          "phone": "5519977665544",
+          "name": "Ana Costa"
+        },
+        {
+          "phone": "5519966554433",
+          "name": "Carlos Oliveira"
+        }
+      ]
+    }
+  },
+  "mensagens": {
+    "dia7": {
+      "grupo1": "Olá {nome}! 🎉\n\nLembrando que hoje, dia 7, é o último dia para enviar seus lances!\n\nNão perca essa oportunidade! ⏰",
+      "grupo2": "Oi {nome}! 📢\n\nAviso importante: hoje é dia 7 e você tem até o final do dia para enviar seus lances.\n\nQualquer dúvida, estamos à disposição! 💪"
+    },
+    "dia15": {
+      "grupo1": "Olá {nome}! 🎯\n\nHoje é dia 15! Último dia para enviar seus lances.\n\nVamos lá, não deixe passar! 🚀",
+      "grupo2": "Oi {nome}! ⏰\n\nLembrando: dia 15 é o prazo final para lances!\n\nConte conosco para ajudar! 📞"
+    }
+  },
+  "agendamento": {
+    "enabled": false,
+    "horario_envio": "09:00",
+    "dias_para_enviar": [
+      7,
+      15
+    ]
+  },
+  "configuracoes": {
+    "delay_entre_mensagens": 2.0,
+    "tentar_reenviar_falhas": true,
+    "max_tentativas": 3
+  }
+}
+EOFCONFIG
+    print_success "Arquivo evolution_config.json criado!"
+else
+    print_success "Arquivo evolution_config.json já existe!"
+fi
 
 echo ""
 
@@ -373,6 +445,9 @@ try:
     
     from bs4 import BeautifulSoup
     print('✓ BeautifulSoup: OK')
+    
+    import schedule
+    print('✓ Schedule: OK')
     
     print('\\n✅ Todas as dependências estão funcionando!')
     

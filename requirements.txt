@@ -16,5 +16,8 @@ beautifulsoup4>=4.12.0
 # Python-dotenv - Gerenciamento de variáveis de ambiente
 python-dotenv>=1.0.0
 
+# Schedule - Agendamento de tarefas para envio automático de mensagens
+schedule>=1.2.0
+
 # Tkinter já vem incluído no Python padrão
 # Para Linux/Ubuntu pode ser necessário: sudo apt-get install python3-tk

@@ -163,7 +163,7 @@ echo [INFO] Atualizando pip...
 python -m pip install --upgrade pip
 
 echo [INFO] Instalando dependências Python...
-python -m pip install selenium webdriver-manager requests beautifulsoup4
+python -m pip install selenium webdriver-manager requests beautifulsoup4 schedule
 
 echo [✓] Dependências Python instaladas!
 echo.
@@ -214,13 +214,84 @@ echo.
 REM 5. Testar instalação
 echo [INFO] Testando instalação...
 
-python -c "import selenium; from webdriver_manager.chrome import ChromeDriverManager; import tkinter as tk; import requests; from bs4 import BeautifulSoup; print('✓ Todas as dependências OK!')" 2>nul
+python -c "import selenium; from webdriver_manager.chrome import ChromeDriverManager; import tkinter as tk; import requests; from bs4 import BeautifulSoup; import schedule; print('✓ Todas as dependências OK!')" 2>nul
 
 if %errorLevel% == 0 (
     echo [✓] Teste de dependências passou!
 ) else (
     echo [✗] Teste de dependências falhou!
     echo [INFO] Verifique se todas as dependências foram instaladas corretamente
+)
+
+echo.
+
+REM 5.5. Criar arquivo de configuração da Evolution API
+echo [INFO] Verificando arquivo de configuração da Evolution API...
+
+if not exist evolution_config.json (
+    echo [INFO] Criando evolution_config.json...
+    
+    (
+        echo {
+        echo   "api": {
+        echo     "base_url": "https://zap.tekvosoft.com",
+        echo     "instance_name": "david -tekvo",
+        echo     "api_key": "634A7E882CE5-4314-8C5B-BC79C0A9EBBA"
+        echo   },
+        echo   "grupos": {
+        echo     "grupo1": {
+        echo       "nome": "Grupo 1 - Clientes Principal",
+        echo       "contatos": [
+        echo         {
+        echo           "phone": "5519995378302",
+        echo           "name": "João Silva"
+        echo         },
+        echo         {
+        echo           "phone": "5519988776655",
+        echo           "name": "Maria Santos"
+        echo         }
+        echo       ]
+        echo     },
+        echo     "grupo2": {
+        echo       "nome": "Grupo 2 - Clientes Secundário",
+        echo       "contatos": [
+        echo         {
+        echo           "phone": "5519977665544",
+        echo           "name": "Ana Costa"
+        echo         },
+        echo         {
+        echo           "phone": "5519966554433",
+        echo           "name": "Carlos Oliveira"
+        echo         }
+        echo       ]
+        echo     }
+        echo   },
+        echo   "mensagens": {
+        echo     "dia7": {
+        echo       "grupo1": "Olá {nome}! 🎉\n\nLembrando que hoje, dia 7, é o último dia para enviar seus lances!\n\nNão perca essa oportunidade! ⏰",
+        echo       "grupo2": "Oi {nome}! 📢\n\nAviso importante: hoje é dia 7 e você tem até o final do dia para enviar seus lances.\n\nQualquer dúvida, estamos à disposição! 💪"
+        echo     },
+        echo     "dia15": {
+        echo       "grupo1": "Olá {nome}! 🎯\n\nHoje é dia 15! Último dia para enviar seus lances.\n\nVamos lá, não deixe passar! 🚀",
+        echo       "grupo2": "Oi {nome}! ⏰\n\nLembrando: dia 15 é o prazo final para lances!\n\nConte conosco para ajudar! 📞"
+        echo     }
+        echo   },
+        echo   "agendamento": {
+        echo     "enabled": false,
+        echo     "horario_envio": "09:00",
+        echo     "dias_para_enviar": [7, 15]
+        echo   },
+        echo   "configuracoes": {
+        echo     "delay_entre_mensagens": 2.0,
+        echo     "tentar_reenviar_falhas": true,
+        echo     "max_tentativas": 3
+        echo   }
+        echo }
+    ) > evolution_config.json
+    
+    echo [✓] Arquivo evolution_config.json criado!
+) else (
+    echo [✓] Arquivo evolution_config.json já existe!
 )
 
 echo.

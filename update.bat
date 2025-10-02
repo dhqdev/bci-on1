@@ -67,6 +67,11 @@ if exist credentials.json (
     echo [OK] Backup de credentials.json criado
 )
 
+if exist evolution_config.json (
+    copy evolution_config.json "%BACKUP_DIR%\" >nul 2>&1
+    echo [OK] Backup de evolution_config.json criado
+)
+
 if exist .env (
     copy .env "%BACKUP_DIR%\" >nul 2>&1
     echo [OK] Backup de .env criado
@@ -190,6 +195,78 @@ if exist requirements.txt (
     echo [OK] Dependências atualizadas!
 ) else (
     echo [AVISO] requirements.txt não encontrado
+)
+
+echo.
+
+REM Verificar arquivos de configuração
+echo [INFO] Verificando arquivos de configuração...
+
+if not exist evolution_config.json (
+    echo [AVISO] evolution_config.json não encontrado!
+    echo [INFO] Criando evolution_config.json...
+    
+    (
+        echo {
+        echo   "api": {
+        echo     "base_url": "https://zap.tekvosoft.com",
+        echo     "instance_name": "david -tekvo",
+        echo     "api_key": "634A7E882CE5-4314-8C5B-BC79C0A9EBBA"
+        echo   },
+        echo   "grupos": {
+        echo     "grupo1": {
+        echo       "nome": "Grupo 1 - Clientes Principal",
+        echo       "contatos": [
+        echo         {
+        echo           "phone": "5519995378302",
+        echo           "name": "João Silva"
+        echo         },
+        echo         {
+        echo           "phone": "5519988776655",
+        echo           "name": "Maria Santos"
+        echo         }
+        echo       ]
+        echo     },
+        echo     "grupo2": {
+        echo       "nome": "Grupo 2 - Clientes Secundário",
+        echo       "contatos": [
+        echo         {
+        echo           "phone": "5519977665544",
+        echo           "name": "Ana Costa"
+        echo         },
+        echo         {
+        echo           "phone": "5519966554433",
+        echo           "name": "Carlos Oliveira"
+        echo         }
+        echo       ]
+        echo     }
+        echo   },
+        echo   "mensagens": {
+        echo     "dia7": {
+        echo       "grupo1": "Olá {nome}! 🎉\n\nLembrando que hoje, dia 7, é o último dia para enviar seus lances!\n\nNão perca essa oportunidade! ⏰",
+        echo       "grupo2": "Oi {nome}! 📢\n\nAviso importante: hoje é dia 7 e você tem até o final do dia para enviar seus lances.\n\nQualquer dúvida, estamos à disposição! 💪"
+        echo     },
+        echo     "dia15": {
+        echo       "grupo1": "Olá {nome}! 🎯\n\nHoje é dia 15! Último dia para enviar seus lances.\n\nVamos lá, não deixe passar! 🚀",
+        echo       "grupo2": "Oi {nome}! ⏰\n\nLembrando: dia 15 é o prazo final para lances!\n\nConte conosco para ajudar! 📞"
+        echo     }
+        echo   },
+        echo   "agendamento": {
+        echo     "enabled": false,
+        echo     "horario_envio": "09:00",
+        echo     "dias_para_enviar": [7, 15]
+        echo   },
+        echo   "configuracoes": {
+        echo     "delay_entre_mensagens": 2.0,
+        echo     "tentar_reenviar_falhas": true,
+        echo     "max_tentativas": 3
+        echo   }
+        echo }
+    ) > evolution_config.json
+    
+    echo [OK] Arquivo evolution_config.json criado!
+) else (
+    echo [OK] evolution_config.json encontrado!
 )
 
 echo.

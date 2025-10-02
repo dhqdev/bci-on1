@@ -54,6 +54,8 @@ class ModernAutomationGUI:
         self.create_automation_tab()
         self.create_automation_tab_dia16()
         self.create_credentials_tab()
+        self.create_message_tab_dia8()  # Mensagens Dia 8
+        self.create_message_tab_dia16()  # Mensagens Dia 16
         self.create_history_tab()
         self.create_history_tab_dia16()
         
@@ -258,6 +260,343 @@ class ModernAutomationGUI:
             self.root.after(2000, lambda: self.creds_status.config(text=""))
         except Exception as e:
             self.creds_status.config(text=f"❌ Erro: {str(e)[:30]}", fg='red')
+    
+    def create_message_tab_dia8(self):
+        """Aba de envio de mensagens WhatsApp - DIA 8"""
+        tab_frame = tk.Frame(self.notebook)
+        self.notebook.add(tab_frame, text='📱 Dia 8')
+        
+        # Inicializa variáveis compartilhadas (apenas uma vez)
+        if not hasattr(self, 'evolution_config_file'):
+            self.evolution_config_file = 'evolution_config.json'
+            self.evo_api_url_var = tk.StringVar(value="https://zap.tekvosoft.com")
+            self.evo_instance_var = tk.StringVar(value="david -tekvo")
+            self.evo_api_key_var = tk.StringVar(value="634A7E882CE5-4314-8C5B-BC79C0A9EBBA")
+        
+        # Container principal
+        main_container = tk.Frame(tab_frame)
+        main_container.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # ========== CONFIGURAÇÃO DA API (compartilhada) ==========
+        api_frame = tk.LabelFrame(main_container, text="🔧 Configuração da Evolution API", 
+                                  font=('Arial', 12, 'bold'))
+        api_frame.pack(fill='x', pady=5)
+        
+        api_content = tk.Frame(api_frame)
+        api_content.pack(fill='x', padx=15, pady=10)
+        
+        # URL da API
+        tk.Label(api_content, text="URL da API:", font=('Arial', 10, 'bold')).pack(anchor='w')
+        url_entry = tk.Entry(api_content, font=('Arial', 10), width=60, textvariable=self.evo_api_url_var)
+        url_entry.pack(fill='x', pady=(2, 8))
+        
+        # Nome da Instância
+        tk.Label(api_content, text="Nome da Instância:", font=('Arial', 10, 'bold')).pack(anchor='w')
+        instance_entry = tk.Entry(api_content, font=('Arial', 10), width=60, textvariable=self.evo_instance_var)
+        instance_entry.pack(fill='x', pady=(2, 8))
+        
+        # API Key
+        tk.Label(api_content, text="API Key:", font=('Arial', 10, 'bold')).pack(anchor='w')
+        apikey_entry = tk.Entry(api_content, font=('Arial', 10), width=60, textvariable=self.evo_api_key_var)
+        apikey_entry.pack(fill='x', pady=(2, 8))
+        
+        # Botão de teste
+        test_button_frame = tk.Frame(api_content)
+        test_button_frame.pack(fill='x')
+        
+        tk.Button(test_button_frame, text="🧪 Testar Conexão", font=('Arial', 9, 'bold'),
+                 bg='#007bff', fg='white', command=self.test_evolution_connection, padx=15).pack(side='left', padx=5)
+        
+        if not hasattr(self, 'evo_test_status'):
+            self.evo_test_status = tk.Label(test_button_frame, text="", font=('Arial', 9))
+        self.evo_test_status.pack(side='left', padx=10)
+        
+        # ========== CONTATOS E MENSAGEM DO DIA 8 ==========
+        content_frame = tk.LabelFrame(main_container, text="📤 Envio de Mensagens - Dia 8", 
+                                      font=('Arial', 12, 'bold'))
+        content_frame.pack(fill='both', expand=True, pady=5)
+        
+        content = tk.Frame(content_frame)
+        content.pack(fill='both', expand=True, padx=15, pady=10)
+        
+        # Contatos
+        tk.Label(content, text="👥 Contatos (um por linha):", font=('Arial', 10, 'bold')).pack(anchor='w')
+        tk.Label(content, text="Formato: 5519995378302 - Nome Cliente", 
+                font=('Arial', 8), fg='gray').pack(anchor='w')
+        
+        self.contacts_text_dia8 = scrolledtext.ScrolledText(content, height=10, font=('Consolas', 9), wrap=tk.WORD)
+        self.contacts_text_dia8.pack(fill='both', expand=True, pady=5)
+        self.contacts_text_dia8.insert('1.0', "5519995378302 - Cliente Exemplo")
+        
+        # Mensagem
+        tk.Label(content, text="💬 Mensagem do Dia 8:", font=('Arial', 10, 'bold')).pack(anchor='w', pady=(10, 0))
+        tk.Label(content, text="Use {nome} para personalizar", 
+                font=('Arial', 8), fg='gray').pack(anchor='w')
+        
+        self.message_text_dia8 = scrolledtext.ScrolledText(content, height=8, font=('Consolas', 9), wrap=tk.WORD)
+        self.message_text_dia8.pack(fill='both', expand=True, pady=5)
+        self.message_text_dia8.insert('1.0', "Olá {nome}! 🎉\n\nMensagem do Dia 8")
+        
+        # Botões de ação
+        action_frame = tk.Frame(content)
+        action_frame.pack(fill='x', pady=10)
+        
+        tk.Button(action_frame, text="📤 Enviar Mensagens Dia 8", font=('Arial', 10, 'bold'),
+                 bg='#28a745', fg='white', command=lambda: self.send_simple_messages('dia8'), padx=20).pack(side='left', padx=5)
+        
+        tk.Button(action_frame, text="🗑️ Limpar", font=('Arial', 9),
+                 bg='#6c757d', fg='white', command=lambda: self.clear_simple_fields('dia8'), padx=15).pack(side='left', padx=5)
+        
+        self.send_status_dia8 = tk.Label(action_frame, text="", font=('Arial', 10))
+        self.send_status_dia8.pack(side='left', padx=10)
+        
+        # ========== LOG DE ENVIO ==========
+        if not hasattr(self, 'message_log_text'):
+            log_frame = tk.LabelFrame(main_container, text="� Log de Envio", font=('Arial', 12, 'bold'))
+            log_frame.pack(fill='both', expand=True, pady=5)
+            
+            self.message_log_text = scrolledtext.ScrolledText(log_frame, height=8, font=('Consolas', 9),
+                                                              bg='#1e1e1e', fg='#d4d4d4', wrap=tk.WORD)
+            self.message_log_text.pack(fill='both', expand=True, padx=5, pady=5)
+        
+        # Carrega configurações (apenas uma vez)
+        if not hasattr(self, '_config_loaded'):
+            self._config_loaded = True
+            self.root.after(500, self.load_evolution_config)
+    
+    def create_message_tab_dia16(self):
+        """Aba de envio de mensagens WhatsApp - DIA 16"""
+        tab_frame = tk.Frame(self.notebook)
+        self.notebook.add(tab_frame, text='📱 Dia 16')
+        
+        # Inicializa variáveis compartilhadas (caso ainda não existam)
+        if not hasattr(self, 'evolution_config_file'):
+            self.evolution_config_file = 'evolution_config.json'
+            self.evo_api_url_var = tk.StringVar(value="https://zap.tekvosoft.com")
+            self.evo_instance_var = tk.StringVar(value="david -tekvo")
+            self.evo_api_key_var = tk.StringVar(value="634A7E882CE5-4314-8C5B-BC79C0A9EBBA")
+        
+        # Container principal
+        main_container = tk.Frame(tab_frame)
+        main_container.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # ========== NOTA: API JÁ CONFIGURADA NA ABA DIA 8 ==========
+        info_frame = tk.Frame(main_container, bg='#d1ecf1', relief='solid', borderwidth=1)
+        info_frame.pack(fill='x', pady=5)
+        tk.Label(info_frame, text="ℹ️ Configuração da API está na aba 'Dia 8'",
+                font=('Arial', 9, 'italic'), bg='#d1ecf1', fg='#0c5460').pack(pady=5)
+        
+        # ========== CONTATOS E MENSAGEM DO DIA 16 ==========
+        content_frame = tk.LabelFrame(main_container, text="📤 Envio de Mensagens - Dia 16", 
+                                      font=('Arial', 12, 'bold'))
+        content_frame.pack(fill='both', expand=True, pady=5)
+        
+        content = tk.Frame(content_frame)
+        content.pack(fill='both', expand=True, padx=15, pady=10)
+        
+        # Contatos
+        tk.Label(content, text="👥 Contatos (um por linha):", font=('Arial', 10, 'bold')).pack(anchor='w')
+        tk.Label(content, text="Formato: 5519995378302 - Nome Cliente", 
+                font=('Arial', 8), fg='gray').pack(anchor='w')
+        
+        self.contacts_text_dia16 = scrolledtext.ScrolledText(content, height=10, font=('Consolas', 9), wrap=tk.WORD)
+        self.contacts_text_dia16.pack(fill='both', expand=True, pady=5)
+        self.contacts_text_dia16.insert('1.0', "5519995378302 - Cliente Exemplo")
+        
+        # Mensagem
+        tk.Label(content, text="💬 Mensagem do Dia 16:", font=('Arial', 10, 'bold')).pack(anchor='w', pady=(10, 0))
+        tk.Label(content, text="Use {nome} para personalizar", 
+                font=('Arial', 8), fg='gray').pack(anchor='w')
+        
+        self.message_text_dia16 = scrolledtext.ScrolledText(content, height=8, font=('Consolas', 9), wrap=tk.WORD)
+        self.message_text_dia16.pack(fill='both', expand=True, pady=5)
+        self.message_text_dia16.insert('1.0', "Olá {nome}! 🎉\n\nMensagem do Dia 16")
+        
+        # Botões de ação
+        action_frame = tk.Frame(content)
+        action_frame.pack(fill='x', pady=10)
+        
+        tk.Button(action_frame, text="📤 Enviar Mensagens Dia 16", font=('Arial', 10, 'bold'),
+                 bg='#28a745', fg='white', command=lambda: self.send_simple_messages('dia16'), padx=20).pack(side='left', padx=5)
+        
+        tk.Button(action_frame, text="🗑️ Limpar", font=('Arial', 9),
+                 bg='#6c757d', fg='white', command=lambda: self.clear_simple_fields('dia16'), padx=15).pack(side='left', padx=5)
+        
+        self.send_status_dia16 = tk.Label(action_frame, text="", font=('Arial', 10))
+        self.send_status_dia16.pack(side='left', padx=10)
+        
+        # Log compartilhado (já criado na aba Dia 8)
+        if hasattr(self, 'message_log_text'):
+            log_frame = tk.LabelFrame(main_container, text="📝 Log de Envio (Compartilhado)", 
+                                     font=('Arial', 12, 'bold'))
+            log_frame.pack(fill='both', expand=True, pady=5)
+            
+            # Referência ao mesmo log
+            self.message_log_text.pack(fill='both', expand=True, padx=5, pady=5)
+    
+    def load_evolution_config(self):
+        """Carrega configurações da Evolution API"""
+        try:
+            if os.path.exists(self.evolution_config_file):
+                with open(self.evolution_config_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                
+                if 'api' in data:
+                    self.evo_api_url_var.set(data['api'].get('base_url', ''))
+                    self.evo_instance_var.set(data['api'].get('instance_name', ''))
+                    self.evo_api_key_var.set(data['api'].get('api_key', ''))
+                
+                self.add_message_log("✅ Configurações carregadas do arquivo")
+        except Exception as e:
+            self.add_message_log(f"⚠️ Erro ao carregar configurações: {e}")
+    
+    def save_evolution_config(self):
+        """Salva configurações da Evolution API"""
+        try:
+            # Carrega config existente ou cria novo
+            if os.path.exists(self.evolution_config_file):
+                with open(self.evolution_config_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            else:
+                data = {}
+            
+            # Atualiza seção API
+            data['api'] = {
+                'base_url': self.evo_api_url_var.get().strip(),
+                'instance_name': self.evo_instance_var.get().strip(),
+                'api_key': self.evo_api_key_var.get().strip()
+            }
+            
+            with open(self.evolution_config_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            
+            return True
+        except Exception as e:
+            self.add_message_log(f"❌ Erro ao salvar configurações: {e}")
+            return False
+    
+    def test_evolution_connection(self):
+        """Testa conexão com a Evolution API"""
+        self.evo_test_status.config(text="🔄 Testando...", fg='orange')
+        
+        def test_thread():
+            try:
+                from utils.evolution_api import EvolutionAPI
+                
+                api = EvolutionAPI(
+                    self.evo_api_url_var.get().strip(),
+                    self.evo_instance_var.get().strip(),
+                    self.evo_api_key_var.get().strip()
+                )
+                
+                success, message = api.test_connection()
+                
+                if success:
+                    self.root.after(0, lambda: self.evo_test_status.config(
+                        text="✅ Conexão OK", fg='green'))
+                    self.root.after(0, lambda: self.add_message_log(f"✅ {message}"))
+                    self.save_evolution_config()
+                else:
+                    self.root.after(0, lambda: self.evo_test_status.config(
+                        text="❌ Falhou", fg='red'))
+                    self.root.after(0, lambda: self.add_message_log(f"❌ {message}"))
+            except Exception as e:
+                self.root.after(0, lambda: self.evo_test_status.config(
+                    text="❌ Erro", fg='red'))
+                self.root.after(0, lambda: self.add_message_log(f"❌ Erro: {e}"))
+        
+        thread = threading.Thread(target=test_thread)
+        thread.daemon = True
+        thread.start()
+    
+    def add_message_log(self, message):
+        """Adiciona mensagem ao log de envio"""
+        if hasattr(self, 'message_log_text'):
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            self.message_log_text.insert(tk.END, f"[{timestamp}] {message}\n")
+            self.message_log_text.see(tk.END)
+    
+    def clear_simple_fields(self, dia):
+        """Limpa campos de mensagem para dia específico"""
+        if dia == 'dia8':
+            self.contacts_text_dia8.delete('1.0', tk.END)
+            self.message_text_dia8.delete('1.0', tk.END)
+        elif dia == 'dia16':
+            self.contacts_text_dia16.delete('1.0', tk.END)
+            self.message_text_dia16.delete('1.0', tk.END)
+        self.add_message_log(f"🗑️ Campos do {dia} limpos")
+    
+    def send_simple_messages(self, dia):
+        """Envia mensagens para dia específico (8 ou 16)"""
+        # Define qual status usar
+        status_label = self.send_status_dia8 if dia == 'dia8' else self.send_status_dia16
+        status_label.config(text="📤 Enviando...", fg='orange')
+        
+        def send_thread():
+            try:
+                from utils.evolution_api import EvolutionAPI, parse_contacts_from_text
+                
+                # Cria cliente API
+                api = EvolutionAPI(
+                    self.evo_api_url_var.get().strip(),
+                    self.evo_instance_var.get().strip(),
+                    self.evo_api_key_var.get().strip()
+                )
+                
+                # Pega contatos e mensagem do dia correto
+                if dia == 'dia8':
+                    contacts_text = self.contacts_text_dia8.get('1.0', tk.END).strip()
+                    message = self.message_text_dia8.get('1.0', tk.END).strip()
+                else:  # dia16
+                    contacts_text = self.contacts_text_dia16.get('1.0', tk.END).strip()
+                    message = self.message_text_dia16.get('1.0', tk.END).strip()
+                
+                # Parse contatos
+                contacts = parse_contacts_from_text(contacts_text)
+                
+                if not contacts:
+                    self.root.after(0, lambda: status_label.config(
+                        text="❌ Nenhum contato", fg='red'))
+                    self.root.after(0, lambda: self.add_message_log("❌ Nenhum contato válido encontrado"))
+                    return
+                
+                if not message:
+                    self.root.after(0, lambda: status_label.config(
+                        text="❌ Mensagem vazia", fg='red'))
+                    self.root.after(0, lambda: self.add_message_log("❌ Mensagem não pode estar vazia"))
+                    return
+                
+                # Envia mensagens
+                self.root.after(0, lambda: self.add_message_log(
+                    f"📤 Iniciando envio {dia.upper()} para {len(contacts)} contato(s)..."))
+                
+                results = api.send_bulk_messages(
+                    contacts,
+                    message,
+                    delay_between_messages=2.0,
+                    progress_callback=lambda msg: self.root.after(0, lambda m=msg: self.add_message_log(m))
+                )
+                
+                # Atualiza status
+                if results['failed'] == 0:
+                    self.root.after(0, lambda: status_label.config(
+                        text=f"✅ {results['success']} enviadas", fg='green'))
+                else:
+                    self.root.after(0, lambda: status_label.config(
+                        text=f"⚠️ {results['success']}/{results['total']}", fg='orange'))
+                
+                # Salva config
+                self.save_evolution_config()
+                
+            except Exception as e:
+                self.root.after(0, lambda: status_label.config(
+                    text="❌ Erro", fg='red'))
+                self.root.after(0, lambda: self.add_message_log(f"❌ Erro ao enviar: {e}"))
+        
+        thread = threading.Thread(target=send_thread)
+        thread.daemon = True
+        thread.start()
+
     
     def create_history_tab(self):
         """Aba de histórico - Já feito do dia 8"""

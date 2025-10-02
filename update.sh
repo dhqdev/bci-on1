@@ -144,6 +144,11 @@ backup_config() {
         print_success "Backup de credentials.json criado"
     fi
     
+    if [ -f "evolution_config.json" ]; then
+        cp evolution_config.json "$BACKUP_DIR/" 2>/dev/null || true
+        print_success "Backup de evolution_config.json criado"
+    fi
+    
     if [ -f ".env" ]; then
         cp .env "$BACKUP_DIR/" 2>/dev/null || true
         print_success "Backup de .env criado"
@@ -253,6 +258,80 @@ update_dependencies() {
     fi
 }
 
+# Verificar e criar arquivos de configuração necessários
+check_config_files() {
+    print_step "Verificando arquivos de configuração..."
+    
+    # Verificar evolution_config.json
+    if [ ! -f "evolution_config.json" ]; then
+        print_warning "evolution_config.json não encontrado!"
+        print_status "Criando evolution_config.json..."
+        cat > evolution_config.json << 'EOFCONFIG'
+{
+  "api": {
+    "base_url": "https://zap.tekvosoft.com",
+    "instance_name": "david -tekvo",
+    "api_key": "634A7E882CE5-4314-8C5B-BC79C0A9EBBA"
+  },
+  "grupos": {
+    "grupo1": {
+      "nome": "Grupo 1 - Clientes Principal",
+      "contatos": [
+        {
+          "phone": "5519995378302",
+          "name": "João Silva"
+        },
+        {
+          "phone": "5519988776655",
+          "name": "Maria Santos"
+        }
+      ]
+    },
+    "grupo2": {
+      "nome": "Grupo 2 - Clientes Secundário",
+      "contatos": [
+        {
+          "phone": "5519977665544",
+          "name": "Ana Costa"
+        },
+        {
+          "phone": "5519966554433",
+          "name": "Carlos Oliveira"
+        }
+      ]
+    }
+  },
+  "mensagens": {
+    "dia7": {
+      "grupo1": "Olá {nome}! 🎉\n\nLembrando que hoje, dia 7, é o último dia para enviar seus lances!\n\nNão perca essa oportunidade! ⏰",
+      "grupo2": "Oi {nome}! 📢\n\nAviso importante: hoje é dia 7 e você tem até o final do dia para enviar seus lances.\n\nQualquer dúvida, estamos à disposição! 💪"
+    },
+    "dia15": {
+      "grupo1": "Olá {nome}! 🎯\n\nHoje é dia 15! Último dia para enviar seus lances.\n\nVamos lá, não deixe passar! 🚀",
+      "grupo2": "Oi {nome}! ⏰\n\nLembrando: dia 15 é o prazo final para lances!\n\nConte conosco para ajudar! 📞"
+    }
+  },
+  "agendamento": {
+    "enabled": false,
+    "horario_envio": "09:00",
+    "dias_para_enviar": [
+      7,
+      15
+    ]
+  },
+  "configuracoes": {
+    "delay_entre_mensagens": 2.0,
+    "tentar_reenviar_falhas": true,
+    "max_tentativas": 3
+  }
+}
+EOFCONFIG
+        print_success "Arquivo evolution_config.json criado!"
+    else
+        print_success "evolution_config.json encontrado!"
+    fi
+}
+
 # Limpar arquivos temporários
 cleanup() {
     print_step "Limpando arquivos temporários..."
@@ -351,6 +430,8 @@ main() {
     apply_updates
     echo ""
     update_dependencies
+    echo ""
+    check_config_files
     echo ""
     cleanup
     restore_stash
