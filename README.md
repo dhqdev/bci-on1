@@ -29,7 +29,27 @@ O **BCI-ON1** é um sistema de automação desenvolvido para simplificar e autom
 - **Sistema Operacional**: Windows, Linux ou macOS
 - **Conexão Internet**: Para automação e WhatsApp
 
-### Instalação Automática
+### Instalação Rápida (Recomendado)
+
+**Instala TUDO com 1 comando diretamente do GitHub:**
+
+#### Linux / macOS
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-linux.sh)
+```
+
+#### Windows (PowerShell como Administrador)
+
+```powershell
+irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.bat -OutFile setup.bat; .\setup.bat
+```
+
+---
+
+### Instalação Manual
+
+**Se preferir clonar primeiro e depois instalar:**
 
 #### Linux / macOS
 
@@ -50,9 +70,17 @@ bash install.sh
 3. Clique duas vezes em: install.bat
 ```
 
+---
+
+### O Que o Instalador Faz
+
+### O Que o Instalador Faz
+
 O instalador irá:
-- ✅ Verificar Python e instalar se necessário
-- ✅ Instalar Google Chrome se não estiver instalado
+- ✅ Instalar Git (se necessário)
+- ✅ Verificar/Instalar Python 3.8+ (se necessário)
+- ✅ Instalar Google Chrome (se necessário)
+- ✅ Clonar repositório do GitHub (instalação rápida)
 - ✅ Criar ambiente virtual Python
 - ✅ Instalar todas as dependências (Selenium, Flask, etc.)
 - ✅ Configurar arquivos necessários
