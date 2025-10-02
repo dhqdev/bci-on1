@@ -86,17 +86,31 @@ if exist "%INSTALL_DIR%" (
         goto :run_install
     ) else if "%opcao%"=="2" (
         echo [*] Removendo diretorio antigo...
-        timeout /t 2 /nobreak >nul
-        rd /s /q "%INSTALL_DIR%" 2>nul
+        echo     Aguarde...
+        
+        REM Tenta com PowerShell (mais confiável)
+        echo [DEBUG] Tentando com PowerShell...
+        powershell -Command "if (Test-Path '%INSTALL_DIR%') { Remove-Item -Path '%INSTALL_DIR%' -Recurse -Force -ErrorAction SilentlyContinue }" 2>nul
+        
+        REM Aguarda 1 segundo
+        echo [DEBUG] Aguardando...
+        ping localhost -n 2 >nul 2>&1
+        
+        REM Verifica se ainda existe
         if exist "%INSTALL_DIR%" (
-            echo [!] Falha ao remover. Tentando forcadamente...
-            rmdir /s /q "%INSTALL_DIR%" 2>nul
-            timeout /t 2 /nobreak >nul
+            echo [!] Tentando novamente com comandos do Windows...
+            rd /s /q "%INSTALL_DIR%" 2>nul
+            ping localhost -n 2 >nul 2>&1
         )
+        
+        REM Última verificação
         if exist "%INSTALL_DIR%" (
             echo [X] ERRO: Nao foi possivel remover o diretorio.
-            echo     Feche todos os programas que possam estar usando arquivos do BCI-ON1
-            echo     (navegador, editor de codigo, terminal, etc.)
+            echo     Feche todos os programas que possam estar usando arquivos do BCI-ON1:
+            echo     - Navegador (Chrome, Edge, Firefox)
+            echo     - VS Code ou editores de codigo
+            echo     - Terminal/PowerShell abertos na pasta
+            echo     - Explorador de Arquivos
             echo.
             pause
             exit /b 1

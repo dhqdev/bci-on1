@@ -1,5 +1,32 @@
 # 🔧 Guia de Solução de Problemas - BCI-ON1
 
+## ⚠️ PROBLEMA MAIS COMUM
+
+### Instalador trava ao escolher opção 2 (Remover e reinstalar)
+
+**Sintoma:** Após escolher opção `[2]`, o instalador mostra "Removendo diretório antigo..." e trava pedindo para pressionar uma tecla.
+
+**Causa:** PowerShell ou CMD tendo dificuldade para remover o diretório.
+
+**SOLUÇÃO RÁPIDA:**
+
+1. **Pressione CTRL+C** para cancelar o instalador
+
+2. **Delete a pasta manualmente:**
+   - Abra o Explorador de Arquivos
+   - Navegue para: `C:\Users\SeuUsuario\`
+   - Delete a pasta `bci-on1`
+   - Se der erro, feche TODOS os programas (navegador, VS Code, terminal)
+
+3. **Use o instalador simplificado:**
+   ```powershell
+   irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows-simple.bat -OutFile setup.bat; .\setup.bat
+   ```
+
+**OU** escolha opção `[1] Atualizar` ao invés de remover!
+
+---
+
 ## ❌ Problemas Comuns Durante a Instalação
 
 ### 1. "Diretório já existe" e trava ao escolher opção

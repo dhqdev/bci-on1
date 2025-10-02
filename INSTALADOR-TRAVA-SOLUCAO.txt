@@ -1,0 +1,89 @@
+=============================================================================
+  INSTRUÇÕES PARA RESOLVER O PROBLEMA DO INSTALADOR TRAVANDO
+=============================================================================
+
+PROBLEMA:
+O instalador trava quando você escolhe opção [2] para remover e reinstalar.
+
+=============================================================================
+SOLUÇÃO IMEDIATA (3 opções, escolha UMA):
+=============================================================================
+
+---------------------------------------------------------------------------
+OPÇÃO 1 - USAR INSTALADOR POWERSHELL (RECOMENDADO)
+---------------------------------------------------------------------------
+Este é o mais confiável e não trava!
+
+1. Abra PowerShell como Administrador
+2. Execute:
+   
+   irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.ps1 -OutFile setup.ps1; .\setup.ps1
+
+3. Siga as instruções na tela
+
+---------------------------------------------------------------------------
+OPÇÃO 2 - DELETAR MANUALMENTE E REINSTALAR
+---------------------------------------------------------------------------
+
+1. Se o instalador travou, pressione CTRL+C
+
+2. Feche TODOS os programas:
+   - Navegadores (Chrome, Edge, Firefox, etc.)
+   - VS Code ou qualquer editor de código
+   - Terminais/PowerShell
+   - Explorador de Arquivos
+
+3. Delete a pasta manualmente:
+   - Aperte Windows + R
+   - Digite: %USERPROFILE%
+   - Pressione ENTER
+   - Delete a pasta "bci-on1"
+
+4. Execute o instalador simplificado:
+   
+   irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows-simple.bat -OutFile setup.bat; .\setup.bat
+
+---------------------------------------------------------------------------
+OPÇÃO 3 - APENAS ATUALIZAR (se já tem instalado)
+---------------------------------------------------------------------------
+
+Se você já tem o BCI-ON1 instalado, não precisa reinstalar!
+Apenas atualize:
+
+1. Abra PowerShell
+2. Execute:
+   
+   cd $env:USERPROFILE\bci-on1
+   git pull origin main
+
+3. Pronto! Seu projeto está atualizado
+
+=============================================================================
+POR QUE TRAVA?
+=============================================================================
+
+O comando "timeout" no Windows .bat às vezes pede para pressionar tecla.
+A solução PowerShell (.ps1) não tem esse problema.
+
+=============================================================================
+EXECUTAR DEPOIS DE INSTALADO
+=============================================================================
+
+Após instalar com sucesso:
+
+1. Procure na sua Área de Trabalho o arquivo: BCI-ON1-Web.bat
+2. Clique nele
+3. Abra seu navegador em: http://localhost:5000
+
+Ou execute no PowerShell:
+
+cd $env:USERPROFILE\bci-on1\web
+python app.py
+
+=============================================================================
+PRECISA DE AJUDA?
+=============================================================================
+
+Consulte o arquivo TROUBLESHOOTING.md para mais soluções.
+
+=============================================================================

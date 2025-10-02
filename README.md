@@ -40,9 +40,23 @@ bash <(curl -fsSL https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-li
 
 #### Windows (PowerShell como Administrador)
 
+**🌟 OPÇÃO 1 - PowerShell Script (MAIS CONFIÁVEL):**
+```powershell
+irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.ps1 -OutFile setup.ps1; .\setup.ps1
+```
+
+**OPÇÃO 2 - Instalador Batch Completo:**
 ```powershell
 irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.bat -OutFile setup.bat; .\setup.bat
 ```
+
+**OPÇÃO 3 - Instalador Batch Simplificado (se os outros travarem):**
+```powershell
+irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows-simple.bat -OutFile setup.bat; .\setup.bat
+```
+
+> ⚠️ **Nota:** Use a OPÇÃO 1 (PowerShell) se tiver problemas com as outras.  
+> Se já tem instalado e o instalador travar, delete manualmente a pasta `%USERPROFILE%\bci-on1` antes de reinstalar.
 
 **🎉 Após instalação, um atalho "BCI-ON1-Web.bat" será criado na sua área de trabalho!**
 
