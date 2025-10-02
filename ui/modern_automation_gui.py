@@ -13,9 +13,32 @@ import queue
 class ModernAutomationGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("🤖 Sistema de Automação Servopa + Todoist v3.0")
-        self.root.geometry("1100x800")
-        self.root.configure(bg='#f8f9fa')
+        self.root.title("🏆 OXCASH - Sistema de Automação Profissional")
+        self.root.geometry("1200x850")
+        
+        # Configurar ícone da janela (se existir)
+        try:
+            # self.root.iconbitmap('icon.ico')  # Descomente se tiver ícone
+            pass
+        except:
+            pass
+        
+        # Cores modernas e profissionais
+        self.colors = {
+            'primary': '#1e3a8a',      # Azul escuro profissional
+            'secondary': '#3b82f6',     # Azul médio
+            'success': '#10b981',       # Verde
+            'warning': '#f59e0b',       # Laranja
+            'danger': '#ef4444',        # Vermelho
+            'light': '#f8fafc',         # Cinza muito claro
+            'dark': '#1e293b',          # Cinza escuro
+            'white': '#ffffff',
+            'border': '#e2e8f0',
+            'text': '#334155',
+            'text_light': '#64748b'
+        }
+        
+        self.root.configure(bg=self.colors['light'])
         
         # Estado da aplicação
         self.automation_running = False
@@ -39,18 +62,69 @@ class ModernAutomationGUI:
         
     def create_interface(self):
         """Cria a interface com abas"""
-        # Header
-        header = tk.Frame(self.root, bg='#0d6efd', height=80)
-        header.pack(fill='x', pady=(0, 10))
+        # ========== HEADER PROFISSIONAL ==========
+        header = tk.Frame(self.root, bg=self.colors['primary'], height=120)
+        header.pack(fill='x')
         header.pack_propagate(False)
         
-        tk.Label(header, text="🤖 Sistema de Automação Servopa + Todoist v3.0",
-                font=('Arial', 16, 'bold'), bg='#0d6efd', fg='white').pack(pady=25)
+        # Container centralizado do header
+        header_content = tk.Frame(header, bg=self.colors['primary'])
+        header_content.place(relx=0.5, rely=0.5, anchor='center')
         
-        # Sistema de abas
-        self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill='both', expand=True, padx=10, pady=10)
+        # Logo/Ícone (usando emoji grande)
+        logo_frame = tk.Frame(header_content, bg=self.colors['primary'])
+        logo_frame.pack(side='left', padx=(0, 20))
         
+        tk.Label(logo_frame, text="🏆", font=('Arial', 48), bg=self.colors['primary']).pack()
+        
+        # Textos do header
+        text_frame = tk.Frame(header_content, bg=self.colors['primary'])
+        text_frame.pack(side='left')
+        
+        tk.Label(text_frame, 
+                text="AUTOMAÇÕES PARA OXCASH",
+                font=('Arial', 24, 'bold'), 
+                bg=self.colors['primary'], 
+                fg=self.colors['white']).pack(anchor='w')
+        
+        tk.Label(text_frame, 
+                text="Sistema Profissional de Automação • Servopa + Todoist + WhatsApp",
+                font=('Arial', 11), 
+                bg=self.colors['primary'], 
+                fg=self.colors['light']).pack(anchor='w', pady=(5, 0))
+        
+        # Linha decorativa abaixo do header
+        separator = tk.Frame(self.root, bg=self.colors['secondary'], height=4)
+        separator.pack(fill='x')
+        
+        # ========== SISTEMA DE ABAS ESTILIZADO ==========
+        # Container para abas com padding
+        tabs_container = tk.Frame(self.root, bg=self.colors['light'])
+        tabs_container.pack(fill='both', expand=True, padx=15, pady=15)
+        
+        # Estilo customizado para as abas
+        style = ttk.Style()
+        style.theme_use('clam')
+        
+        # Configurar estilo das abas
+        style.configure('Custom.TNotebook', 
+                       background=self.colors['light'],
+                       borderwidth=0)
+        style.configure('Custom.TNotebook.Tab', 
+                       background=self.colors['white'],
+                       foreground=self.colors['text'],
+                       padding=[20, 10],
+                       font=('Arial', 10, 'bold'),
+                       borderwidth=1)
+        style.map('Custom.TNotebook.Tab',
+                 background=[('selected', self.colors['secondary'])],
+                 foreground=[('selected', self.colors['white'])],
+                 expand=[('selected', [1, 1, 1, 0])])
+        
+        self.notebook = ttk.Notebook(tabs_container, style='Custom.TNotebook')
+        self.notebook.pack(fill='both', expand=True)
+        
+        # Criar todas as abas
         self.create_automation_tab()
         self.create_automation_tab_dia16()
         self.create_credentials_tab()
@@ -60,64 +134,191 @@ class ModernAutomationGUI:
         self.create_history_tab_dia16()
         
     def create_automation_tab(self):
-        """Aba de automação"""
-        tab_frame = tk.Frame(self.notebook)
-        self.notebook.add(tab_frame, text='🚀 Automação')
+        """Aba de automação com visual moderno"""
+        tab_frame = tk.Frame(self.notebook, bg=self.colors['light'])
+        self.notebook.add(tab_frame, text='🚀 Automação Dia 8')
         
-        # Status cards
-        status_frame = tk.LabelFrame(tab_frame, text="Status", font=('Arial', 12, 'bold'))
-        status_frame.pack(fill='x', padx=10, pady=5)
+        # Container principal com padding
+        main_container = tk.Frame(tab_frame, bg=self.colors['light'])
+        main_container.pack(fill='both', expand=True, padx=20, pady=20)
         
-        cards_container = tk.Frame(status_frame)
-        cards_container.pack(fill='x', padx=5, pady=5)
+        # ========== CARDS DE STATUS MODERNOS ==========
+        status_section = tk.Frame(main_container, bg=self.colors['light'])
+        status_section.pack(fill='x', pady=(0, 20))
         
-        # Cards de status
+        tk.Label(status_section, text="📊 Status em Tempo Real", 
+                font=('Arial', 14, 'bold'), 
+                bg=self.colors['light'],
+                fg=self.colors['dark']).pack(anchor='w', pady=(0, 15))
+        
+        cards_container = tk.Frame(status_section, bg=self.colors['light'])
+        cards_container.pack(fill='x')
+        
+        # Cards de status com ícones e cores
         self.status_cards = {}
-        for i, (text, key) in enumerate([("Servopa", "servopa"), ("Todoist", "todoist"), ("Cliente", "cliente"), ("Lances", "lances")]):
-            card = tk.Frame(cards_container, bg='white', relief='solid', bd=1, width=150, height=60)
-            card.pack_propagate(False)
-            card.grid(row=0, column=i, padx=3, pady=3, sticky='ew')
+        card_configs = [
+            ("🌐", "Servopa", "servopa", self.colors['secondary']),
+            ("📋", "Todoist", "todoist", self.colors['success']),
+            ("👤", "Cliente", "cliente", self.colors['warning']),
+            ("🎯", "Lances", "lances", self.colors['primary'])
+        ]
+        
+        for i, (icon, text, key, color) in enumerate(card_configs):
+            # Card com sombra simulada
+            card_outer = tk.Frame(cards_container, bg=self.colors['border'], 
+                                 relief='flat', bd=0)
+            card_outer.grid(row=0, column=i, padx=8, pady=5, sticky='ew')
             
-            tk.Label(card, text=text, font=('Arial', 9, 'bold'), bg='white').pack(pady=5)
-            status_label = tk.Label(card, text="Aguardando", font=('Arial', 8), bg='white', fg='gray')
-            status_label.pack()
+            card = tk.Frame(card_outer, bg=self.colors['white'], 
+                           relief='flat', bd=0)
+            card.pack(padx=1, pady=1, fill='both', expand=True)
+            
+            # Barra de cor no topo
+            color_bar = tk.Frame(card, bg=color, height=4)
+            color_bar.pack(fill='x')
+            
+            # Conteúdo do card
+            content = tk.Frame(card, bg=self.colors['white'])
+            content.pack(fill='both', expand=True, padx=15, pady=12)
+            
+            # Ícone e título
+            header = tk.Frame(content, bg=self.colors['white'])
+            header.pack(fill='x')
+            
+            tk.Label(header, text=icon, font=('Arial', 20), 
+                    bg=self.colors['white']).pack(side='left', padx=(0, 10))
+            tk.Label(header, text=text, font=('Arial', 11, 'bold'), 
+                    bg=self.colors['white'], fg=self.colors['dark']).pack(side='left')
+            
+            # Status
+            status_label = tk.Label(content, text="Aguardando", 
+                                   font=('Arial', 9), 
+                                   bg=self.colors['white'], 
+                                   fg=self.colors['text_light'])
+            status_label.pack(anchor='w', pady=(8, 0))
             self.status_cards[key] = status_label
             
         for i in range(4):
             cards_container.grid_columnconfigure(i, weight=1)
         
-        # Progresso
-        progress_frame = tk.LabelFrame(tab_frame, text="Progresso", font=('Arial', 12, 'bold'))
-        progress_frame.pack(fill='x', padx=10, pady=5)
+        # ========== BARRA DE PROGRESSO MODERNA ==========
+        progress_section = tk.Frame(main_container, bg=self.colors['white'], 
+                                    relief='flat', bd=0)
+        progress_section.pack(fill='x', pady=(0, 20))
         
-        self.progress_bar = ttk.Progressbar(progress_frame, mode='determinate')
-        self.progress_bar.pack(fill='x', padx=10, pady=5)
+        # Borda simulando sombra
+        progress_border = tk.Frame(main_container, bg=self.colors['border'])
+        progress_border.pack(fill='x', pady=(0, 20))
+        progress_inner = tk.Frame(progress_border, bg=self.colors['white'])
+        progress_inner.pack(padx=1, pady=1, fill='x')
         
-        self.progress_label = tk.Label(progress_frame, text="Sistema pronto", font=('Arial', 10))
-        self.progress_label.pack(pady=2)
+        progress_content = tk.Frame(progress_inner, bg=self.colors['white'])
+        progress_content.pack(fill='x', padx=20, pady=20)
         
-        # Log
-        log_frame = tk.LabelFrame(tab_frame, text="Log", font=('Arial', 12, 'bold'))
-        log_frame.pack(fill='both', expand=True, padx=10, pady=5)
+        tk.Label(progress_content, text="⚡ Progresso da Automação", 
+                font=('Arial', 12, 'bold'), 
+                bg=self.colors['white'],
+                fg=self.colors['dark']).pack(anchor='w', pady=(0, 10))
         
-        self.log_text = scrolledtext.ScrolledText(log_frame, height=15, font=('Consolas', 9),
-                                                bg='#1e1e1e', fg='#d4d4d4', wrap=tk.WORD)
-        self.log_text.pack(fill='both', expand=True, padx=5, pady=5)
+        # Estilo da barra de progresso
+        style = ttk.Style()
+        style.configure("Custom.Horizontal.TProgressbar", 
+                       background=self.colors['secondary'],
+                       troughcolor=self.colors['light'],
+                       borderwidth=0,
+                       thickness=20)
         
-        # Botões
-        button_frame = tk.Frame(tab_frame)
-        button_frame.pack(fill='x', padx=10, pady=5)
+        self.progress_bar = ttk.Progressbar(progress_content, 
+                                           style="Custom.Horizontal.TProgressbar",
+                                           mode='determinate')
+        self.progress_bar.pack(fill='x', pady=(0, 10))
         
-        self.start_button = tk.Button(button_frame, text="🚀 Iniciar", font=('Arial', 10, 'bold'),
-                                    bg='#28a745', fg='white', command=self.start_automation, padx=20)
-        self.start_button.pack(side='left', padx=5)
+        self.progress_label = tk.Label(progress_content, 
+                                      text="Sistema pronto para iniciar", 
+                                      font=('Arial', 10),
+                                      bg=self.colors['white'],
+                                      fg=self.colors['text_light'])
+        self.progress_label.pack(anchor='w')
         
-        self.stop_button = tk.Button(button_frame, text="⏸️ Parar", font=('Arial', 10, 'bold'),
-                                   bg='#dc3545', fg='white', command=self.stop_automation, padx=20, state='disabled')
-        self.stop_button.pack(side='left', padx=5)
+        # ========== LOG MODERNO ==========
+        log_section = tk.Frame(main_container, bg=self.colors['white'])
+        log_section.pack(fill='both', expand=True)
         
-        self.general_status = tk.Label(button_frame, text="Sistema pronto", font=('Arial', 10, 'bold'), fg='#28a745')
-        self.general_status.pack(side='right', padx=10)
+        # Borda do log
+        log_border = tk.Frame(main_container, bg=self.colors['border'])
+        log_border.pack(fill='both', expand=True)
+        log_inner = tk.Frame(log_border, bg=self.colors['white'])
+        log_inner.pack(padx=1, pady=1, fill='both', expand=True)
+        
+        log_header = tk.Frame(log_inner, bg=self.colors['white'])
+        log_header.pack(fill='x', padx=20, pady=(20, 10))
+        
+        tk.Label(log_header, text="📝 Log de Atividades", 
+                font=('Arial', 12, 'bold'), 
+                bg=self.colors['white'],
+                fg=self.colors['dark']).pack(side='left')
+        
+        self.log_text = scrolledtext.ScrolledText(log_inner, height=12, 
+                                                font=('Consolas', 9),
+                                                bg='#0f172a', 
+                                                fg='#e2e8f0', 
+                                                wrap=tk.WORD,
+                                                relief='flat',
+                                                borderwidth=0)
+        self.log_text.pack(fill='both', expand=True, padx=20, pady=(0, 20))
+        
+        # ========== BOTÕES DE AÇÃO MODERNOS ==========
+        button_section = tk.Frame(main_container, bg=self.colors['light'])
+        button_section.pack(fill='x', pady=(20, 0))
+        
+        button_container = tk.Frame(button_section, bg=self.colors['light'])
+        button_container.pack(fill='x')
+        
+        # Botão Iniciar
+        self.start_button = tk.Button(button_container, 
+                                     text="🚀 INICIAR AUTOMAÇÃO", 
+                                     font=('Arial', 11, 'bold'),
+                                     bg=self.colors['success'], 
+                                     fg=self.colors['white'],
+                                     activebackground='#059669',
+                                     activeforeground=self.colors['white'],
+                                     command=self.start_automation, 
+                                     padx=30,
+                                     pady=12,
+                                     relief='flat',
+                                     cursor='hand2')
+        self.start_button.pack(side='left', padx=(0, 10))
+        
+        # Botão Parar
+        self.stop_button = tk.Button(button_container, 
+                                    text="⏸️ PARAR", 
+                                    font=('Arial', 11, 'bold'),
+                                    bg=self.colors['danger'], 
+                                    fg=self.colors['white'],
+                                    activebackground='#dc2626',
+                                    activeforeground=self.colors['white'],
+                                    command=self.stop_automation, 
+                                    padx=30,
+                                    pady=12,
+                                    relief='flat',
+                                    cursor='hand2',
+                                    state='disabled')
+        self.stop_button.pack(side='left', padx=(0, 10))
+        
+        # Status geral
+        status_container = tk.Frame(button_container, bg=self.colors['white'],
+                                   relief='flat', bd=0)
+        status_container.pack(side='right', padx=10)
+        
+        status_inner = tk.Frame(status_container, bg=self.colors['white'])
+        status_inner.pack(padx=15, pady=10)
+        
+        self.general_status = tk.Label(status_inner, 
+                                      text="✓ Sistema Pronto", 
+                                      font=('Arial', 11, 'bold'), 
+                                      bg=self.colors['white'],
+                                      fg=self.colors['success'])
+        self.general_status.pack()
     
     def create_automation_tab_dia16(self):
         """Aba de automação para Dia 16"""
