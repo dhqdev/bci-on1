@@ -67,6 +67,14 @@
 
 {% block extra_js %}
 <script>
+// Conecta WebSocket para atualização em tempo real
+const socket = io();
+
+socket.on('history_update', function(data) {
+    // Atualiza quando novo registro é adicionado
+    loadHistory(data.dia);
+});
+
 async function loadHistory(dia) {
     try {
         const response = await fetch(`/api/history/${dia}`);
@@ -75,24 +83,26 @@ async function loadHistory(dia) {
         const tbody = document.getElementById(`history-${dia}`);
         tbody.innerHTML = '';
         
-        if (result.success && result.data.length > 0) {
+        if (result.success && result.data && result.data.length > 0) {
             result.data.reverse().forEach(entry => {
                 const row = tbody.insertRow();
                 row.innerHTML = `
-                    <td>${entry.hora}</td>
-                    <td>${entry.grupo}</td>
-                    <td>${entry.cota}</td>
-                    <td>${entry.nome}</td>
-                    <td>${entry.valor_lance}</td>
+                    <td>${entry.hora || '-'}</td>
+                    <td>${entry.grupo || '-'}</td>
+                    <td>${entry.cota || '-'}</td>
+                    <td>${entry.nome || '-'}</td>
+                    <td>${entry.valor_lance || '-'}</td>
                     <td>${entry.protocolo || '-'}</td>
-                    <td>${entry.status}</td>
+                    <td>${entry.status || '-'}</td>
                 `;
             });
         } else {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Sem dados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Sem dados ainda. Execute uma automação para gerar histórico.</td></tr>';
         }
     } catch (error) {
         console.error('Erro ao carregar histórico:', error);
+        const tbody = document.getElementById(`history-${dia}`);
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar dados</td></tr>';
     }
 }
 
@@ -100,11 +110,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loadHistory('dia8');
     loadHistory('dia16');
     
-    // Atualiza a cada 10 segundos
+    // Atualiza a cada 5 segundos
     setInterval(() => {
         loadHistory('dia8');
         loadHistory('dia16');
-    }, 10000);
+    }, 5000);
 });
 </script>
 {% endblock %}

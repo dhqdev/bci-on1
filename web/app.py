@@ -108,11 +108,7 @@ def api_credentials():
             if os.path.exists(filepath):
                 with open(filepath, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                # Remove senhas para segurança
-                if 'servopa' in data and 'senha' in data['servopa']:
-                    data['servopa']['senha'] = '********'
-                if 'todoist' in data and 'senha' in data['todoist']:
-                    data['todoist']['senha'] = '********'
+                # Retorna TUDO incluindo senhas (interface web é local/confiável)
                 return jsonify({'success': True, 'data': data})
             else:
                 return jsonify({'success': True, 'data': {}})
@@ -152,6 +148,45 @@ def api_evolution_config():
             return jsonify({'success': True, 'message': 'Configuração salva com sucesso'})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/update-from-github', methods=['POST'])
+def api_update_from_github():
+    """Atualiza código do GitHub"""
+    try:
+        import subprocess
+        
+        # Obtém diretório do projeto
+        project_dir = os.path.dirname(os.path.dirname(__file__))
+        
+        # Executa git pull
+        result = subprocess.run(
+            ['git', 'pull', 'origin', 'main'],
+            cwd=project_dir,
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        if result.returncode == 0:
+            return jsonify({
+                'success': True,
+                'message': 'Atualização concluída com sucesso!',
+                'output': result.stdout,
+                'needs_restart': 'Already up to date' not in result.stdout
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Erro ao executar git pull',
+                'output': result.stderr
+            })
+    
+    except subprocess.TimeoutExpired:
+        return jsonify({'success': False, 'error': 'Timeout ao executar comando'})
+    except FileNotFoundError:
+        return jsonify({'success': False, 'error': 'Git não encontrado. Instale o Git primeiro.'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/automation/start/<dia>', methods=['POST'])
 def api_start_automation(dia):
