@@ -1,6 +1,6 @@
 # 🤖 BCI-ON1 - Sistema de Automação Servopa + Todoist
 
-Sistema completo de automação para gerenciamento de lances no Servopa, integrado com Todoist e WhatsApp via Evolution API. Possui interface desktop (Tkinter) e interface web moderna (Flask + Bootstrap 5).
+Sistema completo de automação para gerenciamento de lances no Servopa, integrado com Todoist e WhatsApp via Evolution API. **Interface Web Moderna** (Flask + Bootstrap 5).
 
 ---
 
@@ -13,7 +13,6 @@ O **BCI-ON1** é um sistema de automação desenvolvido para simplificar e autom
 - ✅ **Automação Dia 8**: Login Servopa → Extração Todoist → Envio de Lances → Notificação WhatsApp
 - ✅ **Automação Dia 16**: Mesma rotina para o segundo ciclo mensal
 - ✅ **WhatsApp Bulk Send**: Envio em massa via Evolution API com suporte a grupos
-- ✅ **Interface Desktop**: GUI Tkinter para execução local
 - ✅ **Interface Web Moderna**: Dashboard com gráficos, logs em tempo real e controle remoto
 - ✅ **Histórico Completo**: Registro de todas as execuções em JSON
 - ✅ **Gerenciamento de Credenciais**: Interface amigável para configurar logins
@@ -44,6 +43,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-li
 ```powershell
 irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.bat -OutFile setup.bat; .\setup.bat
 ```
+
+**🎉 Após instalação, um atalho "BCI-ON1-Web.bat" será criado na sua área de trabalho!**
 
 ---
 
@@ -90,37 +91,30 @@ O instalador irá:
 
 ## 🎮 Como Usar
 
-### Opção 1: Interface Desktop (Tkinter)
+### Interface Web (Moderna) - RECOMENDADO
 
-#### Linux / macOS
-```bash
-bash run.sh
+#### Opção 1: Usar o Atalho da Área de Trabalho (Windows)
+```
+Clique duas vezes em: BCI-ON1-Web.bat
 ```
 
-#### Windows
-```
-Clique duas vezes em: run.bat
-```
+#### Opção 2: Linha de Comando
 
-**Funcionalidades:**
-- Configurar credenciais Servopa e Todoist
-- Executar automação Dia 8 ou Dia 16
-- Visualizar logs em tempo real
-- Ver histórico de execuções
-
----
-
-### Opção 2: Interface Web (Moderna)
-
-#### Linux / macOS
+**Linux / macOS:**
 ```bash
 bash web/run_web.sh
 ```
 
-#### Windows
+**Windows:**
 ```
-Navegue até a pasta web/
-Clique duas vezes em: run_web.bat
+cd web
+run_web.bat
+```
+
+#### Opção 3: Manual
+```bash
+cd web
+python app.py
 ```
 
 **Depois acesse no navegador:**
@@ -142,11 +136,6 @@ http://localhost:5000
 ## ⚙️ Configuração
 
 ### 1. Credenciais Servopa e Todoist
-
-**Interface Desktop:**
-- Abra a interface Tkinter
-- Clique em "Configurações"
-- Preencha login/senha Servopa e Token Todoist
 
 **Interface Web:**
 - Acesse http://localhost:5000/credentials

@@ -1,38 +1,21 @@
 @echo off
-title Sistema de Automação Servopa + Todoist
+title Sistema de Automação Servopa + Todoist - WEB
 
 REM Ir para o diretório do script
 cd /d "%~dp0"
 
 echo ==========================================
-echo 🤖 Sistema de Automação Servopa + Todoist
+echo 🚀 Sistema de Automação Servopa + Todoist
 echo ==========================================
 echo.
-
-echo Verificando ambiente virtual...
-if not exist venv\Scripts\activate.bat (
-    echo ❌ Ambiente virtual não encontrado!
-    echo Execute primeiro: install.bat
-    echo.
-    pause
-    exit /b 1
-)
-
-echo Ativando ambiente virtual...
-call venv\Scripts\activate.bat
-
-if %errorLevel% == 0 (
-    echo ✓ Ambiente virtual ativado
-    echo.
-) else (
-    echo ❌ Falha ao ativar ambiente virtual
-    pause
-    exit /b 1
-)
-
-echo Iniciando sistema...
-python main_gui.py
-
+echo ⚠️  ATENÇÃO: Versão Desktop Desativada
 echo.
-echo Sistema encerrado.
+echo Este sistema agora roda apenas em modo WEB.
+echo.
+echo Para iniciar a interface web, execute:
+echo    web\run_web.bat
+echo.
+echo Ou clique no atalho "BCI-ON1 Web" na sua área de trabalho.
+echo.
+echo ==========================================
 pause

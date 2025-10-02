@@ -63,10 +63,61 @@ echo [*] Clonando repositorio...
 git clone https://github.com/dhqdev/bci-on1.git "%INSTALL_DIR%"
 cd /d "%INSTALL_DIR%"
 
-REM Run installer
+# Run installer
 echo [*] Executando instalador...
 echo.
 call install.bat
+
+REM Criar atalho na área de trabalho
+echo.
+echo [*] Criando atalho na area de trabalho...
+
+REM Cria arquivo BAT na área de trabalho
+set DESKTOP=%USERPROFILE%\Desktop
+set SHORTCUT_FILE=%DESKTOP%\BCI-ON1-Web.bat
+
+echo @echo off > "%SHORTCUT_FILE%"
+echo title BCI-ON1 - Interface Web >> "%SHORTCUT_FILE%"
+echo color 0B >> "%SHORTCUT_FILE%"
+echo. >> "%SHORTCUT_FILE%"
+echo echo ========================================== >> "%SHORTCUT_FILE%"
+echo echo   BCI-ON1 - Sistema de Automacao >> "%SHORTCUT_FILE%"
+echo echo ========================================== >> "%SHORTCUT_FILE%"
+echo echo. >> "%SHORTCUT_FILE%"
+echo. >> "%SHORTCUT_FILE%"
+echo REM Vai para o diretorio do projeto >> "%SHORTCUT_FILE%"
+echo cd /d "%INSTALL_DIR%" >> "%SHORTCUT_FILE%"
+echo. >> "%SHORTCUT_FILE%"
+echo REM Ativa ambiente virtual >> "%SHORTCUT_FILE%"
+echo if exist "venv\Scripts\activate.bat" ( >> "%SHORTCUT_FILE%"
+echo     echo [+] Ativando ambiente virtual... >> "%SHORTCUT_FILE%"
+echo     call venv\Scripts\activate.bat >> "%SHORTCUT_FILE%"
+echo ) else ( >> "%SHORTCUT_FILE%"
+echo     echo [!] ERRO: Ambiente virtual nao encontrado! >> "%SHORTCUT_FILE%"
+echo     echo Execute o instalador novamente. >> "%SHORTCUT_FILE%"
+echo     pause >> "%SHORTCUT_FILE%"
+echo     exit /b 1 >> "%SHORTCUT_FILE%"
+echo ) >> "%SHORTCUT_FILE%"
+echo. >> "%SHORTCUT_FILE%"
+echo echo. >> "%SHORTCUT_FILE%"
+echo echo ========================================== >> "%SHORTCUT_FILE%"
+echo echo Iniciando servidor web... >> "%SHORTCUT_FILE%"
+echo echo ========================================== >> "%SHORTCUT_FILE%"
+echo echo. >> "%SHORTCUT_FILE%"
+echo echo Apos iniciar, abra seu navegador em: >> "%SHORTCUT_FILE%"
+echo echo    http://localhost:5000 >> "%SHORTCUT_FILE%"
+echo echo. >> "%SHORTCUT_FILE%"
+echo echo Pressione CTRL+C para parar o servidor. >> "%SHORTCUT_FILE%"
+echo echo ========================================== >> "%SHORTCUT_FILE%"
+echo echo. >> "%SHORTCUT_FILE%"
+echo. >> "%SHORTCUT_FILE%"
+echo REM Inicia servidor >> "%SHORTCUT_FILE%"
+echo cd web >> "%SHORTCUT_FILE%"
+echo python app.py >> "%SHORTCUT_FILE%"
+echo. >> "%SHORTCUT_FILE%"
+echo pause >> "%SHORTCUT_FILE%"
+
+echo [OK] Atalho criado: %SHORTCUT_FILE%
 
 echo.
 echo ============================================================
@@ -75,9 +126,12 @@ echo ============================================================
 echo.
 echo Projeto instalado em: %INSTALL_DIR%
 echo.
+echo ✅ Atalho criado na area de trabalho: BCI-ON1-Web.bat
+echo.
 echo Como executar:
-echo   cd %INSTALL_DIR% ^&^& run.bat
-echo   ou
-echo   cd %INSTALL_DIR%\web ^&^& run_web.bat
+echo   1. Clique no atalho "BCI-ON1-Web.bat" na area de trabalho
+echo   2. Ou execute: cd %INSTALL_DIR%\web ^&^& run_web.bat
+echo.
+echo Apos iniciar, abra: http://localhost:5000
 echo.
 pause

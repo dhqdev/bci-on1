@@ -1,0 +1,80 @@
+============================================================
+  BCI-ON1 - Sistema de Automação Servopa + Todoist
+  GUIA RÁPIDO DE USO
+============================================================
+
+📌 IMPORTANTE: Este sistema agora funciona APENAS em modo WEB!
+
+============================================================
+🚀 INSTALAÇÃO RÁPIDA
+============================================================
+
+No PowerShell (como Administrador), execute:
+
+  irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.bat -OutFile setup.bat; .\setup.bat
+
+Isso irá:
+✅ Instalar todas as dependências
+✅ Configurar o projeto
+✅ Criar atalho "BCI-ON1-Web.bat" na sua área de trabalho
+
+============================================================
+🎮 COMO USAR
+============================================================
+
+OPÇÃO 1 (RECOMENDADO):
+  → Clique no atalho "BCI-ON1-Web.bat" na área de trabalho
+  
+OPÇÃO 2:
+  → Navegue até a pasta: bci-on1\web
+  → Clique em: run_web.bat
+  
+OPÇÃO 3 (Manual):
+  → Abra o terminal
+  → cd bci-on1\web
+  → python app.py
+
+Após iniciar, abra seu navegador em:
+  http://localhost:5000
+
+============================================================
+📋 FUNCIONALIDADES
+============================================================
+
+✅ Dashboard com estatísticas
+✅ Automação Dia 8 e Dia 16
+✅ Envio WhatsApp em massa
+✅ Histórico de execuções
+✅ Gerenciamento de credenciais
+✅ Logs em tempo real
+
+============================================================
+⚙️ CONFIGURAÇÃO INICIAL
+============================================================
+
+1. Acesse: http://localhost:5000/credentials
+2. Configure:
+   - Login e senha do Servopa
+   - Token do Todoist
+   - API do WhatsApp (Evolution API)
+3. Salve as credenciais
+
+============================================================
+❓ PROBLEMAS?
+============================================================
+
+Erro de porta ocupada?
+  → Outro serviço está na porta 5000
+  → Feche outros programas ou mude a porta no web/app.py
+
+Python não encontrado?
+  → Execute novamente o instalador
+  → Ou instale Python 3.8+ manualmente
+
+============================================================
+📧 SUPORTE
+============================================================
+
+Para mais informações, consulte o README.md
+
+============================================================

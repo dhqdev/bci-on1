@@ -1,0 +1,98 @@
+============================================================
+  BCI-ON1 - CHANGELOG DE MODIFICAÇÕES
+  Data: $(date)
+============================================================
+
+🔄 MUDANÇAS IMPLEMENTADAS:
+
+1. ✅ VERSÃO WEB ÚNICA
+   - Sistema agora roda APENAS em modo web
+   - Versão desktop (Tkinter) foi desativada
+   - Interface moderna via navegador (Flask)
+
+2. ✅ ARQUIVOS MODIFICADOS:
+
+   a) run.bat
+      - Agora exibe mensagem redirecionando para versão web
+      - Não executa mais main_gui.py
+
+   b) main.py
+      - Código de automação local removido
+      - Exibe mensagem de redirecionamento
+
+   c) main_gui.py
+      - Interface Tkinter desativada
+      - Exibe mensagem de redirecionamento
+
+   d) setup-windows.bat
+      - Cria automaticamente atalho "BCI-ON1-Web.bat" na área de trabalho
+      - Atalho configurado para abrir direto a versão web
+
+   e) web/run_web.bat
+      - Melhorado com mais validações
+      - Mensagens mais claras
+      - Verifica ambiente virtual
+
+   f) README.md
+      - Documentação atualizada
+      - Removidas referências à versão desktop
+      - Instruções focadas na versão web
+
+3. ✅ NOVOS ARQUIVOS CRIADOS:
+
+   a) COMO_USAR.txt
+      - Guia rápido de instalação e uso
+      - Instruções passo a passo
+
+   b) INICIAR_WEB.bat
+      - Script auxiliar para iniciar a versão web
+      - Pode ser copiado para qualquer lugar
+
+============================================================
+📋 COMO USAR AGORA:
+============================================================
+
+INSTALAÇÃO (PowerShell como Admin):
+  irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.bat -OutFile setup.bat; .\setup.bat
+
+APÓS INSTALAÇÃO:
+  → Um atalho "BCI-ON1-Web.bat" será criado na área de trabalho
+  → Clique nele para iniciar o sistema
+
+ACESSO:
+  → http://localhost:5000
+
+============================================================
+✨ BENEFÍCIOS DAS MUDANÇAS:
+============================================================
+
+✅ Interface mais moderna e profissional
+✅ Acesso via navegador (mais fácil de usar)
+✅ Não precisa instalar Tkinter
+✅ Logs em tempo real via WebSocket
+✅ Dashboard com gráficos interativos
+✅ Acesso remoto possível (configurando IP/porta)
+✅ Responsivo (funciona em mobile)
+✅ Um único ponto de manutenção
+
+============================================================
+🔧 PARA DESENVOLVEDORES:
+============================================================
+
+Estrutura mantida:
+  - automation/ (orquestradores)
+  - auth/ (autenticações)
+  - utils/ (utilitários)
+  - web/ (interface web) ← PRINCIPAL AGORA
+  - ui/ (desativado)
+
+Arquivos importantes:
+  - web/app.py (servidor Flask)
+  - web/templates/ (HTML)
+  - web/static/ (CSS/JS)
+
+Para executar manualmente:
+  cd web
+  python app.py
+
+============================================================
