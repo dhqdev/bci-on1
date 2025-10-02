@@ -2,10 +2,13 @@
 # Módulo completo para automação de lances no Servopa
 
 import time
+
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+
+from utils.protocol_extractor import extract_protocol_from_docparser
 
 TIMEOUT = 20
 SERVOPA_PAINEL_URL = "https://www.consorcioservopa.com.br/vendas/painel"
@@ -295,13 +298,15 @@ def executar_lance(driver, progress_callback=None):
         registrar_button = wait.until(EC.element_to_be_clickable(
             (By.CSS_SELECTOR, "a.printBt")
         ))
-        
+
+        original_window = driver.current_window_handle
+        handles_before = set(driver.window_handles)
+
         registrar_button.click()
-        
-        # NOVA VALIDAÇÃO: Aguarda alguns segundos e verifica se aparece popup
+
         if progress_callback:
             progress_callback("🔍 Verificando resultado do registro...")
-        
+
         time.sleep(3)  # Aguarda popup aparecer se houver
         
         # Tenta encontrar o popup de erro
@@ -323,6 +328,13 @@ def executar_lance(driver, progress_callback=None):
                             progress_callback("⚠️ Popup detectado: 'Número do Protocolo Anterior é obrigatório'")
                             progress_callback("✅ Lance JÁ FOI REGISTRADO anteriormente - considerando sucesso!")
                         
+                        protocol_info = _capture_protocol_from_docparser(
+                            driver,
+                            original_window,
+                            handles_before,
+                            progress_callback,
+                        )
+
                         # Tenta clicar em OK se houver botão
                         try:
                             ok_button = driver.find_element(By.XPATH, 
@@ -337,7 +349,10 @@ def executar_lance(driver, progress_callback=None):
                             'success': True,
                             'already_exists': True,
                             'message': 'Lance já foi registrado anteriormente',
-                            'valor_lance': valor_lanfix
+                            'valor_lance': valor_lanfix,
+                            'protocol_number': protocol_info.get('protocol'),
+                            'docparser_url': protocol_info.get('docparser_url'),
+                            'protocol_source': protocol_info.get('source'),
                         }
             
             # Se não encontrou popup, lance foi registrado com sucesso agora
@@ -345,11 +360,21 @@ def executar_lance(driver, progress_callback=None):
                 if progress_callback:
                     progress_callback("✅ Lance registrado com sucesso!")
                 
+                protocol_info = _capture_protocol_from_docparser(
+                    driver,
+                    original_window,
+                    handles_before,
+                    progress_callback,
+                )
+
                 return {
                     'success': True,
                     'already_exists': False,
                     'message': 'Lance registrado com sucesso',
-                    'valor_lance': valor_lanfix
+                    'valor_lance': valor_lanfix,
+                    'protocol_number': protocol_info.get('protocol'),
+                    'docparser_url': protocol_info.get('docparser_url'),
+                    'protocol_source': protocol_info.get('source'),
                 }
                 
         except Exception as popup_error:
@@ -357,11 +382,21 @@ def executar_lance(driver, progress_callback=None):
             if progress_callback:
                 progress_callback(f"✅ Lance registrado (verificação de popup: {popup_error})")
             
+            protocol_info = _capture_protocol_from_docparser(
+                driver,
+                original_window,
+                handles_before,
+                progress_callback,
+            )
+
             return {
                 'success': True,
                 'already_exists': False,
                 'message': 'Lance registrado',
-                'valor_lance': valor_lanfix
+                'valor_lance': valor_lanfix,
+                'protocol_number': protocol_info.get('protocol'),
+                'docparser_url': protocol_info.get('docparser_url'),
+                'protocol_source': protocol_info.get('source'),
             }
         
     except Exception as e:
@@ -373,6 +408,67 @@ def executar_lance(driver, progress_callback=None):
             'message': f'Erro: {e}',
             'valor_lance': 'N/A'
         }
+
+
+def _capture_protocol_from_docparser(driver, original_window, handles_before, progress_callback=None) -> dict:
+    """Captura protocolo abrindo a aba gerada pelo registro do lance."""
+
+    protocol_payload = {
+        'protocol': None,
+        'docparser_url': None,
+        'source': None,
+    }
+
+    wait_until = time.time() + 10
+    new_handles = []
+    while time.time() < wait_until:
+        handles_after = list(driver.window_handles)
+        new_handles = [h for h in handles_after if h not in handles_before]
+        current_url = driver.current_url
+        if new_handles or "docparser/view" in current_url:
+            break
+        time.sleep(1)
+
+    candidate_handles = new_handles + [original_window]
+
+    for handle in candidate_handles:
+        try:
+            driver.switch_to.window(handle)
+            current_url = driver.current_url
+        except Exception:
+            continue
+
+        if "docparser/view" not in current_url:
+            continue
+
+        if progress_callback:
+            progress_callback("📄 Documento de protocolo detectado, extraindo dados...")
+
+        result = extract_protocol_from_docparser(driver, current_url, progress_callback)
+        protocol_payload['protocol'] = result.protocol
+        protocol_payload['docparser_url'] = result.docparser_url
+        protocol_payload['source'] = result.source
+
+        if handle != original_window:
+            try:
+                driver.close()
+            except Exception:
+                pass
+        else:
+            try:
+                driver.back()
+                WebDriverWait(driver, 10).until(EC.url_contains("/vendas/lances"))
+            except Exception:
+                pass
+
+        break
+
+    try:
+        driver.switch_to.window(original_window)
+    except Exception:
+        pass
+
+    return protocol_payload
 
 
 def processar_lance_completo(driver, grupo, cota, progress_callback=None):
@@ -424,9 +520,13 @@ def processar_lance_completo(driver, grupo, cota, progress_callback=None):
         lance_result = executar_lance(driver, progress_callback)
         if not lance_result['success']:
             return result
+
         result['steps_completed'].append('executar_lance')
         result['already_exists'] = lance_result.get('already_exists', False)
         result['lance_message'] = lance_result.get('message', '')
+        result['protocol_number'] = lance_result.get('protocol_number')
+        result['protocol_source'] = lance_result.get('protocol_source')
+        result['docparser_url'] = lance_result.get('docparser_url')
         
         # Sucesso!
         result['success'] = True

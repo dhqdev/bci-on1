@@ -135,7 +135,14 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                     # Automação foi parada pelo usuário DURANTE o processamento deste item
                     if history_callback:
                         try:
-                            history_callback(grupo, cota, nome, "N/A", "⏹️ Parado", "Automação interrompida pelo usuário")
+                            history_callback(
+                                grupo,
+                                cota,
+                                nome,
+                                "N/A",
+                                "⏹️ Parado",
+                                "Automação interrompida pelo usuário",
+                            )
                         except:
                             pass
                     if progress_callback:
@@ -208,6 +215,8 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                         progress_callback(f"✅ [TODOIST] Tarefa marcada com sucesso!")
                     
                     result['success'] = True
+                    result['protocol_number'] = lance_result.get('protocol_number')
+                    result['docparser_url'] = lance_result.get('docparser_url')
                     stats['completed'] += 1
                     
                     # ========== REGISTRA NO HISTÓRICO (SUCESSO) ==========
@@ -221,7 +230,16 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                                 observacao = "Lance registrado com sucesso"
                                 status = "✅ Sucesso"
                             
-                            history_callback(grupo, cota, nome, f"{valor_lance}%", status, observacao)
+                            history_callback(
+                                grupo,
+                                cota,
+                                nome,
+                                f"{valor_lance}%",
+                                status,
+                                observacao,
+                                protocolo=lance_result.get('protocol_number'),
+                                documento_url=lance_result.get('docparser_url'),
+                            )
                         except Exception as hist_error:
                             if progress_callback:
                                 progress_callback(f"⚠️ Aviso: Não foi possível registrar no histórico: {hist_error}")

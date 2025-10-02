@@ -10,6 +10,9 @@ webdriver-manager>=4.0.1
 # Requests - Comunicação HTTP
 requests>=2.31.0
 
+# pdfplumber - Extração de texto de PDFs (protocolos Servopa)
+pdfplumber>=0.11.0
+
 # BeautifulSoup4 - Parsing HTML (usado nos scripts de verificação)
 beautifulsoup4>=4.12.0
 

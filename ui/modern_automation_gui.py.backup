@@ -461,11 +461,10 @@ class ModernAutomationGUI:
         except Exception as e:
             self.creds_status.config(text=f"❌ Erro: {str(e)[:30]}", fg='red')
     
-
-    def create_whatsapp_tab(self):
-        """Aba unificada de envio de mensagens WhatsApp - Dia 8 e Dia 16"""
-        tab_frame = tk.Frame(self.notebook, bg=self.colors['light'])
-        self.notebook.add(tab_frame, text='📱 WhatsApp')
+    def create_message_tab_dia8(self):
+        """Aba de envio de mensagens WhatsApp - DIA 8"""
+        tab_frame = tk.Frame(self.notebook)
+        self.notebook.add(tab_frame, text='📱 Dia 8')
         
         # Inicializa variáveis compartilhadas (apenas uma vez)
         if not hasattr(self, 'evolution_config_file'):
@@ -474,166 +473,87 @@ class ModernAutomationGUI:
             self.evo_instance_var = tk.StringVar(value="david -tekvo")
             self.evo_api_key_var = tk.StringVar(value="634A7E882CE5-4314-8C5B-BC79C0A9EBBA")
         
-        # Container principal com scroll
-        main_container = tk.Frame(tab_frame, bg=self.colors['light'])
+        # Container principal
+        main_container = tk.Frame(tab_frame)
         main_container.pack(fill='both', expand=True, padx=10, pady=10)
         
-        # ========== TÍTULO E DESCRIÇÃO ==========
-        header_border = tk.Frame(main_container, bg=self.colors['border'])
-        header_border.pack(fill='x', pady=(0, 10))
-        header_inner = tk.Frame(header_border, bg=self.colors['white'])
-        header_inner.pack(padx=1, pady=1, fill='x')
-        
-        header_content = tk.Frame(header_inner, bg=self.colors['white'])
-        header_content.pack(fill='x', padx=20, pady=15)
-        
-        tk.Label(header_content, text="📱 Disparo em Massa via WhatsApp", 
-                font=('Arial', 16, 'bold'), bg=self.colors['white'], fg=self.colors['primary']).pack(anchor='w')
-        tk.Label(header_content, 
-                text="Configure os contatos e mensagens para envio automático nos dias 8 e 16 de cada mês",
-                font=('Arial', 10), bg=self.colors['white'], fg=self.colors['text_light'], wraplength=900, justify='left').pack(anchor='w', pady=(5, 0))
-        
-        # ========== CONFIGURAÇÃO DA API (URL BLOQUEADA) ==========
-        api_frame = tk.LabelFrame(main_container, text="🔧 Configuração da Evolution API (URL Bloqueada)", 
-                                  font=('Arial', 12, 'bold'), bg=self.colors['light'])
+        # ========== CONFIGURAÇÃO DA API (compartilhada) ==========
+        api_frame = tk.LabelFrame(main_container, text="🔧 Configuração da Evolution API", 
+                                  font=('Arial', 12, 'bold'))
         api_frame.pack(fill='x', pady=5)
         
-        api_content = tk.Frame(api_frame, bg=self.colors['light'])
+        api_content = tk.Frame(api_frame)
         api_content.pack(fill='x', padx=15, pady=10)
         
-        # URL da API (BLOQUEADA - READ ONLY)
-        tk.Label(api_content, text="URL da API:", font=('Arial', 10, 'bold'), bg=self.colors['light']).pack(anchor='w')
-        url_entry = tk.Entry(api_content, font=('Arial', 10), width=60, textvariable=self.evo_api_url_var, 
-                            state='readonly', readonlybackground='#f0f0f0', fg='#555555')
+        # URL da API
+        tk.Label(api_content, text="URL da API:", font=('Arial', 10, 'bold')).pack(anchor='w')
+        url_entry = tk.Entry(api_content, font=('Arial', 10), width=60, textvariable=self.evo_api_url_var)
         url_entry.pack(fill='x', pady=(2, 8))
         
         # Nome da Instância
-        tk.Label(api_content, text="Nome da Instância:", font=('Arial', 10, 'bold'), bg=self.colors['light']).pack(anchor='w')
+        tk.Label(api_content, text="Nome da Instância:", font=('Arial', 10, 'bold')).pack(anchor='w')
         instance_entry = tk.Entry(api_content, font=('Arial', 10), width=60, textvariable=self.evo_instance_var)
         instance_entry.pack(fill='x', pady=(2, 8))
         
         # API Key
-        tk.Label(api_content, text="API Key:", font=('Arial', 10, 'bold'), bg=self.colors['light']).pack(anchor='w')
+        tk.Label(api_content, text="API Key:", font=('Arial', 10, 'bold')).pack(anchor='w')
         apikey_entry = tk.Entry(api_content, font=('Arial', 10), width=60, textvariable=self.evo_api_key_var)
         apikey_entry.pack(fill='x', pady=(2, 8))
         
         # Botão de teste
-        test_button_frame = tk.Frame(api_content, bg=self.colors['light'])
+        test_button_frame = tk.Frame(api_content)
         test_button_frame.pack(fill='x')
         
         tk.Button(test_button_frame, text="🧪 Testar Conexão", font=('Arial', 9, 'bold'),
-                 bg='#007bff', fg='white', command=self.test_evolution_connection, padx=15, relief='flat', cursor='hand2').pack(side='left', padx=5)
+                 bg='#007bff', fg='white', command=self.test_evolution_connection, padx=15).pack(side='left', padx=5)
         
         if not hasattr(self, 'evo_test_status'):
-            self.evo_test_status = tk.Label(test_button_frame, text="", font=('Arial', 9), bg=self.colors['light'])
+            self.evo_test_status = tk.Label(test_button_frame, text="", font=('Arial', 9))
         self.evo_test_status.pack(side='left', padx=10)
         
-        # ========== CONTAINER PARA GRUPOS DIA 8 E DIA 16 (LADO A LADO) ==========
-        groups_container = tk.Frame(main_container, bg=self.colors['light'])
-        groups_container.pack(fill='both', expand=True, pady=5)
+        # ========== CONTATOS E MENSAGEM DO DIA 8 ==========
+        content_frame = tk.LabelFrame(main_container, text="📤 Envio de Mensagens - Dia 8", 
+                                      font=('Arial', 12, 'bold'))
+        content_frame.pack(fill='both', expand=True, pady=5)
         
-        # ========== GRUPO DIA 8 ==========
-        dia8_border = tk.Frame(groups_container, bg=self.colors['border'])
-        dia8_border.pack(side='left', fill='both', expand=True, padx=(0, 5))
+        content = tk.Frame(content_frame)
+        content.pack(fill='both', expand=True, padx=15, pady=10)
         
-        dia8_frame = tk.Frame(dia8_border, bg=self.colors['white'])
-        dia8_frame.pack(padx=1, pady=1, fill='both', expand=True)
+        # Contatos
+        tk.Label(content, text="👥 Contatos (um por linha):", font=('Arial', 10, 'bold')).pack(anchor='w')
+        tk.Label(content, text="Formato: 5519995378302 - Nome Cliente", 
+                font=('Arial', 8), fg='gray').pack(anchor='w')
         
-        # Header Dia 8
-        dia8_header = tk.Frame(dia8_frame, bg=self.colors['secondary'], height=40)
-        dia8_header.pack(fill='x')
-        dia8_header.pack_propagate(False)
-        
-        tk.Label(dia8_header, text="📅 GRUPO DIA 8", font=('Arial', 12, 'bold'), 
-                bg=self.colors['secondary'], fg='white').pack(pady=10)
-        
-        dia8_content = tk.Frame(dia8_frame, bg=self.colors['white'])
-        dia8_content.pack(fill='both', expand=True, padx=15, pady=15)
-        
-        # Contatos Dia 8
-        tk.Label(dia8_content, text="👥 Contatos (um por linha):", font=('Arial', 10, 'bold'), bg=self.colors['white']).pack(anchor='w')
-        tk.Label(dia8_content, text="Formato: 5519995378302 - Nome Cliente", 
-                font=('Arial', 8), fg='gray', bg=self.colors['white']).pack(anchor='w')
-        
-        self.contacts_text_dia8 = scrolledtext.ScrolledText(dia8_content, height=10, font=('Consolas', 9), wrap=tk.WORD)
+        self.contacts_text_dia8 = scrolledtext.ScrolledText(content, height=10, font=('Consolas', 9), wrap=tk.WORD)
         self.contacts_text_dia8.pack(fill='both', expand=True, pady=5)
-        self.contacts_text_dia8.insert('1.0', "5519995378302 - Cliente Exemplo Dia 8")
+        self.contacts_text_dia8.insert('1.0', "5519995378302 - Cliente Exemplo")
         
-        # Mensagem Dia 8
-        tk.Label(dia8_content, text="💬 Mensagem do Dia 8:", font=('Arial', 10, 'bold'), bg=self.colors['white']).pack(anchor='w', pady=(10, 0))
-        tk.Label(dia8_content, text="Use {nome} para personalizar", 
-                font=('Arial', 8), fg='gray', bg=self.colors['white']).pack(anchor='w')
+        # Mensagem
+        tk.Label(content, text="💬 Mensagem do Dia 8:", font=('Arial', 10, 'bold')).pack(anchor='w', pady=(10, 0))
+        tk.Label(content, text="Use {nome} para personalizar", 
+                font=('Arial', 8), fg='gray').pack(anchor='w')
         
-        self.message_text_dia8 = scrolledtext.ScrolledText(dia8_content, height=6, font=('Consolas', 9), wrap=tk.WORD)
+        self.message_text_dia8 = scrolledtext.ScrolledText(content, height=8, font=('Consolas', 9), wrap=tk.WORD)
         self.message_text_dia8.pack(fill='both', expand=True, pady=5)
-        self.message_text_dia8.insert('1.0', "Olá {nome}! 🎉\n\nMensagem para envio no dia 8")
+        self.message_text_dia8.insert('1.0', "Olá {nome}! 🎉\n\nMensagem do Dia 8")
         
-        # Botões Dia 8
-        action_frame_dia8 = tk.Frame(dia8_content, bg=self.colors['white'])
-        action_frame_dia8.pack(fill='x', pady=10)
+        # Botões de ação
+        action_frame = tk.Frame(content)
+        action_frame.pack(fill='x', pady=10)
         
-        tk.Button(action_frame_dia8, text="📤 Enviar Agora", font=('Arial', 9, 'bold'),
-                 bg='#28a745', fg='white', command=lambda: self.send_simple_messages('dia8'), padx=15, relief='flat', cursor='hand2').pack(side='left', padx=3)
+        tk.Button(action_frame, text="📤 Enviar Mensagens Dia 8", font=('Arial', 10, 'bold'),
+                 bg='#28a745', fg='white', command=lambda: self.send_simple_messages('dia8'), padx=20).pack(side='left', padx=5)
         
-        tk.Button(action_frame_dia8, text="🗑️ Limpar", font=('Arial', 8),
-                 bg='#6c757d', fg='white', command=lambda: self.clear_simple_fields('dia8'), padx=10, relief='flat', cursor='hand2').pack(side='left', padx=3)
+        tk.Button(action_frame, text="🗑️ Limpar", font=('Arial', 9),
+                 bg='#6c757d', fg='white', command=lambda: self.clear_simple_fields('dia8'), padx=15).pack(side='left', padx=5)
         
-        self.send_status_dia8 = tk.Label(action_frame_dia8, text="", font=('Arial', 9), bg=self.colors['white'])
+        self.send_status_dia8 = tk.Label(action_frame, text="", font=('Arial', 10))
         self.send_status_dia8.pack(side='left', padx=10)
         
-        # ========== GRUPO DIA 16 ==========
-        dia16_border = tk.Frame(groups_container, bg=self.colors['border'])
-        dia16_border.pack(side='left', fill='both', expand=True, padx=(5, 0))
-        
-        dia16_frame = tk.Frame(dia16_border, bg=self.colors['white'])
-        dia16_frame.pack(padx=1, pady=1, fill='both', expand=True)
-        
-        # Header Dia 16
-        dia16_header = tk.Frame(dia16_frame, bg=self.colors['warning'], height=40)
-        dia16_header.pack(fill='x')
-        dia16_header.pack_propagate(False)
-        
-        tk.Label(dia16_header, text="📅 GRUPO DIA 16", font=('Arial', 12, 'bold'), 
-                bg=self.colors['warning'], fg='white').pack(pady=10)
-        
-        dia16_content = tk.Frame(dia16_frame, bg=self.colors['white'])
-        dia16_content.pack(fill='both', expand=True, padx=15, pady=15)
-        
-        # Contatos Dia 16
-        tk.Label(dia16_content, text="👥 Contatos (um por linha):", font=('Arial', 10, 'bold'), bg=self.colors['white']).pack(anchor='w')
-        tk.Label(dia16_content, text="Formato: 5519995378302 - Nome Cliente", 
-                font=('Arial', 8), fg='gray', bg=self.colors['white']).pack(anchor='w')
-        
-        self.contacts_text_dia16 = scrolledtext.ScrolledText(dia16_content, height=10, font=('Consolas', 9), wrap=tk.WORD)
-        self.contacts_text_dia16.pack(fill='both', expand=True, pady=5)
-        self.contacts_text_dia16.insert('1.0', "5519995378302 - Cliente Exemplo Dia 16")
-        
-        # Mensagem Dia 16
-        tk.Label(dia16_content, text="💬 Mensagem do Dia 16:", font=('Arial', 10, 'bold'), bg=self.colors['white']).pack(anchor='w', pady=(10, 0))
-        tk.Label(dia16_content, text="Use {nome} para personalizar", 
-                font=('Arial', 8), fg='gray', bg=self.colors['white']).pack(anchor='w')
-        
-        self.message_text_dia16 = scrolledtext.ScrolledText(dia16_content, height=6, font=('Consolas', 9), wrap=tk.WORD)
-        self.message_text_dia16.pack(fill='both', expand=True, pady=5)
-        self.message_text_dia16.insert('1.0', "Olá {nome}! 🎉\n\nMensagem para envio no dia 16")
-        
-        # Botões Dia 16
-        action_frame_dia16 = tk.Frame(dia16_content, bg=self.colors['white'])
-        action_frame_dia16.pack(fill='x', pady=10)
-        
-        tk.Button(action_frame_dia16, text="📤 Enviar Agora", font=('Arial', 9, 'bold'),
-                 bg='#28a745', fg='white', command=lambda: self.send_simple_messages('dia16'), padx=15, relief='flat', cursor='hand2').pack(side='left', padx=3)
-        
-        tk.Button(action_frame_dia16, text="🗑️ Limpar", font=('Arial', 8),
-                 bg='#6c757d', fg='white', command=lambda: self.clear_simple_fields('dia16'), padx=10, relief='flat', cursor='hand2').pack(side='left', padx=3)
-        
-        self.send_status_dia16 = tk.Label(action_frame_dia16, text="", font=('Arial', 9), bg=self.colors['white'])
-        self.send_status_dia16.pack(side='left', padx=10)
-        
-        # ========== LOG DE ENVIO (COMPARTILHADO) ==========
+        # ========== LOG DE ENVIO ==========
         if not hasattr(self, 'message_log_text'):
-            log_frame = tk.LabelFrame(main_container, text="📝 Log de Envio", font=('Arial', 12, 'bold'), bg=self.colors['light'])
-            log_frame.pack(fill='both', expand=True, pady=10)
+            log_frame = tk.LabelFrame(main_container, text="� Log de Envio", font=('Arial', 12, 'bold'))
+            log_frame.pack(fill='both', expand=True, pady=5)
             
             self.message_log_text = scrolledtext.ScrolledText(log_frame, height=8, font=('Consolas', 9),
                                                               bg='#1e1e1e', fg='#d4d4d4', wrap=tk.WORD)
@@ -643,7 +563,77 @@ class ModernAutomationGUI:
         if not hasattr(self, '_config_loaded'):
             self._config_loaded = True
             self.root.after(500, self.load_evolution_config)
-
+    
+    def create_message_tab_dia16(self):
+        """Aba de envio de mensagens WhatsApp - DIA 16"""
+        tab_frame = tk.Frame(self.notebook)
+        self.notebook.add(tab_frame, text='📱 Dia 16')
+        
+        # Inicializa variáveis compartilhadas (caso ainda não existam)
+        if not hasattr(self, 'evolution_config_file'):
+            self.evolution_config_file = 'evolution_config.json'
+            self.evo_api_url_var = tk.StringVar(value="https://zap.tekvosoft.com")
+            self.evo_instance_var = tk.StringVar(value="david -tekvo")
+            self.evo_api_key_var = tk.StringVar(value="634A7E882CE5-4314-8C5B-BC79C0A9EBBA")
+        
+        # Container principal
+        main_container = tk.Frame(tab_frame)
+        main_container.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # ========== NOTA: API JÁ CONFIGURADA NA ABA DIA 8 ==========
+        info_frame = tk.Frame(main_container, bg='#d1ecf1', relief='solid', borderwidth=1)
+        info_frame.pack(fill='x', pady=5)
+        tk.Label(info_frame, text="ℹ️ Configuração da API está na aba 'Dia 8'",
+                font=('Arial', 9, 'italic'), bg='#d1ecf1', fg='#0c5460').pack(pady=5)
+        
+        # ========== CONTATOS E MENSAGEM DO DIA 16 ==========
+        content_frame = tk.LabelFrame(main_container, text="📤 Envio de Mensagens - Dia 16", 
+                                      font=('Arial', 12, 'bold'))
+        content_frame.pack(fill='both', expand=True, pady=5)
+        
+        content = tk.Frame(content_frame)
+        content.pack(fill='both', expand=True, padx=15, pady=10)
+        
+        # Contatos
+        tk.Label(content, text="👥 Contatos (um por linha):", font=('Arial', 10, 'bold')).pack(anchor='w')
+        tk.Label(content, text="Formato: 5519995378302 - Nome Cliente", 
+                font=('Arial', 8), fg='gray').pack(anchor='w')
+        
+        self.contacts_text_dia16 = scrolledtext.ScrolledText(content, height=10, font=('Consolas', 9), wrap=tk.WORD)
+        self.contacts_text_dia16.pack(fill='both', expand=True, pady=5)
+        self.contacts_text_dia16.insert('1.0', "5519995378302 - Cliente Exemplo")
+        
+        # Mensagem
+        tk.Label(content, text="💬 Mensagem do Dia 16:", font=('Arial', 10, 'bold')).pack(anchor='w', pady=(10, 0))
+        tk.Label(content, text="Use {nome} para personalizar", 
+                font=('Arial', 8), fg='gray').pack(anchor='w')
+        
+        self.message_text_dia16 = scrolledtext.ScrolledText(content, height=8, font=('Consolas', 9), wrap=tk.WORD)
+        self.message_text_dia16.pack(fill='both', expand=True, pady=5)
+        self.message_text_dia16.insert('1.0', "Olá {nome}! 🎉\n\nMensagem do Dia 16")
+        
+        # Botões de ação
+        action_frame = tk.Frame(content)
+        action_frame.pack(fill='x', pady=10)
+        
+        tk.Button(action_frame, text="📤 Enviar Mensagens Dia 16", font=('Arial', 10, 'bold'),
+                 bg='#28a745', fg='white', command=lambda: self.send_simple_messages('dia16'), padx=20).pack(side='left', padx=5)
+        
+        tk.Button(action_frame, text="🗑️ Limpar", font=('Arial', 9),
+                 bg='#6c757d', fg='white', command=lambda: self.clear_simple_fields('dia16'), padx=15).pack(side='left', padx=5)
+        
+        self.send_status_dia16 = tk.Label(action_frame, text="", font=('Arial', 10))
+        self.send_status_dia16.pack(side='left', padx=10)
+        
+        # Log compartilhado (já criado na aba Dia 8)
+        if hasattr(self, 'message_log_text'):
+            log_frame = tk.LabelFrame(main_container, text="📝 Log de Envio (Compartilhado)", 
+                                     font=('Arial', 12, 'bold'))
+            log_frame.pack(fill='both', expand=True, pady=5)
+            
+            # Referência ao mesmo log
+            self.message_log_text.pack(fill='both', expand=True, padx=5, pady=5)
+    
     def load_evolution_config(self):
         """Carrega configurações da Evolution API"""
         try:
