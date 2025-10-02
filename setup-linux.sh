@@ -1,262 +1,521 @@
-#!/bin/bash#!/bin/bash
+#!/bin/bash#!/bin/bash#!/bin/bash
 
-# setup-linux.sh - Instalador Automático BCI-ON1 (Linux/Mac)# setup-linux.sh - Instalador Autônomo para Linux/Mac
+# setup-linux.sh - BCI-ON1 Installer for Linux/Mac
 
-# Pode ser executado diretamente do GitHub:# Sistema de Automação Servopa + Todoist
+# Usage: bash <(curl -fsSL https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-linux.sh)# setup-linux.sh - Instalador Automático BCI-ON1 (Linux/Mac)# setup-linux.sh - Instalador Autônomo para Linux/Mac
 
-# bash <(curl -fsSL https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-linux.sh)# 
 
-# COMO USAR:
 
-set -e# wget -O - https://raw.githubusercontent.com/dhqdev/auto-oxbci/main/setup-linux.sh | bash
+set -e# Pode ser executado diretamente do GitHub:# Sistema de Automação Servopa + Todoist
 
-# OU
 
-# Cores# curl -fsSL https://raw.githubusercontent.com/dhqdev/auto-oxbci/main/setup-linux.sh | bash
 
-RED='\033[0;31m'# OU baixe e execute: bash setup-linux.sh
+RED='\033[0;31m'# bash <(curl -fsSL https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-linux.sh)# 
 
 GREEN='\033[0;32m'
 
-YELLOW='\033[0;33m'set -e  # Sair em caso de erro
+YELLOW='\033[0;33m'# COMO USAR:
 
 BLUE='\033[0;34m'
 
-CYAN='\033[0;36m'# Cores para output
+CYAN='\033[0;36m'set -e# wget -O - https://raw.githubusercontent.com/dhqdev/auto-oxbci/main/setup-linux.sh | bash
 
-BOLD='\033[1m'RED='\033[0;31m'
+BOLD='\033[1m'
 
-NC='\033[0m'GREEN='\033[0;32m'
+NC='\033[0m'# OU
 
-YELLOW='\033[0;33m'
 
-# BannerBLUE='\033[0;34m'
 
-clearCYAN='\033[0;36m'
-
-echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"BOLD='\033[1m'
-
-echo -e "${CYAN}║${NC}  ${BOLD}🤖 BCI-ON1 - Instalador Automático${NC}                    ${CYAN}║${NC}"NC='\033[0m' # No Color
-
-echo -e "${CYAN}║${NC}     Sistema de Automação Servopa + Todoist                ${CYAN}║${NC}"
-
-echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"# Função para imprimir banner
-
-echo ""print_banner() {
+print_banner() {# Cores# curl -fsSL https://raw.githubusercontent.com/dhqdev/auto-oxbci/main/setup-linux.sh | bash
 
     clear
 
-# Funções    echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}============================================================${NC}"RED='\033[0;31m'# OU baixe e execute: bash setup-linux.sh
 
-print_step() {    echo -e "${CYAN}║${NC}  ${BOLD}🤖 Sistema de Automação Servopa + Todoist${NC}              ${CYAN}║${NC}"
+    echo -e "${CYAN}  ${BOLD}BCI-ON1 - Instalador Automatico${NC}"
 
-    echo -e "${BLUE}▶${NC} ${BOLD}$1${NC}"    echo -e "${CYAN}║${NC}     Instalador Automático Completo                        ${CYAN}║${NC}"
+    echo -e "${CYAN}  Sistema de Automacao Servopa + Todoist${NC}"GREEN='\033[0;32m'
 
-}    echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${CYAN}============================================================${NC}"
 
-    echo ""
+    echo ""YELLOW='\033[0;33m'set -e  # Sair em caso de erro
 
-print_success() {}
+}
 
-    echo -e "${GREEN}✓${NC} $1"
-
-}# Funções para mensagens
+BLUE='\033[0;34m'
 
 print_step() {
 
-print_warning() {    echo -e "${BLUE}▶${NC} ${BOLD}$1${NC}"
-
-    echo -e "${YELLOW}⚠${NC} $1"}
+    echo -e "${BLUE}[*]${NC} ${BOLD}$1${NC}"CYAN='\033[0;36m'# Cores para output
 
 }
+
+BOLD='\033[1m'RED='\033[0;31m'
 
 print_success() {
 
-print_error() {    echo -e "${GREEN}✓${NC} $1"
-
-    echo -e "${RED}✗${NC} $1"}
+    echo -e "${GREEN}[OK]${NC} $1"NC='\033[0m'GREEN='\033[0;32m'
 
 }
+
+YELLOW='\033[0;33m'
 
 print_warning() {
 
-print_info() {    echo -e "${YELLOW}⚠${NC} $1"
-
-    echo -e "${CYAN}ℹ${NC} $1"}
+    echo -e "${YELLOW}[!]${NC} $1"# BannerBLUE='\033[0;34m'
 
 }
 
+clearCYAN='\033[0;36m'
+
 print_error() {
 
-# Detectar sistema operacional    echo -e "${RED}✗${NC} $1"
+    echo -e "${RED}[ERRO]${NC} $1"echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"BOLD='\033[1m'
 
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then}
+}
 
-    OS="Linux"
+echo -e "${CYAN}║${NC}  ${BOLD}🤖 BCI-ON1 - Instalador Automático${NC}                    ${CYAN}║${NC}"NC='\033[0m' # No Color
 
-    print_info "Sistema detectado: Linux"print_info() {
+print_info() {
 
-elif [[ "$OSTYPE" == "darwin"* ]]; then    echo -e "${CYAN}ℹ${NC} $1"
+    echo -e "${CYAN}[INFO]${NC} $1"echo -e "${CYAN}║${NC}     Sistema de Automação Servopa + Todoist                ${CYAN}║${NC}"
 
-    OS="Mac"}
+}
 
-    print_info "Sistema detectado: macOS"
+echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"# Função para imprimir banner
 
-else# Detectar sistema operacional
+print_banner
 
-    print_error "Sistema operacional não suportado: $OSTYPE"detect_os() {
+echo ""print_banner() {
 
-    exit 1    OS="$(uname -s)"
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 
-fi    case "${OS}" in
+    OS="Linux"    clear
 
-        Linux*)     
+    print_info "Sistema detectado: Linux"
 
-echo ""            MACHINE="Linux"
+elif [[ "$OSTYPE" == "darwin"* ]]; then# Funções    echo -e "${CYAN}╔════════════════════════════════════════════════════════════╗${NC}"
 
-            if [ -f /etc/os-release ]; then
+    OS="Mac"
 
-# 1. Verificar/Instalar Git                . /etc/os-release
+    print_info "Sistema detectado: macOS"print_step() {    echo -e "${CYAN}║${NC}  ${BOLD}🤖 Sistema de Automação Servopa + Todoist${NC}              ${CYAN}║${NC}"
 
-print_step "Verificando Git..."                OS_NAME=$NAME
+else
 
-                OS_VERSION=$VERSION_ID
+    print_error "Sistema operacional nao suportado: $OSTYPE"    echo -e "${BLUE}▶${NC} ${BOLD}$1${NC}"    echo -e "${CYAN}║${NC}     Instalador Automático Completo                        ${CYAN}║${NC}"
 
-if ! command -v git &> /dev/null; then            fi
+    exit 1
 
-    print_warning "Git não encontrado. Instalando..."            ;;
+fi}    echo -e "${CYAN}╚════════════════════════════════════════════════════════════╝${NC}"
 
-            Darwin*)    
 
-    if [[ "$OS" == "Linux" ]]; then            MACHINE="Mac"
 
-        if command -v apt-get &> /dev/null; then            OS_NAME="macOS"
+echo ""    echo ""
 
-            sudo apt-get update -qq            OS_VERSION=$(sw_vers -productVersion)
 
-            sudo apt-get install -y git            ;;
 
-        elif command -v yum &> /dev/null; then        *)          
+# 1. Check Gitprint_success() {}
 
-            sudo yum install -y git            MACHINE="UNKNOWN"
+print_step "Verificando Git..."
 
-        elif command -v dnf &> /dev/null; then            print_error "Sistema operacional não suportado: ${OS}"
+    echo -e "${GREEN}✓${NC} $1"
 
-            sudo dnf install -y git            exit 1
+if ! command -v git &> /dev/null; then
 
-        fi            ;;
+    print_warning "Git nao encontrado. Instalando..."}# Funções para mensagens
 
-    elif [[ "$OS" == "Mac" ]]; then    esac
+    
 
-        if command -v brew &> /dev/null; then}
+    if [[ "$OS" == "Linux" ]]; thenprint_step() {
+
+        if command -v apt-get &> /dev/null; then
+
+            sudo apt-get update -qqprint_warning() {    echo -e "${BLUE}▶${NC} ${BOLD}$1${NC}"
+
+            sudo apt-get install -y git
+
+        elif command -v yum &> /dev/null; then    echo -e "${YELLOW}⚠${NC} $1"}
+
+            sudo yum install -y git
+
+        elif command -v dnf &> /dev/null; then}
+
+            sudo dnf install -y git
+
+        fiprint_success() {
+
+    elif [[ "$OS" == "Mac" ]]; then
+
+        if command -v brew &> /dev/null; thenprint_error() {    echo -e "${GREEN}✓${NC} $1"
 
             brew install git
 
-        else# Verificar se está executando como root (não recomendado)
+        else    echo -e "${RED}✗${NC} $1"}
 
-            print_error "Homebrew não encontrado. Instale o Git manualmente."check_root() {
+            print_error "Homebrew nao encontrado. Instale o Git manualmente."
 
-            exit 1    if [ "$EUID" -eq 0 ]; then
+            exit 1}
 
-        fi        print_error "Não execute este script como root/sudo!"
+        fi
 
-    fi        print_info "Execute: bash setup-linux.sh"
+    fiprint_warning() {
+
+    
+
+    if command -v git &> /dev/null; thenprint_info() {    echo -e "${YELLOW}⚠${NC} $1"
+
+        print_success "Git instalado com sucesso!"
+
+    else    echo -e "${CYAN}ℹ${NC} $1"}
+
+        print_error "Falha ao instalar Git"
+
+        exit 1}
+
+    fi
+
+elseprint_error() {
+
+    GIT_VERSION=$(git --version | cut -d' ' -f3)
+
+    print_success "Git ja instalado (versao $GIT_VERSION)"# Detectar sistema operacional    echo -e "${RED}✗${NC} $1"
+
+fi
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then}
+
+echo ""
+
+    OS="Linux"
+
+# 2. Check Python
+
+print_step "Verificando Python..."    print_info "Sistema detectado: Linux"print_info() {
+
+
+
+PYTHON_CMD=""elif [[ "$OSTYPE" == "darwin"* ]]; then    echo -e "${CYAN}ℹ${NC} $1"
+
+if command -v python3 &> /dev/null; then
+
+    PYTHON_CMD="python3"    OS="Mac"}
+
+    PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)
+
+    print_success "Python3 encontrado (versao $PYTHON_VERSION)"    print_info "Sistema detectado: macOS"
+
+elif command -v python &> /dev/null; then
+
+    PYTHON_VERSION=$(python --version 2>&1 | cut -d' ' -f2)else# Detectar sistema operacional
+
+    if [[ $PYTHON_VERSION == 3.* ]]; then
+
+        PYTHON_CMD="python"    print_error "Sistema operacional não suportado: $OSTYPE"detect_os() {
+
+        print_success "Python encontrado (versao $PYTHON_VERSION)"
+
+    else    exit 1    OS="$(uname -s)"
+
+        print_error "Python 2 detectado. Python 3.8+ e necessario."
+
+        PYTHON_CMD=""fi    case "${OS}" in
+
+    fi
+
+fi        Linux*)     
+
+
+
+if [ -z "$PYTHON_CMD" ]; thenecho ""            MACHINE="Linux"
+
+    print_warning "Python 3 nao encontrado. Instalando..."
+
+                if [ -f /etc/os-release ]; then
+
+    if [[ "$OS" == "Linux" ]]; then
+
+        if command -v apt-get &> /dev/null; then# 1. Verificar/Instalar Git                . /etc/os-release
+
+            sudo apt-get update -qq
+
+            sudo apt-get install -y python3 python3-pip python3-venv python3-fullprint_step "Verificando Git..."                OS_NAME=$NAME
+
+        elif command -v yum &> /dev/null; then
+
+            sudo yum install -y python3 python3-pip                OS_VERSION=$VERSION_ID
+
+        elif command -v dnf &> /dev/null; then
+
+            sudo dnf install -y python3 python3-pipif ! command -v git &> /dev/null; then            fi
+
+        fi
+
+        PYTHON_CMD="python3"    print_warning "Git não encontrado. Instalando..."            ;;
+
+    elif [[ "$OS" == "Mac" ]]; then
+
+        if command -v brew &> /dev/null; then            Darwin*)    
+
+            brew install python3
+
+            PYTHON_CMD="python3"    if [[ "$OS" == "Linux" ]]; then            MACHINE="Mac"
+
+        else
+
+            print_error "Homebrew nao encontrado. Instale o Python manualmente."        if command -v apt-get &> /dev/null; then            OS_NAME="macOS"
 
             exit 1
 
+        fi            sudo apt-get update -qq            OS_VERSION=$(sw_vers -productVersion)
+
+    fi
+
+                sudo apt-get install -y git            ;;
+
+    if command -v $PYTHON_CMD &> /dev/null; then
+
+        PYTHON_VERSION=$($PYTHON_CMD --version | cut -d' ' -f2)        elif command -v yum &> /dev/null; then        *)          
+
+        print_success "Python instalado com sucesso! (versao $PYTHON_VERSION)"
+
+    else            sudo yum install -y git            MACHINE="UNKNOWN"
+
+        print_error "Falha ao instalar Python"
+
+        exit 1        elif command -v dnf &> /dev/null; then            print_error "Sistema operacional não suportado: ${OS}"
+
+    fi
+
+fi            sudo dnf install -y git            exit 1
+
+
+
+echo ""        fi            ;;
+
+
+
+# 3. Check Chrome    elif [[ "$OS" == "Mac" ]]; then    esac
+
+print_step "Verificando Google Chrome..."
+
+        if command -v brew &> /dev/null; then}
+
+CHROME_FOUND=false
+
+            brew install git
+
+if command -v google-chrome &> /dev/null; then
+
+    CHROME_VERSION=$(google-chrome --version | cut -d' ' -f3)        else# Verificar se está executando como root (não recomendado)
+
+    print_success "Google Chrome encontrado (versao $CHROME_VERSION)"
+
+    CHROME_FOUND=true            print_error "Homebrew não encontrado. Instale o Git manualmente."check_root() {
+
+elif command -v chromium-browser &> /dev/null; then
+
+    CHROME_VERSION=$(chromium-browser --version | cut -d' ' -f2)            exit 1    if [ "$EUID" -eq 0 ]; then
+
+    print_success "Chromium encontrado (versao $CHROME_VERSION)"
+
+    CHROME_FOUND=true        fi        print_error "Não execute este script como root/sudo!"
+
+elif [[ "$OS" == "Mac" ]] && [ -f "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ]; then
+
+    CHROME_VERSION=$("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --version | cut -d' ' -f3)    fi        print_info "Execute: bash setup-linux.sh"
+
+    print_success "Google Chrome encontrado (versao $CHROME_VERSION)"
+
+    CHROME_FOUND=true            exit 1
+
+fi
+
     if command -v git &> /dev/null; then    fi
 
-        print_success "Git instalado com sucesso!"}
+if [ "$CHROME_FOUND" = false ]; then
 
-    else
+    print_warning "Google Chrome nao encontrado. Instalando..."        print_success "Git instalado com sucesso!"}
 
-        print_error "Falha ao instalar Git"# Instalar dependências do sistema
+    
 
-        exit 1install_system_dependencies() {
+    if [[ "$OS" == "Linux" ]]; then    else
 
-    fi    print_step "Instalando dependências do sistema..."
+        if command -v apt-get &> /dev/null; then
 
-else    
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 2>/dev/null || true        print_error "Falha ao instalar Git"# Instalar dependências do sistema
 
-    GIT_VERSION=$(git --version | cut -d' ' -f3)    if [[ "$MACHINE" == "Linux" ]]; then
+            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
 
-    print_success "Git já instalado (versão $GIT_VERSION)"        # Detectar gerenciador de pacotes
+            sudo apt-get update -qq        exit 1install_system_dependencies() {
 
-fi        if command -v apt-get &> /dev/null; then
+            sudo apt-get install -y google-chrome-stable
 
-            PKG_MANAGER="apt-get"
+        elif command -v dnf &> /dev/null; then    fi    print_step "Instalando dependências do sistema..."
 
-echo ""            print_info "Usando apt-get (Debian/Ubuntu)"
+            sudo dnf install -y wget
 
-            
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpmelse    
+
+            sudo dnf localinstall -y google-chrome-stable_current_x86_64.rpm
+
+            rm google-chrome-stable_current_x86_64.rpm    GIT_VERSION=$(git --version | cut -d' ' -f3)    if [[ "$MACHINE" == "Linux" ]]; then
+
+        fi
+
+    elif [[ "$OS" == "Mac" ]]; then    print_success "Git já instalado (versão $GIT_VERSION)"        # Detectar gerenciador de pacotes
+
+        if command -v brew &> /dev/null; then
+
+            brew install --cask google-chromefi        if command -v apt-get &> /dev/null; then
+
+        else
+
+            print_warning "Instale o Chrome manualmente: https://www.google.com/chrome/"            PKG_MANAGER="apt-get"
+
+        fi
+
+    fiecho ""            print_info "Usando apt-get (Debian/Ubuntu)"
+
+    
+
+    print_success "Google Chrome instalado!"            
+
+fi
 
 # 2. Verificar/Instalar Python            # Atualizar lista de pacotes (ignorando erros de GPG de outros repos)
 
+echo ""
+
 print_step "Verificando Python..."            sudo apt-get update 2>&1 | grep -v "GPG" | grep -v "NO_PUBKEY" | grep -v "não está assinado" || true
 
-            
+# 4. Install directory
 
-PYTHON_CMD=""            # Instalar pacotes necessários
+print_step "Escolhendo diretorio de instalacao..."            
 
-if command -v python3 &> /dev/null; then            sudo apt-get install -y \
 
-    PYTHON_CMD="python3"                python3 \
 
-    PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)                python3-pip \
+INSTALL_DIR="$HOME/bci-on1"PYTHON_CMD=""            # Instalar pacotes necessários
 
-    print_success "Python3 encontrado (versão $PYTHON_VERSION)"                python3-venv \
 
-elif command -v python &> /dev/null; then                python3-tk \
 
-    PYTHON_VERSION=$(python --version 2>&1 | cut -d' ' -f2)                git \
+if [ -d "$INSTALL_DIR" ]; thenif command -v python3 &> /dev/null; then            sudo apt-get install -y \
 
-    if [[ $PYTHON_VERSION == 3.* ]]; then                wget \
+    print_warning "Diretorio $INSTALL_DIR ja existe!"
 
-        PYTHON_CMD="python"                curl \
+    read -p "Deseja remover e reinstalar? [s/N]: " -n 1 -r    PYTHON_CMD="python3"                python3 \
 
-        print_success "Python encontrado (versão $PYTHON_VERSION)"                2>&1 | grep -v "already" || true
+    echo
+
+    if [[ $REPLY =~ ^[Ss]$ ]]; then    PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)                python3-pip \
+
+        print_info "Removendo diretorio antigo..."
+
+        rm -rf "$INSTALL_DIR"    print_success "Python3 encontrado (versão $PYTHON_VERSION)"                python3-venv \
+
+        print_success "Diretorio removido!"
+
+    elseelif command -v python &> /dev/null; then                python3-tk \
+
+        print_info "Instalacao cancelada."
+
+        exit 0    PYTHON_VERSION=$(python --version 2>&1 | cut -d' ' -f2)                git \
+
+    fi
+
+fi    if [[ $PYTHON_VERSION == 3.* ]]; then                wget \
+
+
+
+echo ""        PYTHON_CMD="python"                curl \
+
+
+
+# 5. Clone repository        print_success "Python encontrado (versão $PYTHON_VERSION)"                2>&1 | grep -v "already" || true
+
+print_step "Clonando repositorio do GitHub..."
 
     else                
 
-        print_error "Python 2 detectado. Python 3.8+ é necessário."        elif command -v dnf &> /dev/null; then
+if git clone https://github.com/dhqdev/bci-on1.git "$INSTALL_DIR" 2>&1; then
 
-        PYTHON_CMD=""            PKG_MANAGER="dnf"
+    print_success "Repositorio clonado com sucesso!"        print_error "Python 2 detectado. Python 3.8+ é necessário."        elif command -v dnf &> /dev/null; then
 
-    fi            print_info "Usando dnf (Fedora/RHEL 8+)"
+else
 
-fi            sudo dnf install -y \
+    print_error "Falha ao clonar repositorio"        PYTHON_CMD=""            PKG_MANAGER="dnf"
 
-                python3 \
+    exit 1
 
-if [ -z "$PYTHON_CMD" ]; then                python3-pip \
+fi    fi            print_info "Usando dnf (Fedora/RHEL 8+)"
 
-    print_warning "Python 3 não encontrado. Instalando..."                python3-tkinter \
 
-                    git \
 
-    if [[ "$OS" == "Linux" ]]; then                wget \
+cd "$INSTALL_DIR"fi            sudo dnf install -y \
 
-        if command -v apt-get &> /dev/null; then                curl \
 
-            sudo apt-get update -qq                2>&1 | grep -v "already" || true
 
-            sudo apt-get install -y python3 python3-pip python3-venv python3-full                
+echo ""                python3 \
 
-        elif command -v yum &> /dev/null; then        elif command -v yum &> /dev/null; then
 
-            sudo yum install -y python3 python3-pip            PKG_MANAGER="yum"
 
-        elif command -v dnf &> /dev/null; then            print_info "Usando yum (CentOS/RHEL)"
+# 6. Run local installerif [ -z "$PYTHON_CMD" ]; then                python3-pip \
 
-            sudo dnf install -y python3 python3-pip            sudo yum install -y \
+print_step "Executando instalador local..."
 
-        fi                python3 \
+echo ""    print_warning "Python 3 não encontrado. Instalando..."                python3-tkinter \
 
-        PYTHON_CMD="python3"                python3-pip \
 
-    elif [[ "$OS" == "Mac" ]]; then                python3-tkinter \
 
-        if command -v brew &> /dev/null; then                git \
+chmod +x install.sh                    git \
+
+
+
+if bash install.sh; then    if [[ "$OS" == "Linux" ]]; then                wget \
+
+    echo ""
+
+    echo -e "${GREEN}============================================================${NC}"        if command -v apt-get &> /dev/null; then                curl \
+
+    echo -e "${GREEN}  ${BOLD}INSTALACAO CONCLUIDA COM SUCESSO!${NC}"
+
+    echo -e "${GREEN}============================================================${NC}"            sudo apt-get update -qq                2>&1 | grep -v "already" || true
+
+    echo ""
+
+    echo -e "${BOLD}Projeto instalado em:${NC} $INSTALL_DIR"            sudo apt-get install -y python3 python3-pip python3-venv python3-full                
+
+    echo ""
+
+    echo -e "${BOLD}Como executar:${NC}"        elif command -v yum &> /dev/null; then        elif command -v yum &> /dev/null; then
+
+    echo ""
+
+    echo -e "  ${CYAN}Interface Desktop:${NC}"            sudo yum install -y python3 python3-pip            PKG_MANAGER="yum"
+
+    echo -e "  cd $INSTALL_DIR"
+
+    echo -e "  bash run.sh"        elif command -v dnf &> /dev/null; then            print_info "Usando yum (CentOS/RHEL)"
+
+    echo ""
+
+    echo -e "  ${CYAN}Interface Web:${NC}"            sudo dnf install -y python3 python3-pip            sudo yum install -y \
+
+    echo -e "  cd $INSTALL_DIR"
+
+    echo -e "  bash web/run_web.sh"        fi                python3 \
+
+    echo -e "  Depois acesse: ${BOLD}http://localhost:5000${NC}"
+
+    echo ""        PYTHON_CMD="python3"                python3-pip \
+
+else
+
+    print_error "Falha na instalacao"    elif [[ "$OS" == "Mac" ]]; then                python3-tkinter \
+
+    exit 1
+
+fi        if command -v brew &> /dev/null; then                git \
+
 
             brew install python3                wget \
 
