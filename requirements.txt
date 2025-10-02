@@ -22,5 +22,12 @@ python-dotenv>=1.0.0
 # Schedule - Agendamento de tarefas para envio automático de mensagens
 schedule>=1.2.0
 
+# Flask - Framework web para interface moderna
+Flask>=3.0.0
+Flask-SocketIO>=5.3.0
+Flask-CORS>=4.0.0
+python-socketio>=5.10.0
+python-engineio>=4.8.0
+
 # Tkinter já vem incluído no Python padrão
 # Para Linux/Ubuntu pode ser necessário: sudo apt-get install python3-tk

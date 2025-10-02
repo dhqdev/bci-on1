@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Automação Dia 8 - OXCASH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5">
+                <i class="fas fa-robot text-primary"></i> Automação Dia 8
+            </h1>
+            <p class="lead text-muted">Controle completo da automação para o dia 8</p>
+        </div>
+    </div>
+
+    <!-- Controles -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-sliders-h"></i> Controles
+                </div>
+                <div class="card-body">
+                    <div class="d-flex gap-3 align-items-center">
+                        <button class="btn btn-success btn-lg" id="btn-start" onclick="startAutomation()">
+                            <i class="fas fa-play"></i> Iniciar Automação
+                        </button>
+                        <button class="btn btn-danger btn-lg" id="btn-stop" onclick="stopAutomation()" disabled>
+                            <i class="fas fa-stop"></i> Parar
+                        </button>
+                        <div class="ms-auto">
+                            <div class="status-badge stopped" id="automation-status">
+                                <i class="fas fa-circle"></i> Parado
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line"></i> Progresso
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-2">
+                        <div class="progress-bar bg-primary" id="progress-bar" style="width: 0%">0%</div>
+                    </div>
+                    <small class="text-muted" id="progress-text">Aguardando início...</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="dashboard-grid mb-4">
+        <div class="card stats-card">
+            <div class="icon text-secondary"><i class="fas fa-globe"></i></div>
+            <div class="value" id="status-servopa">⏳ Aguardando</div>
+            <div class="label">Servopa</div>
+        </div>
+
+        <div class="card stats-card">
+            <div class="icon text-success"><i class="fas fa-clipboard"></i></div>
+            <div class="value" id="status-todoist">⏳ Aguardando</div>
+            <div class="label">Todoist</div>
+        </div>
+
+        <div class="card stats-card">
+            <div class="icon text-info"><i class="fas fa-user"></i></div>
+            <div class="value" id="status-cliente">⏳ Aguardando</div>
+            <div class="label">Cliente</div>
+        </div>
+
+        <div class="card stats-card">
+            <div class="icon text-warning"><i class="fas fa-gavel"></i></div>
+            <div class="value" id="status-lances">⏳ Aguardando</div>
+            <div class="label">Lances</div>
+        </div>
+    </div>
+
+    <!-- Log -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-terminal"></i> Log de Execução</span>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearLog()">
+                        <i class="fas fa-eraser"></i> Limpar
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="log-console" id="log-console">
+                        <div class="log-line">
+                            <span class="timestamp">[Sistema]</span>
+                            <span class="info">✨ Interface carregada. Pronto para iniciar automação.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let socket;
+const dia = 'dia8';
+
+// Conecta ao WebSocket
+function connectWebSocket() {
+    socket = io();
+    
+    socket.on('connect', function() {
+        addLog('Conectado ao servidor', 'success');
+    });
+    
+    socket.on('log', function(data) {
+        if (data.dia === dia || data.dia === 'general') {
+            addLog(data.message, getLogType(data.message));
+        }
+    });
+    
+    socket.on('progress', function(data) {
+        if (data.dia === dia) {
+            updateProgress(data.value, data.message);
+        }
+    });
+    
+    socket.on('automation_status', function(data) {
+        if (data.dia === dia) {
+            updateAutomationStatus(data.running);
+        }
+    });
+}
+
+// Adiciona log
+function addLog(message, type = 'info') {
+    const console = document.getElementById('log-console');
+    const timestamp = new Date().toLocaleTimeString();
+    
+    const logLine = document.createElement('div');
+    logLine.className = 'log-line';
+    logLine.innerHTML = `
+        <span class="timestamp">[${timestamp}]</span>
+        <span class="${type}">${message}</span>
+    `;
+    
+    console.appendChild(logLine);
+    console.scrollTop = console.scrollHeight;
+}
+
+// Determina tipo de log
+function getLogType(message) {
+    if (message.includes('✅') || message.includes('sucesso')) return 'success';
+    if (message.includes('❌') || message.includes('erro')) return 'error';
+    if (message.includes('⚠️') || message.includes('atenção')) return 'warning';
+    return 'info';
+}
+
+// Limpa log
+function clearLog() {
+    document.getElementById('log-console').innerHTML = '';
+    addLog('Log limpo', 'info');
+}
+
+// Atualiza progresso
+function updateProgress(value, message) {
+    const bar = document.getElementById('progress-bar');
+    const text = document.getElementById('progress-text');
+    
+    bar.style.width = value + '%';
+    bar.textContent = value + '%';
+    
+    if (message) {
+        text.textContent = message;
+    }
+}
+
+// Atualiza status de automação
+function updateAutomationStatus(running) {
+    const badge = document.getElementById('automation-status');
+    const btnStart = document.getElementById('btn-start');
+    const btnStop = document.getElementById('btn-stop');
+    
+    if (running) {
+        badge.className = 'status-badge running';
+        badge.innerHTML = '<i class="fas fa-circle pulse"></i> Executando';
+        btnStart.disabled = true;
+        btnStop.disabled = false;
+    } else {
+        badge.className = 'status-badge stopped';
+        badge.innerHTML = '<i class="fas fa-circle"></i> Parado';
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+    }
+}
+
+// Inicia automação
+async function startAutomation() {
+    try {
+        addLog('🚀 Iniciando automação...', 'info');
+        
+        const response = await fetch(`/api/automation/start/${dia}`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            addLog('✅ Automação iniciada com sucesso!', 'success');
+        } else {
+            addLog('❌ Erro: ' + data.error, 'error');
+        }
+    } catch (error) {
+        addLog('❌ Erro ao iniciar: ' + error, 'error');
+    }
+}
+
+// Para automação
+async function stopAutomation() {
+    try {
+        addLog('⏹️ Parando automação...', 'warning');
+        
+        const response = await fetch(`/api/automation/stop/${dia}`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            addLog('✅ Automação parada!', 'success');
+        } else {
+            addLog('❌ Erro: ' + data.error, 'error');
+        }
+    } catch (error) {
+        addLog('❌ Erro ao parar: ' + error, 'error');
+    }
+}
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    connectWebSocket();
+});
+</script>
+{% endblock %}

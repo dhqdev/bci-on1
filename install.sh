@@ -301,7 +301,7 @@ echo ""
 print_status "Instalando dependências Python no ambiente virtual..."
 
 # Instalar dependências uma por uma para melhor diagnóstico
-dependencies=("selenium" "webdriver-manager" "requests" "beautifulsoup4" "schedule")
+dependencies=("selenium" "webdriver-manager" "requests" "beautifulsoup4" "schedule" "Flask>=3.0.0" "Flask-SocketIO>=5.3.0" "Flask-CORS>=4.0.0" "python-socketio>=5.10.0" "python-engineio>=4.8.0")
 
 for dep in "${dependencies[@]}"; do
     print_status "Instalando $dep..."
@@ -449,6 +449,13 @@ try:
     import schedule
     print('✓ Schedule: OK')
     
+    import flask
+    from flask_socketio import SocketIO
+    from flask_cors import CORS
+    print('✓ Flask: OK')
+    print('✓ Flask-SocketIO: OK')
+    print('✓ Flask-CORS: OK')
+    
     print('\\n✅ Todas as dependências estão funcionando!')
     
 except ImportError as e:
@@ -473,19 +480,20 @@ echo "   ✓ Python $PYTHON_VERSION"
 echo "   ✓ Ambiente virtual criado em ./venv"
 echo "   ✓ Todas as dependências instaladas"
 echo "   ✓ Selenium, WebDriver, Requests, BeautifulSoup"
+echo "   ✓ Flask, Flask-SocketIO, Flask-CORS (Interface Web)"
 echo ""
 echo "=========================================="
 echo "🚀 COMO EXECUTAR O SISTEMA"
 echo "=========================================="
 echo ""
-echo "Opção 1 - Usando o script automático (RECOMENDADO):"
+echo "Interface Desktop (Tkinter):"
 echo ""
 echo "   bash run.sh"
 echo ""
-echo "Opção 2 - Manualmente:"
+echo "Interface Web (Moderna):"
 echo ""
-echo "   source venv/bin/activate"
-echo "   python main_gui.py"
+echo "   bash web/run_web.sh"
+echo "   Depois acesse: http://localhost:5000"
 echo ""
 echo "=========================================="
 echo ""

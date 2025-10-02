@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - OXCASH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">
+                <i class="fas fa-chart-line"></i> Dashboard de Automação
+            </h1>
+            <p class="lead text-muted">Visão geral do sistema OXCASH</p>
+        </div>
+        <div class="col-auto">
+            <div class="status-badge success" id="connection-status">
+                <i class="fas fa-circle pulse"></i> Conectado
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="dashboard-grid fade-in">
+        <!-- Dia 8 - Total -->
+        <div class="card stats-card">
+            <div class="icon text-primary">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <div class="value text-primary" id="stats-dia8-total">0</div>
+            <div class="label">Total Dia 8</div>
+        </div>
+
+        <!-- Dia 8 - Sucesso -->
+        <div class="card stats-card">
+            <div class="icon text-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="value text-success" id="stats-dia8-success">0</div>
+            <div class="label">Sucesso Dia 8</div>
+        </div>
+
+        <!-- Dia 16 - Total -->
+        <div class="card stats-card">
+            <div class="icon text-warning">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <div class="value text-warning" id="stats-dia16-total">0</div>
+            <div class="label">Total Dia 16</div>
+        </div>
+
+        <!-- Dia 16 - Sucesso -->
+        <div class="card stats-card">
+            <div class="icon text-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="value text-success" id="stats-dia16-success">0</div>
+            <div class="label">Sucesso Dia 16</div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <!-- Gráfico Dia 8 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie"></i> Estatísticas Dia 8
+                </div>
+                <div class="card-body">
+                    <canvas id="chart-dia8" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico Dia 16 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie"></i> Estatísticas Dia 16
+                </div>
+                <div class="card-body">
+                    <canvas id="chart-dia16" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Atual -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-robot"></i> Automação Dia 8
+                </div>
+                <div class="card-body text-center">
+                    <div class="status-badge stopped mb-3" id="status-dia8">
+                        <i class="fas fa-circle"></i> Parado
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="/automation/dia8" class="btn btn-primary btn-lg">
+                            <i class="fas fa-play"></i> Abrir Controle
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-robot"></i> Automação Dia 16
+                </div>
+                <div class="card-body text-center">
+                    <div class="status-badge stopped mb-3" id="status-dia16">
+                        <i class="fas fa-circle"></i> Parado
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="/automation/dia16" class="btn btn-warning btn-lg">
+                            <i class="fas fa-play"></i> Abrir Controle
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fab fa-whatsapp fa-3x text-success mb-3"></i>
+                    <h5>WhatsApp</h5>
+                    <p class="text-muted">Envio em massa</p>
+                    <a href="/whatsapp" class="btn btn-success">
+                        <i class="fas fa-paper-plane"></i> Acessar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-history fa-3x text-info mb-3"></i>
+                    <h5>Histórico</h5>
+                    <p class="text-muted">Visualizar registros</p>
+                    <a href="/history" class="btn btn-info">
+                        <i class="fas fa-table"></i> Ver Histórico
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-key fa-3x text-secondary mb-3"></i>
+                    <h5>Credenciais</h5>
+                    <p class="text-muted">Configurar acessos</p>
+                    <a href="/credentials" class="btn btn-secondary">
+                        <i class="fas fa-cog"></i> Configurar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let socket;
+let chartDia8, chartDia16;
+
+// Conecta ao WebSocket
+function connectWebSocket() {
+    socket = io();
+    
+    socket.on('connect', function() {
+        console.log('✅ Conectado ao servidor');
+        updateConnectionStatus(true);
+    });
+    
+    socket.on('disconnect', function() {
+        console.log('❌ Desconectado do servidor');
+        updateConnectionStatus(false);
+    });
+    
+    socket.on('automation_status', function(data) {
+        updateAutomationStatus(data.dia, data.running);
+    });
+}
+
+// Atualiza status de conexão
+function updateConnectionStatus(connected) {
+    const badge = document.getElementById('connection-status');
+    if (connected) {
+        badge.className = 'status-badge success';
+        badge.innerHTML = '<i class="fas fa-circle pulse"></i> Conectado';
+    } else {
+        badge.className = 'status-badge stopped';
+        badge.innerHTML = '<i class="fas fa-circle"></i> Desconectado';
+    }
+}
+
+// Atualiza status de automação
+function updateAutomationStatus(dia, running) {
+    const statusEl = document.getElementById(`status-${dia}`);
+    if (running) {
+        statusEl.className = 'status-badge running';
+        statusEl.innerHTML = '<i class="fas fa-circle pulse"></i> Executando';
+    } else {
+        statusEl.className = 'status-badge stopped';
+        statusEl.innerHTML = '<i class="fas fa-circle"></i> Parado';
+    }
+}
+
+// Carrega estatísticas
+async function loadStats() {
+    try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        
+        // Atualiza cards
+        document.getElementById('stats-dia8-total').textContent = data.dia8.total;
+        document.getElementById('stats-dia8-success').textContent = data.dia8.success;
+        document.getElementById('stats-dia16-total').textContent = data.dia16.total;
+        document.getElementById('stats-dia16-success').textContent = data.dia16.success;
+        
+        // Atualiza status
+        updateAutomationStatus('dia8', data.running.dia8);
+        updateAutomationStatus('dia16', data.running.dia16);
+        
+        // Atualiza gráficos
+        updateCharts(data);
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+    }
+}
+
+// Cria gráficos
+function createCharts() {
+    const ctxDia8 = document.getElementById('chart-dia8').getContext('2d');
+    const ctxDia16 = document.getElementById('chart-dia16').getContext('2d');
+    
+    const chartConfig = (title) => ({
+        type: 'doughnut',
+        data: {
+            labels: ['Sucesso', 'Falha', 'Parado'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    chartDia8 = new Chart(ctxDia8, chartConfig('Dia 8'));
+    chartDia16 = new Chart(ctxDia16, chartConfig('Dia 16'));
+}
+
+// Atualiza gráficos
+function updateCharts(data) {
+    if (chartDia8) {
+        chartDia8.data.datasets[0].data = [
+            data.dia8.success,
+            data.dia8.failed,
+            data.dia8.stopped
+        ];
+        chartDia8.update();
+    }
+    
+    if (chartDia16) {
+        chartDia16.data.datasets[0].data = [
+            data.dia16.success,
+            data.dia16.failed,
+            data.dia16.stopped
+        ];
+        chartDia16.update();
+    }
+}
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    connectWebSocket();
+    createCharts();
+    loadStats();
+    
+    // Atualiza stats a cada 5 segundos
+    setInterval(loadStats, 5000);
+});
+</script>
+{% endblock %}

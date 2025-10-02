@@ -163,7 +163,7 @@ echo [INFO] Atualizando pip...
 python -m pip install --upgrade pip
 
 echo [INFO] Instalando dependências Python...
-python -m pip install selenium webdriver-manager requests beautifulsoup4 schedule
+python -m pip install selenium webdriver-manager requests beautifulsoup4 schedule Flask Flask-SocketIO Flask-CORS python-socketio python-engineio
 
 echo [✓] Dependências Python instaladas!
 echo.
@@ -214,7 +214,7 @@ echo.
 REM 5. Testar instalação
 echo [INFO] Testando instalação...
 
-python -c "import selenium; from webdriver_manager.chrome import ChromeDriverManager; import tkinter as tk; import requests; from bs4 import BeautifulSoup; import schedule; print('✓ Todas as dependências OK!')" 2>nul
+python -c "import selenium; from webdriver_manager.chrome import ChromeDriverManager; import tkinter as tk; import requests; from bs4 import BeautifulSoup; import schedule; import flask; from flask_socketio import SocketIO; from flask_cors import CORS; print('✓ Todas as dependências OK!')" 2>nul
 
 if %errorLevel% == 0 (
     echo [✓] Teste de dependências passou!
@@ -316,11 +316,12 @@ echo ==========================================
 echo.
 echo [INFO] Como executar o sistema:
 echo.
-echo 1. Clique duas vezes em: run.bat
-echo    OU
-echo 2. Execute manualmente:
-echo    - venv\Scripts\activate.bat
-echo    - python main_gui.py
+echo Interface Desktop (Tkinter):
+echo    Clique duas vezes em: run.bat
+echo.
+echo Interface Web (Moderna):
+echo    Clique duas vezes em: web\run_web.bat
+echo    Depois acesse: http://localhost:5000
 echo.
 echo [INFO] Sistema pronto para uso! 🚀
 echo.

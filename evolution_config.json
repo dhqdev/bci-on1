@@ -3,56 +3,5 @@
     "base_url": "https://zap.tekvosoft.com",
     "instance_name": "davidoficial",
     "api_key": "4AB2EAC128B8-425C-A2B3-3C263D555D6C"
-  },
-  "grupos": {
-    "grupo1": {
-      "nome": "Grupo 1 - Clientes Principal",
-      "contatos": [
-        {
-          "phone": "5519995378302",
-          "name": "João Silva"
-        },
-        {
-          "phone": "5519988776655",
-          "name": "Maria Santos"
-        }
-      ]
-    },
-    "grupo2": {
-      "nome": "Grupo 2 - Clientes Secundário",
-      "contatos": [
-        {
-          "phone": "5519977665544",
-          "name": "Ana Costa"
-        },
-        {
-          "phone": "5519966554433",
-          "name": "Carlos Oliveira"
-        }
-      ]
-    }
-  },
-  "mensagens": {
-    "dia7": {
-      "grupo1": "Olá {nome}! 🎉\n\nLembrando que hoje, dia 7, é o último dia para enviar seus lances!\n\nNão perca essa oportunidade! ⏰",
-      "grupo2": "Oi {nome}! 📢\n\nAviso importante: hoje é dia 7 e você tem até o final do dia para enviar seus lances.\n\nQualquer dúvida, estamos à disposição! 💪"
-    },
-    "dia15": {
-      "grupo1": "Olá {nome}! 🎯\n\nHoje é dia 15! Último dia para enviar seus lances.\n\nVamos lá, não deixe passar! 🚀",
-      "grupo2": "Oi {nome}! ⏰\n\nLembrando: dia 15 é o prazo final para lances!\n\nConte conosco para ajudar! 📞"
-    }
-  },
-  "agendamento": {
-    "enabled": false,
-    "horario_envio": "09:00",
-    "dias_para_enviar": [
-      7,
-      15
-    ]
-  },
-  "configuracoes": {
-    "delay_entre_mensagens": 2.0,
-    "tentar_reenviar_falhas": true,
-    "max_tentativas": 3
   }
 }

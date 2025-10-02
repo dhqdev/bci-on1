@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}WhatsApp - OXCASH{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4"><i class="fab fa-whatsapp text-success"></i> Disparo em Massa WhatsApp</h1>
+    
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Configure os contatos e mensagens para envio automático nos dias 8 e 16 de cada mês
+    </div>
+    
+    <!-- Config API -->
+    <div class="card mb-4">
+        <div class="card-header">🔧 Configuração da Evolution API (URL Bloqueada)</div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label"><strong>URL da API:</strong></label>
+                <input type="text" class="form-control" id="api-url" value="https://zap.tekvosoft.com" readonly style="background: #f0f0f0;">
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><strong>Nome da Instância:</strong></label>
+                <input type="text" class="form-control" id="api-instance">
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><strong>API Key:</strong></label>
+                <input type="text" class="form-control" id="api-key">
+            </div>
+            <button class="btn btn-primary" onclick="saveConfig()">
+                <i class="fas fa-save"></i> Salvar Configuração
+            </button>
+        </div>
+    </div>
+    
+    <!-- Grupos Dia 8 e 16 -->
+    <div class="whatsapp-container">
+        <!-- Dia 8 -->
+        <div class="whatsapp-group dia8">
+            <div class="whatsapp-group-header text-primary">
+                📅 GRUPO DIA 8
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><strong>Contatos (um por linha):</strong></label>
+                <small class="text-muted d-block">Formato: 5519995378302 - Nome Cliente</small>
+                <textarea class="form-control" id="contacts-dia8" rows="6" placeholder="5519995378302 - Cliente Exemplo"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><strong>Mensagem do Dia 8:</strong></label>
+                <small class="text-muted d-block">Use {nome} para personalizar</small>
+                <textarea class="form-control" id="message-dia8" rows="4" placeholder="Olá {nome}! 🎉"></textarea>
+            </div>
+            <button class="btn btn-success w-100" onclick="sendMessages('dia8')">
+                <i class="fas fa-paper-plane"></i> Enviar Agora
+            </button>
+        </div>
+        
+        <!-- Dia 16 -->
+        <div class="whatsapp-group dia16">
+            <div class="whatsapp-group-header text-warning">
+                📅 GRUPO DIA 16
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><strong>Contatos (um por linha):</strong></label>
+                <small class="text-muted d-block">Formato: 5519995378302 - Nome Cliente</small>
+                <textarea class="form-control" id="contacts-dia16" rows="6" placeholder="5519995378302 - Cliente Exemplo"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label"><strong>Mensagem do Dia 16:</strong></label>
+                <small class="text-muted d-block">Use {nome} para personalizar</small>
+                <textarea class="form-control" id="message-dia16" rows="4" placeholder="Olá {nome}! 🎉"></textarea>
+            </div>
+            <button class="btn btn-success w-100" onclick="sendMessages('dia16')">
+                <i class="fas fa-paper-plane"></i> Enviar Agora
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function saveConfig() {
+    const data = {
+        api: {
+            base_url: document.getElementById('api-url').value,
+            instance_name: document.getElementById('api-instance').value,
+            api_key: document.getElementById('api-key').value
+        }
+    };
+    
+    try {
+        const response = await fetch('/api/evolution-config', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            alert('✅ Configuração salva com sucesso!');
+        }
+    } catch (error) {
+        alert('❌ Erro: ' + error);
+    }
+}
+
+async function sendMessages(dia) {
+    const contactsId = `contacts-${dia}`;
+    const messageId = `message-${dia}`;
+    
+    const contacts = document.getElementById(contactsId).value.trim();
+    const message = document.getElementById(messageId).value.trim();
+    
+    if (!contacts) {
+        alert('❌ Por favor, adicione contatos!');
+        return;
+    }
+    
+    if (!message) {
+        alert('❌ Por favor, digite uma mensagem!');
+        return;
+    }
+    
+    // Mostra loading
+    const btnText = event.target.innerHTML;
+    event.target.disabled = true;
+    event.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    
+    try {
+        const response = await fetch('/api/whatsapp/send', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                dia: dia,
+                contacts: contacts,
+                message: message
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`✅ Sucesso!\n\n${result.message}\n\nEnviados: ${result.stats.success}\nFalhas: ${result.stats.failed}`);
+            
+            // Limpa campos se todos enviados
+            if (result.stats.failed === 0) {
+                if (confirm('Limpar campos?')) {
+                    document.getElementById(contactsId).value = '';
+                    document.getElementById(messageId).value = '';
+                }
+            }
+        } else {
+            alert('❌ Erro: ' + result.error);
+        }
+    } catch (error) {
+        alert('❌ Erro ao enviar: ' + error);
+    } finally {
+        event.target.disabled = false;
+        event.target.innerHTML = btnText;
+    }
+}
+
+// Carrega config ao iniciar
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const response = await fetch('/api/evolution-config');
+        const data = await response.json();
+        
+        if (data.success && data.data.api) {
+            document.getElementById('api-instance').value = data.data.api.instance_name || '';
+            document.getElementById('api-key').value = data.data.api.api_key || '';
+        }
+    } catch (error) {
+        console.error('Erro ao carregar config:', error);
+    }
+});
+</script>
+{% endblock %}
