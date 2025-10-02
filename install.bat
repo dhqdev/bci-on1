@@ -162,8 +162,18 @@ call venv\Scripts\activate.bat
 echo [INFO] Atualizando pip...
 python -m pip install --upgrade pip
 
-echo [INFO] Instalando dependências Python...
-python -m pip install selenium webdriver-manager requests beautifulsoup4 schedule Flask Flask-SocketIO Flask-CORS python-socketio python-engineio
+echo [INFO] Instalando dependências Python do requirements.txt...
+if exist requirements.txt (
+    python -m pip install -r requirements.txt
+    if %errorLevel% == 0 (
+        echo [✓] Todas as dependências instaladas com sucesso!
+    ) else (
+        echo [!] Algumas dependências podem ter falhado, mas continuando...
+    )
+) else (
+    echo [!] requirements.txt não encontrado, instalando dependências básicas...
+    python -m pip install selenium webdriver-manager requests pdfplumber beautifulsoup4 python-dotenv schedule Flask Flask-SocketIO Flask-CORS python-socketio python-engineio
+)
 
 echo [✓] Dependências Python instaladas!
 echo.
@@ -214,7 +224,7 @@ echo.
 REM 5. Testar instalação
 echo [INFO] Testando instalação...
 
-python -c "import selenium; from webdriver_manager.chrome import ChromeDriverManager; import tkinter as tk; import requests; from bs4 import BeautifulSoup; import schedule; import flask; from flask_socketio import SocketIO; from flask_cors import CORS; print('✓ Todas as dependências OK!')" 2>nul
+python -c "import selenium; from webdriver_manager.chrome import ChromeDriverManager; import tkinter as tk; import requests; from bs4 import BeautifulSoup; import schedule; import pdfplumber; import flask; from flask_socketio import SocketIO; from flask_cors import CORS; print('✓ Todas as dependências OK!')" 2>nul
 
 if %errorLevel% == 0 (
     echo [✓] Teste de dependências passou!

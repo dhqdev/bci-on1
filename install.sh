@@ -300,18 +300,37 @@ echo ""
 # 7. Instalar dependências Python no ambiente virtual
 print_status "Instalando dependências Python no ambiente virtual..."
 
-# Instalar dependências uma por uma para melhor diagnóstico
-dependencies=("selenium" "webdriver-manager" "requests" "beautifulsoup4" "schedule" "Flask>=3.0.0" "Flask-SocketIO>=5.3.0" "Flask-CORS>=4.0.0" "python-socketio>=5.10.0" "python-engineio>=4.8.0")
+# Atualizar pip primeiro
+print_status "Atualizando pip..."
+$VENV_PIP install --upgrade pip > /dev/null 2>&1
 
-for dep in "${dependencies[@]}"; do
-    print_status "Instalando $dep..."
-    if $VENV_PIP install "$dep" > /dev/null 2>&1; then
-        print_success "$dep instalado!"
+# Instalar todas as dependências do requirements.txt
+if [ -f "requirements.txt" ]; then
+    print_status "Instalando dependências do requirements.txt..."
+    if $VENV_PIP install -r requirements.txt > /dev/null 2>&1; then
+        print_success "Todas as dependências instaladas com sucesso!"
     else
-        print_error "Falha ao instalar $dep"
-        exit 1
+        print_error "Falha ao instalar algumas dependências"
+        print_status "Tentando instalar uma por uma para diagnóstico..."
+        
+        # Fallback: instalar uma por uma
+        while IFS= read -r line; do
+            # Ignorar linhas vazias e comentários
+            if [[ ! -z "$line" ]] && [[ ! "$line" =~ ^# ]]; then
+                dep=$(echo "$line" | xargs)
+                if [[ ! -z "$dep" ]]; then
+                    print_status "Instalando $dep..."
+                    $VENV_PIP install "$dep" > /dev/null 2>&1 || print_warning "Aviso: $dep pode ter falhado"
+                fi
+            fi
+        done < requirements.txt
+        
+        print_success "Instalação concluída!"
     fi
-done
+else
+    print_error "Arquivo requirements.txt não encontrado!"
+    exit 1
+fi
 
 print_success "Todas as dependências Python foram instaladas!"
 
@@ -445,6 +464,9 @@ try:
     
     from bs4 import BeautifulSoup
     print('✓ BeautifulSoup: OK')
+    
+    import pdfplumber
+    print('✓ pdfplumber: OK')
     
     import schedule
     print('✓ Schedule: OK')
