@@ -2,6 +2,8 @@
 REM setup-windows.bat - BCI-ON1 Installer
 REM Usage: irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.bat -OutFile setup.bat; .\setup.bat
 
+setlocal enabledelayedexpansion
+
 title BCI-ON1 Installer
 color 0B
 cls
@@ -10,6 +12,20 @@ echo ============================================================
 echo   BCI-ON1 - Instalador Automatico
 echo   Sistema de Automacao Servopa + Todoist
 echo ============================================================
+echo.
+echo Verificando permissoes...
+
+REM Verifica se está rodando como administrador (recomendado mas não obrigatório)
+net session >nul 2>&1
+if %errorLevel% == 0 (
+    echo [OK] Executando como Administrador
+) else (
+    echo [!] AVISO: Nao esta executando como Administrador
+    echo     Algumas instalacoes podem falhar. Recomenda-se executar como Admin.
+    echo.
+    timeout /t 3 /nobreak >nul
+)
+
 echo.
 
 REM Check Git
@@ -49,11 +65,46 @@ echo.
 REM Install directory
 set INSTALL_DIR=%USERPROFILE%\bci-on1
 if exist "%INSTALL_DIR%" (
-    echo [!] Diretorio ja existe
-    set /p "remove=Remover e reinstalar? [s/N]: "
-    if /i "%remove%"=="s" (
-        rd /s /q "%INSTALL_DIR%"
+    echo [!] Diretorio ja existe: %INSTALL_DIR%
+    echo.
+    echo Opcoes:
+    echo   [1] Atualizar projeto existente (git pull)
+    echo   [2] Remover e reinstalar do zero
+    echo   [3] Cancelar
+    echo.
+    set /p "opcao=Escolha uma opcao [1/2/3]: "
+    
+    if "%opcao%"=="1" (
+        echo [*] Atualizando projeto existente...
+        cd /d "%INSTALL_DIR%"
+        git pull origin main
+        if %errorLevel% NEQ 0 (
+            echo [!] Erro ao atualizar. Continuando com instalacao...
+        ) else (
+            echo [OK] Projeto atualizado
+        )
+        goto :run_install
+    ) else if "%opcao%"=="2" (
+        echo [*] Removendo diretorio antigo...
+        timeout /t 2 /nobreak >nul
+        rd /s /q "%INSTALL_DIR%" 2>nul
+        if exist "%INSTALL_DIR%" (
+            echo [!] Falha ao remover. Tentando forcadamente...
+            rmdir /s /q "%INSTALL_DIR%" 2>nul
+            timeout /t 2 /nobreak >nul
+        )
+        if exist "%INSTALL_DIR%" (
+            echo [X] ERRO: Nao foi possivel remover o diretorio.
+            echo     Feche todos os programas que possam estar usando arquivos do BCI-ON1
+            echo     (navegador, editor de codigo, terminal, etc.)
+            echo.
+            pause
+            exit /b 1
+        )
+        echo [OK] Diretorio removido
     ) else (
+        echo [!] Instalacao cancelada.
+        pause
         exit /b 0
     )
 )
@@ -61,6 +112,15 @@ if exist "%INSTALL_DIR%" (
 REM Clone repo
 echo [*] Clonando repositorio...
 git clone https://github.com/dhqdev/bci-on1.git "%INSTALL_DIR%"
+if %errorLevel% NEQ 0 (
+    echo [X] ERRO: Falha ao clonar repositorio
+    echo     Verifique sua conexao com a internet
+    pause
+    exit /b 1
+)
+echo [OK] Repositorio clonado
+
+:run_install
 cd /d "%INSTALL_DIR%"
 
 # Run installer
