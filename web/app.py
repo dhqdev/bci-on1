@@ -189,6 +189,21 @@ def api_update_from_github():
         except:
             pass  # Se falhar, continua mesmo assim
         
+        # Guarda mudanças locais temporariamente usando stash
+        stashed = False
+        try:
+            # Verifica se há mudanças
+            status_cmd = ['git', 'status', '--porcelain']
+            status_result = subprocess.run(status_cmd, cwd=project_dir, capture_output=True, text=True, timeout=10)
+            
+            if status_result.stdout.strip():  # Se há mudanças
+                # Faz stash (guarda mudanças temporariamente)
+                stash_cmd = ['git', 'stash', 'push', '-u', '-m', 'Auto-stash antes de atualizar do GitHub']
+                subprocess.run(stash_cmd, cwd=project_dir, capture_output=True, text=True, timeout=10)
+                stashed = True
+        except:
+            pass
+        
         # Executa git pull
         result = subprocess.run(
             ['git', 'pull', 'origin', 'main'],
@@ -198,18 +213,32 @@ def api_update_from_github():
             timeout=30
         )
         
+        # Se fez stash, restaura mudanças
+        if stashed:
+            try:
+                stash_pop_cmd = ['git', 'stash', 'pop']
+                subprocess.run(stash_pop_cmd, cwd=project_dir, capture_output=True, text=True, timeout=10)
+            except:
+                pass
+        
         if result.returncode == 0:
+            msg = 'Atualização concluída com sucesso!'
+            if stashed:
+                msg += ' (Suas mudanças locais foram preservadas)'
+            
             return jsonify({
                 'success': True,
-                'message': 'Atualização concluída com sucesso!',
+                'message': msg,
                 'output': result.stdout,
+                'stashed': stashed,
                 'needs_restart': 'Already up to date' not in result.stdout
             })
         else:
             return jsonify({
                 'success': False,
                 'error': 'Erro ao executar git pull',
-                'output': result.stderr
+                'output': result.stderr,
+                'stashed': stashed
             })
     
     except subprocess.TimeoutExpired:
