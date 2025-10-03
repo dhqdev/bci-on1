@@ -85,12 +85,11 @@
         </div>
     </div>
 
-    <!-- Status Atual + Visualizador de Automação -->
+    <!-- Controles de Automação -->
     <div class="row mb-4">
-        <!-- Controles Laterais -->
-        <div class="col-md-3">
-            <!-- Automação Dia 8 -->
-            <div class="card mb-3">
+        <!-- Automação Dia 8 -->
+        <div class="col-md-6">
+            <div class="card">
                 <div class="card-header">
                     <i class="fas fa-robot"></i> Automação Dia 8
                 </div>
@@ -99,23 +98,19 @@
                         <i class="fas fa-circle"></i> Parado
                     </div>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-success" onclick="startAutomationViewer('dia8')">
-                            <i class="fas fa-play"></i> Iniciar
-                        </button>
-                        <button class="btn btn-danger" onclick="stopAutomationViewer('dia8')" disabled id="btn-stop-dia8">
-                            <i class="fas fa-stop"></i> Parar
-                        </button>
+                        <a href="/automation/dia8" class="btn btn-success btn-lg">
+                            <i class="fas fa-play"></i> Iniciar Automação Dia 8
+                        </a>
                     </div>
-                    <div class="mt-2 text-center">
-                        <small class="text-muted">ou</small>
-                    </div>
-                    <a href="/automation/dia8" class="btn btn-outline-primary btn-sm w-100">
-                        <i class="fas fa-external-link-alt"></i> Abrir em aba separada
-                    </a>
+                    <p class="text-muted mt-2 mb-0">
+                        <small><i class="fas fa-info-circle"></i> Abre o Chrome para você acompanhar</small>
+                    </p>
                 </div>
             </div>
+        </div>
 
-            <!-- Automação Dia 16 -->
+        <!-- Automação Dia 16 -->
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-robot"></i> Automação Dia 16
@@ -125,66 +120,13 @@
                         <i class="fas fa-circle"></i> Parado
                     </div>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-warning" onclick="startAutomationViewer('dia16')">
-                            <i class="fas fa-play"></i> Iniciar
-                        </button>
-                        <button class="btn btn-danger" onclick="stopAutomationViewer('dia16')" disabled id="btn-stop-dia16">
-                            <i class="fas fa-stop"></i> Parar
-                        </button>
+                        <a href="/automation/dia16" class="btn btn-warning btn-lg">
+                            <i class="fas fa-play"></i> Iniciar Automação Dia 16
+                        </a>
                     </div>
-                    <div class="mt-2 text-center">
-                        <small class="text-muted">ou</small>
-                    </div>
-                    <a href="/automation/dia16" class="btn btn-outline-warning btn-sm w-100">
-                        <i class="fas fa-external-link-alt"></i> Abrir em aba separada
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Visualizador de Automação (Grande) -->
-        <div class="col-md-9">
-            <div class="card browser-viewer">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="fas fa-desktop"></i> Visualizador de Automação
-                        <span class="badge bg-secondary ms-2" id="viewer-dia">Nenhuma ativa</span>
-                    </div>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-light" onclick="refreshViewer()" title="Atualizar">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                        <button class="btn btn-outline-light" onclick="toggleFullscreen()" title="Tela cheia">
-                            <i class="fas fa-expand"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <!-- Screenshot do navegador -->
-                    <div id="browser-screen" class="browser-screen">
-                        <div class="browser-placeholder">
-                            <i class="fas fa-browser fa-5x text-muted mb-3"></i>
-                            <h5 class="text-muted">Nenhuma automação em execução</h5>
-                            <p class="text-muted">Inicie uma automação para ver o navegador aqui</p>
-                        </div>
-                        <img id="browser-screenshot" class="browser-screenshot" style="display:none;" />
-                    </div>
-                    
-                    <!-- Log Console Compacto -->
-                    <div class="browser-log" id="viewer-log">
-                        <div class="log-line">
-                            <span class="timestamp">[Sistema]</span>
-                            <span class="info">Aguardando início da automação...</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Barra de Progresso -->
-                    <div class="browser-progress">
-                        <div class="progress">
-                            <div class="progress-bar bg-primary" id="viewer-progress" style="width: 0%">0%</div>
-                        </div>
-                        <div class="progress-text mt-1" id="viewer-progress-text">Pronto</div>
-                    </div>
+                    <p class="text-muted mt-2 mb-0">
+                        <small><i class="fas fa-info-circle"></i> Abre o Chrome para você acompanhar</small>
+                    </p>
                 </div>
             </div>
         </div>
@@ -204,12 +146,6 @@ function connectWebSocket() {
     socket.on('connect', function() {
         console.log('✅ Conectado ao servidor');
         updateConnectionStatus(true);
-        
-        // Se tinha automação ativa, força atualização
-        if (currentViewerDia) {
-            console.log('🔄 Reconectado - atualizando screenshot');
-            updateViewerScreenshot();
-        }
     });
     
     socket.on('disconnect', function() {
@@ -219,21 +155,6 @@ function connectWebSocket() {
     
     socket.on('automation_status', function(data) {
         updateAutomationStatus(data.dia, data.running);
-    });
-    
-    socket.on('log', function(data) {
-        // Adiciona logs no visualizador se for da automação ativa
-        if (currentViewerDia && (data.dia === currentViewerDia || data.dia === 'general')) {
-            const type = getLogType(data.message);
-            addViewerLog(data.message, type);
-        }
-    });
-    
-    socket.on('progress', function(data) {
-        // Atualiza progresso no visualizador
-        if (currentViewerDia && data.dia === currentViewerDia) {
-            updateViewerProgress(data.value, data.message);
-        }
     });
 }
 
@@ -340,15 +261,6 @@ function updateCharts(data) {
     }
 }
 
-// Previne pausas ao trocar de aba
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden && currentViewerDia) {
-        // Usuário voltou para a aba e tem automação ativa
-        console.log('👁️ Aba visível - forçando atualização de screenshot');
-        updateViewerScreenshot(); // Atualiza IMEDIATAMENTE
-    }
-});
-
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
     connectWebSocket();
@@ -357,154 +269,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Atualiza stats a cada 5 segundos
     setInterval(loadStats, 5000);
-    
-    // Atualiza screenshot do visualizador a cada 2 segundos (se ativo)
-    setInterval(updateViewerScreenshot, 2000);
 });
-
-// ========== VISUALIZADOR DE AUTOMAÇÃO ==========
-
-let currentViewerDia = null;
-let screenshotInterval = null;
-
-// Inicia automação no visualizador
-async function startAutomationViewer(dia) {
-    try {
-        currentViewerDia = dia;
-        document.getElementById('viewer-dia').textContent = `Dia ${dia === 'dia8' ? '8' : '16'} - Executando`;
-        document.getElementById('viewer-dia').className = 'badge bg-success ms-2';
-        
-        addViewerLog(`🚀 Iniciando automação ${dia === 'dia8' ? 'Dia 8' : 'Dia 16'}...`, 'info');
-        
-        // Habilita botão parar
-        document.getElementById(`btn-stop-${dia}`).disabled = false;
-        
-        // Inicia automação
-        const response = await fetch(`/api/automation/start/${dia}`, {
-            method: 'POST'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            addViewerLog('✅ Automação iniciada com sucesso!', 'success');
-            // Screenshot irá atualizar automaticamente via intervalo
-        } else {
-            addViewerLog('❌ Erro: ' + data.error, 'error');
-            currentViewerDia = null;
-        }
-    } catch (error) {
-        addViewerLog('❌ Erro ao iniciar: ' + error, 'error');
-        currentViewerDia = null;
-    }
-}
-
-// Para automação no visualizador
-async function stopAutomationViewer(dia) {
-    try {
-        addViewerLog(`⏹️ Parando automação ${dia === 'dia8' ? 'Dia 8' : 'Dia 16'}...`, 'warning');
-        
-        const response = await fetch(`/api/automation/stop/${dia}`, {
-            method: 'POST'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            addViewerLog('✅ ' + data.message, 'success');
-            currentViewerDia = null;
-            document.getElementById('viewer-dia').textContent = 'Nenhuma ativa';
-            document.getElementById('viewer-dia').className = 'badge bg-secondary ms-2';
-            document.getElementById(`btn-stop-${dia}`).disabled = true;
-            
-            // Limpa screenshot
-            document.getElementById('browser-screenshot').style.display = 'none';
-            document.querySelector('.browser-placeholder').style.display = 'flex';
-        } else {
-            addViewerLog('❌ Erro: ' + data.error, 'error');
-        }
-    } catch (error) {
-        addViewerLog('❌ Erro ao parar: ' + error, 'error');
-    }
-}
-
-// Atualiza screenshot do navegador
-async function updateViewerScreenshot() {
-    if (!currentViewerDia) return;
-    
-    try {
-        const response = await fetch(`/api/automation/screenshot/${currentViewerDia}`);
-        const data = await response.json();
-        
-        if (data.success && data.screenshot) {
-            const img = document.getElementById('browser-screenshot');
-            img.src = 'data:image/png;base64,' + data.screenshot;
-            img.style.display = 'block';
-            document.querySelector('.browser-placeholder').style.display = 'none';
-        }
-    } catch (error) {
-        console.error('Erro ao carregar screenshot:', error);
-    }
-}
-
-// Atualiza visualizador
-function refreshViewer() {
-    if (currentViewerDia) {
-        addViewerLog('🔄 Atualizando visualização...', 'info');
-        updateViewerScreenshot();
-    }
-}
-
-// Tela cheia
-function toggleFullscreen() {
-    const viewer = document.querySelector('.browser-viewer');
-    if (!document.fullscreenElement) {
-        viewer.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
-}
-
-// Adiciona log no visualizador
-function addViewerLog(message, type = 'info') {
-    const console = document.getElementById('viewer-log');
-    const timestamp = new Date().toLocaleTimeString();
-    
-    const logLine = document.createElement('div');
-    logLine.className = 'log-line';
-    logLine.innerHTML = `
-        <span class="timestamp">[${timestamp}]</span>
-        <span class="${type}">${message}</span>
-    `;
-    
-    console.appendChild(logLine);
-    console.scrollTop = console.scrollHeight;
-    
-    // Limita a 50 linhas
-    while (console.children.length > 50) {
-        console.removeChild(console.firstChild);
-    }
-}
-
-// Atualiza progresso no visualizador
-function updateViewerProgress(value, message) {
-    const bar = document.getElementById('viewer-progress');
-    const text = document.getElementById('viewer-progress-text');
-    if (bar) {
-        bar.style.width = value + '%';
-        bar.textContent = value + '%';
-    }
-    if (text && message) {
-        text.textContent = message;
-    }
-}
-
-// Determina tipo de log pela mensagem
-function getLogType(message) {
-    if (message.includes('✅') || message.includes('sucesso')) return 'success';
-    if (message.includes('❌') || message.includes('erro')) return 'error';
-    if (message.includes('⚠️') || message.includes('atenção')) return 'warning';
-    return 'info';
-}
 </script>
 {% endblock %}
