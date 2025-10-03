@@ -85,82 +85,106 @@
         </div>
     </div>
 
-    <!-- Status Atual -->
+    <!-- Status Atual + Visualizador de Automação -->
     <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
+        <!-- Controles Laterais -->
+        <div class="col-md-3">
+            <!-- Automação Dia 8 -->
+            <div class="card mb-3">
                 <div class="card-header">
                     <i class="fas fa-robot"></i> Automação Dia 8
                 </div>
-                <div class="card-body text-center">
+                <div class="card-body">
                     <div class="status-badge stopped mb-3" id="status-dia8">
                         <i class="fas fa-circle"></i> Parado
                     </div>
                     <div class="d-grid gap-2">
-                        <a href="/automation/dia8" class="btn btn-primary btn-lg">
-                            <i class="fas fa-play"></i> Abrir Controle
-                        </a>
+                        <button class="btn btn-success" onclick="startAutomationViewer('dia8')">
+                            <i class="fas fa-play"></i> Iniciar
+                        </button>
+                        <button class="btn btn-danger" onclick="stopAutomationViewer('dia8')" disabled id="btn-stop-dia8">
+                            <i class="fas fa-stop"></i> Parar
+                        </button>
                     </div>
+                    <div class="mt-2 text-center">
+                        <small class="text-muted">ou</small>
+                    </div>
+                    <a href="/automation/dia8" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-external-link-alt"></i> Abrir em aba separada
+                    </a>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-6">
+            <!-- Automação Dia 16 -->
             <div class="card">
                 <div class="card-header">
                     <i class="fas fa-robot"></i> Automação Dia 16
                 </div>
-                <div class="card-body text-center">
+                <div class="card-body">
                     <div class="status-badge stopped mb-3" id="status-dia16">
                         <i class="fas fa-circle"></i> Parado
                     </div>
                     <div class="d-grid gap-2">
-                        <a href="/automation/dia16" class="btn btn-warning btn-lg">
-                            <i class="fas fa-play"></i> Abrir Controle
-                        </a>
+                        <button class="btn btn-warning" onclick="startAutomationViewer('dia16')">
+                            <i class="fas fa-play"></i> Iniciar
+                        </button>
+                        <button class="btn btn-danger" onclick="stopAutomationViewer('dia16')" disabled id="btn-stop-dia16">
+                            <i class="fas fa-stop"></i> Parar
+                        </button>
+                    </div>
+                    <div class="mt-2 text-center">
+                        <small class="text-muted">ou</small>
+                    </div>
+                    <a href="/automation/dia16" class="btn btn-outline-warning btn-sm w-100">
+                        <i class="fas fa-external-link-alt"></i> Abrir em aba separada
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualizador de Automação (Grande) -->
+        <div class="col-md-9">
+            <div class="card browser-viewer">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-desktop"></i> Visualizador de Automação
+                        <span class="badge bg-secondary ms-2" id="viewer-dia">Nenhuma ativa</span>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-light" onclick="refreshViewer()" title="Atualizar">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="btn btn-outline-light" onclick="toggleFullscreen()" title="Tela cheia">
+                            <i class="fas fa-expand"></i>
+                        </button>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Ações Rápidas -->
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fab fa-whatsapp fa-3x text-success mb-3"></i>
-                    <h5>WhatsApp</h5>
-                    <p class="text-muted">Envio em massa</p>
-                    <a href="/whatsapp" class="btn btn-success">
-                        <i class="fas fa-paper-plane"></i> Acessar
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fas fa-history fa-3x text-info mb-3"></i>
-                    <h5>Histórico</h5>
-                    <p class="text-muted">Visualizar registros</p>
-                    <a href="/history" class="btn btn-info">
-                        <i class="fas fa-table"></i> Ver Histórico
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fas fa-key fa-3x text-secondary mb-3"></i>
-                    <h5>Credenciais</h5>
-                    <p class="text-muted">Configurar acessos</p>
-                    <a href="/credentials" class="btn btn-secondary">
-                        <i class="fas fa-cog"></i> Configurar
-                    </a>
+                <div class="card-body p-0">
+                    <!-- Screenshot do navegador -->
+                    <div id="browser-screen" class="browser-screen">
+                        <div class="browser-placeholder">
+                            <i class="fas fa-browser fa-5x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhuma automação em execução</h5>
+                            <p class="text-muted">Inicie uma automação para ver o navegador aqui</p>
+                        </div>
+                        <img id="browser-screenshot" class="browser-screenshot" style="display:none;" />
+                    </div>
+                    
+                    <!-- Log Console Compacto -->
+                    <div class="browser-log" id="viewer-log">
+                        <div class="log-line">
+                            <span class="timestamp">[Sistema]</span>
+                            <span class="info">Aguardando início da automação...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Barra de Progresso -->
+                    <div class="browser-progress">
+                        <div class="progress">
+                            <div class="progress-bar bg-primary" id="viewer-progress" style="width: 0%">0%</div>
+                        </div>
+                        <div class="progress-text mt-1" id="viewer-progress-text">Pronto</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -303,6 +327,159 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Atualiza stats a cada 5 segundos
     setInterval(loadStats, 5000);
+    
+    // Atualiza screenshot do visualizador a cada 2 segundos (se ativo)
+    setInterval(updateViewerScreenshot, 2000);
 });
+
+// ========== VISUALIZADOR DE AUTOMAÇÃO ==========
+
+let currentViewerDia = null;
+let screenshotInterval = null;
+
+// Inicia automação no visualizador
+async function startAutomationViewer(dia) {
+    try {
+        currentViewerDia = dia;
+        document.getElementById('viewer-dia').textContent = `Dia ${dia === 'dia8' ? '8' : '16'} - Executando`;
+        document.getElementById('viewer-dia').className = 'badge bg-success ms-2';
+        
+        addViewerLog(`🚀 Iniciando automação ${dia === 'dia8' ? 'Dia 8' : 'Dia 16'}...`, 'info');
+        
+        // Habilita botão parar
+        document.getElementById(`btn-stop-${dia}`).disabled = false;
+        
+        // Inicia automação
+        const response = await fetch(`/api/automation/start/${dia}`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            addViewerLog('✅ Automação iniciada com sucesso!', 'success');
+            // Screenshot irá atualizar automaticamente via intervalo
+        } else {
+            addViewerLog('❌ Erro: ' + data.error, 'error');
+            currentViewerDia = null;
+        }
+    } catch (error) {
+        addViewerLog('❌ Erro ao iniciar: ' + error, 'error');
+        currentViewerDia = null;
+    }
+}
+
+// Para automação no visualizador
+async function stopAutomationViewer(dia) {
+    try {
+        addViewerLog(`⏹️ Parando automação ${dia === 'dia8' ? 'Dia 8' : 'Dia 16'}...`, 'warning');
+        
+        const response = await fetch(`/api/automation/stop/${dia}`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            addViewerLog('✅ ' + data.message, 'success');
+            currentViewerDia = null;
+            document.getElementById('viewer-dia').textContent = 'Nenhuma ativa';
+            document.getElementById('viewer-dia').className = 'badge bg-secondary ms-2';
+            document.getElementById(`btn-stop-${dia}`).disabled = true;
+            
+            // Limpa screenshot
+            document.getElementById('browser-screenshot').style.display = 'none';
+            document.querySelector('.browser-placeholder').style.display = 'flex';
+        } else {
+            addViewerLog('❌ Erro: ' + data.error, 'error');
+        }
+    } catch (error) {
+        addViewerLog('❌ Erro ao parar: ' + error, 'error');
+    }
+}
+
+// Atualiza screenshot do navegador
+async function updateViewerScreenshot() {
+    if (!currentViewerDia) return;
+    
+    try {
+        const response = await fetch(`/api/automation/screenshot/${currentViewerDia}`);
+        const data = await response.json();
+        
+        if (data.success && data.screenshot) {
+            const img = document.getElementById('browser-screenshot');
+            img.src = 'data:image/png;base64,' + data.screenshot;
+            img.style.display = 'block';
+            document.querySelector('.browser-placeholder').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Erro ao carregar screenshot:', error);
+    }
+}
+
+// Atualiza visualizador
+function refreshViewer() {
+    if (currentViewerDia) {
+        addViewerLog('🔄 Atualizando visualização...', 'info');
+        updateViewerScreenshot();
+    }
+}
+
+// Tela cheia
+function toggleFullscreen() {
+    const viewer = document.querySelector('.browser-viewer');
+    if (!document.fullscreenElement) {
+        viewer.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+// Adiciona log no visualizador
+function addViewerLog(message, type = 'info') {
+    const console = document.getElementById('viewer-log');
+    const timestamp = new Date().toLocaleTimeString();
+    
+    const logLine = document.createElement('div');
+    logLine.className = 'log-line';
+    logLine.innerHTML = `
+        <span class="timestamp">[${timestamp}]</span>
+        <span class="${type}">${message}</span>
+    `;
+    
+    console.appendChild(logLine);
+    console.scrollTop = console.scrollHeight;
+    
+    // Limita a 50 linhas
+    while (console.children.length > 50) {
+        console.removeChild(console.firstChild);
+    }
+}
+
+// Escuta eventos WebSocket
+socket.on('log', function(data) {
+    if (currentViewerDia === data.dia || data.dia === 'general') {
+        addViewerLog(data.message, getLogType(data.message));
+    }
+});
+
+socket.on('progress', function(data) {
+    if (currentViewerDia === data.dia) {
+        const bar = document.getElementById('viewer-progress');
+        const text = document.getElementById('viewer-progress-text');
+        bar.style.width = data.value + '%';
+        bar.textContent = data.value + '%';
+        if (data.message) {
+            text.textContent = data.message;
+        }
+    }
+});
+
+function getLogType(message) {
+    if (message.includes('✅') || message.includes('sucesso')) return 'success';
+    if (message.includes('❌') || message.includes('erro')) return 'error';
+    if (message.includes('⚠️') || message.includes('atenção')) return 'warning';
+    return 'info';
+}
 </script>
 {% endblock %}

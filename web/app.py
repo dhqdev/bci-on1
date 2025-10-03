@@ -292,6 +292,40 @@ def api_automation_status(dia):
         'dia': dia
     })
 
+@app.route('/api/automation/screenshot/<dia>', methods=['GET'])
+def api_automation_screenshot(dia):
+    """Retorna screenshot atual do navegador em base64"""
+    import base64
+    from io import BytesIO
+    
+    if dia not in ['dia8', 'dia16']:
+        return jsonify({'success': False, 'error': 'Dia inválido'})
+    
+    driver_key = f'driver_{dia}'
+    driver = app_state.get(driver_key)
+    
+    if not driver:
+        return jsonify({'success': False, 'error': 'Navegador não está ativo'})
+    
+    try:
+        # Captura screenshot
+        screenshot_png = driver.get_screenshot_as_png()
+        
+        # Converte para base64
+        screenshot_base64 = base64.b64encode(screenshot_png).decode('utf-8')
+        
+        return jsonify({
+            'success': True,
+            'screenshot': screenshot_base64,
+            'dia': dia
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Erro ao capturar screenshot: {str(e)}'
+        })
+
 @app.route('/api/automation/start/<dia>', methods=['POST'])
 def api_start_automation(dia):
     """Inicia automação"""
@@ -492,8 +526,9 @@ def run_automation_thread(dia):
         with open(creds_file, 'r') as f:
             credentials = json.load(f)
         
-        # Cria driver
-        driver = create_driver()
+        # Cria driver em MODO HEADLESS (sem janela visível)
+        progress_callback(dia, "🖥️ Iniciando navegador em modo invisível...")
+        driver = create_driver(headless=True)
         app_state[f'driver_{dia}'] = driver
         
         try:

@@ -348,6 +348,124 @@ body {
     100% { transform: rotate(360deg); }
 }
 
+/* ========== BROWSER VIEWER (Visualizador de Automação) ========== */
+.browser-viewer {
+    height: 100%;
+}
+
+.browser-viewer .card-header {
+    background: linear-gradient(135deg, var(--dark) 0%, #334155 100%);
+    color: white;
+    font-weight: 600;
+}
+
+.browser-screen {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    background: #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.browser-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+}
+
+.browser-screenshot {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.browser-log {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1rem;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85rem;
+    height: 150px;
+    overflow-y: auto;
+    border-top: 2px solid var(--border);
+}
+
+.browser-log .log-line {
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.browser-log .timestamp {
+    color: #9ca3af;
+    font-size: 0.8rem;
+}
+
+.browser-log .success {
+    color: #10b981;
+}
+
+.browser-log .error {
+    color: #ef4444;
+}
+
+.browser-log .warning {
+    color: #f59e0b;
+}
+
+.browser-log .info {
+    color: #3b82f6;
+}
+
+.browser-progress {
+    padding: 1rem;
+    background: white;
+    border-top: 1px solid var(--border);
+}
+
+.browser-progress .progress {
+    height: 25px;
+    border-radius: 12px;
+    background: var(--light);
+}
+
+.browser-progress .progress-bar {
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.browser-progress .progress-text {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+/* Tela cheia do visualizador */
+.browser-viewer:fullscreen {
+    background: white;
+}
+
+.browser-viewer:fullscreen .browser-screen {
+    height: calc(100vh - 300px);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .browser-screen {
+        height: 300px;
+    }
+    
+    .browser-log {
+        height: 100px;
+    }
+}
+
 /* ========== DASHBOARD GRID ========== */
 .dashboard-grid {
     display: grid;
