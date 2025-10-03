@@ -116,7 +116,15 @@ function connectWebSocket() {
     socket.on('automation_status', function(data) {
         console.log('📡 Status recebido:', data);
         if (data.dia === dia) {
-            updateAutomationStatus(data.running);
+            // Se está tentando parar, não atualiza status ainda
+            // Deixa a função stopAutomation() cuidar disso
+            if (!window.isStopping) {
+                updateAutomationStatus(data.running);
+            } else if (data.running === false) {
+                // Se recebeu confirmação que parou, atualiza
+                window.isStopping = false;
+                updateAutomationStatus(false);
+            }
         }
     });
 }
@@ -126,14 +134,19 @@ socket.on('connect', function() {
     addLog('Conectado ao servidor', 'success');
     
     // Verifica status atual da automação
-    fetch(`/api/automation/status/${dia}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.running) {
-                updateAutomationStatus(true);
-            }
-        })
-        .catch(err => console.error('Erro ao verificar status:', err));
+    // MAS respeita se usuário está tentando parar
+    if (!window.isStopping) {
+        fetch(`/api/automation/status/${dia}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.running) {
+                    updateAutomationStatus(true);
+                } else {
+                    updateAutomationStatus(false);
+                }
+            })
+            .catch(err => console.error('Erro ao verificar status:', err));
+    }
 });
 
 // Adiciona log
@@ -194,7 +207,11 @@ function updateAutomationStatus(running) {
         badge.className = 'status-badge stopped';
         badge.innerHTML = '<i class="fas fa-circle"></i> Parado';
         btnStart.disabled = false;
-        btnStop.disabled = true;
+        // IMPORTANTE: Só desabilita o botão parar se realmente parou
+        // Não desabilita se ainda está tentando parar
+        if (!window.isStopping) {
+            btnStop.disabled = true;
+        }
     }
 }
 
@@ -227,7 +244,9 @@ async function startAutomation() {
 // Para automação
 async function stopAutomation() {
     try {
-        // NÃO desabilita botão ainda - permite clicar múltiplas vezes se necessário
+        // Marca que está tentando parar
+        window.isStopping = true;
+        
         addLog('⏹️ Parando automação...', 'warning');
         
         const response = await fetch(`/api/automation/stop/${dia}`, {
@@ -238,13 +257,18 @@ async function stopAutomation() {
         
         if (data.success) {
             addLog('✅ ' + data.message, 'success');
-            // Só desabilita depois que confirmar que parou
-            updateAutomationStatus(false);
+            // Aguarda 2 segundos para garantir que automação parou
+            setTimeout(() => {
+                window.isStopping = false;
+                updateAutomationStatus(false);
+            }, 2000);
         } else {
             addLog('❌ Erro: ' + data.error, 'error');
+            window.isStopping = false;
         }
     } catch (error) {
         addLog('❌ Erro ao parar: ' + error, 'error');
+        window.isStopping = false;
     }
 }
 
