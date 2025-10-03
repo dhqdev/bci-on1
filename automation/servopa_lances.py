@@ -419,35 +419,80 @@ def _capture_protocol_from_docparser(driver, original_window, handles_before, pr
         'source': None,
     }
 
+    if progress_callback:
+        progress_callback("🔍 DEBUG: Iniciando captura de protocolo...")
+        progress_callback(f"🔍 DEBUG: Janelas antes: {len(handles_before)}")
+
     wait_until = time.time() + 10
     new_handles = []
     while time.time() < wait_until:
         handles_after = list(driver.window_handles)
         new_handles = [h for h in handles_after if h not in handles_before]
         current_url = driver.current_url
-        if new_handles or "docparser/view" in current_url:
+        
+        if progress_callback and len(new_handles) > 0:
+            progress_callback(f"🔍 DEBUG: {len(new_handles)} nova(s) janela(s) detectada(s)")
+        
+        # EXPANDIDO: Procura por múltiplos padrões de URL
+        if new_handles or "docparser/view" in current_url or "docgen/lance" in current_url or "/lance/" in current_url:
+            if progress_callback:
+                progress_callback(f"🔍 DEBUG: URL ou nova janela detectada!")
             break
         time.sleep(1)
 
+    if progress_callback:
+        progress_callback(f"🔍 DEBUG: Janelas depois: {len(driver.window_handles)}")
+        progress_callback(f"🔍 DEBUG: Novas janelas: {len(new_handles)}")
+
     candidate_handles = new_handles + [original_window]
 
-    for handle in candidate_handles:
+    for idx, handle in enumerate(candidate_handles):
         try:
             driver.switch_to.window(handle)
             current_url = driver.current_url
-        except Exception:
+            
+            if progress_callback:
+                progress_callback(f"🔍 DEBUG: Verificando janela {idx + 1}/{len(candidate_handles)}")
+                progress_callback(f"🔍 DEBUG: URL = {current_url[:100]}...")
+            
+        except Exception as e:
+            if progress_callback:
+                progress_callback(f"⚠️ DEBUG: Erro ao mudar para janela: {e}")
             continue
 
-        if "docparser/view" not in current_url:
+        # EXPANDIDO: Aceita múltiplos padrões de URL
+        is_protocol_page = (
+            "docparser/view" in current_url or 
+            "docgen/lance" in current_url or
+            "/lance/index.php" in current_url
+        )
+        
+        if not is_protocol_page:
+            if progress_callback:
+                progress_callback(f"⏭️ DEBUG: URL não contém protocolo, pulando...")
             continue
 
         if progress_callback:
+            progress_callback("✅ DEBUG: URL de protocolo encontrada!")
             progress_callback("📄 Documento de protocolo detectado, extraindo dados...")
 
-        result = extract_protocol_from_docparser(driver, current_url, progress_callback)
+        # Tenta extrair do final da URL se for formato /view/BASE64
+        extracted_url = current_url
+        if "/view/" in current_url:
+            # URL completa já tem o Base64 no final
+            if progress_callback:
+                progress_callback("🔍 DEBUG: URL no formato /view/BASE64")
+        
+        result = extract_protocol_from_docparser(driver, extracted_url, progress_callback)
         protocol_payload['protocol'] = result.protocol
-        protocol_payload['docparser_url'] = result.docparser_url
+        protocol_payload['docparser_url'] = result.docparser_url or current_url
         protocol_payload['source'] = result.source
+
+        if progress_callback:
+            if result.protocol:
+                progress_callback(f"✅ DEBUG: Protocolo extraído: {result.protocol}")
+            else:
+                progress_callback(f"⚠️ DEBUG: Protocolo NÃO foi extraído!")
 
         if handle != original_window:
             try:
@@ -467,6 +512,9 @@ def _capture_protocol_from_docparser(driver, original_window, handles_before, pr
         driver.switch_to.window(original_window)
     except Exception:
         pass
+
+    if progress_callback:
+        progress_callback(f"🔍 DEBUG: Protocolo final: {protocol_payload['protocol']}")
 
     return protocol_payload
 

@@ -109,17 +109,38 @@ def extract_protocol_from_docparser(
 ) -> ProtocolExtractionResult:
     """Attempts to extract the protocol number from the Docparser URL/PDF."""
 
+    _notify(progress_callback, f"🔍 DEBUG: URL recebida para extração: {docparser_url[:100]}...")
+
     metadata: Dict = {}
     protocol: Optional[str] = None
     pdf_url: Optional[str] = None
     source: Optional[str] = None
 
-    try:
-        payload = _decode_docparser_payload(docparser_url)
-        metadata["decoded_payload"] = payload
-    except Exception as error:  # pragma: no cover - depends on remote data
-        metadata["payload_decode_error"] = str(error)
-        _notify(progress_callback, f"⚠️ Não foi possível decodificar Docparser: {error}")
+    # Tenta extrair Base64 da URL de diferentes formatos
+    base64_chunk = None
+    
+    if "/view/" in docparser_url:
+        # Formato: https://...../view/BASE64
+        base64_chunk = docparser_url.split("/view/")[-1]
+        _notify(progress_callback, f"🔍 DEBUG: Base64 extraído da URL (/view/): {base64_chunk[:50]}...")
+    elif docparser_url.startswith("eyJ"):
+        # Já é o Base64 direto
+        base64_chunk = docparser_url
+        _notify(progress_callback, f"🔍 DEBUG: URL já é Base64: {base64_chunk[:50]}...")
+    else:
+        _notify(progress_callback, f"⚠️ DEBUG: Formato de URL não reconhecido!")
+
+    if base64_chunk:
+        try:
+            payload = _decode_docparser_payload(base64_chunk)
+            metadata["decoded_payload"] = payload
+            _notify(progress_callback, f"✅ DEBUG: Payload decodificado com sucesso!")
+        except Exception as error:
+            metadata["payload_decode_error"] = str(error)
+            _notify(progress_callback, f"⚠️ Não foi possível decodificar Docparser: {error}")
+            payload = None
+    else:
+        _notify(progress_callback, f"⚠️ DEBUG: Não foi possível extrair Base64 da URL")
         payload = None
 
     if payload:
@@ -129,27 +150,37 @@ def extract_protocol_from_docparser(
             "num_protocolo",
             "numero_protocolo",
         ]
+        
+        _notify(progress_callback, f"🔍 DEBUG: Procurando protocolo em {len(candidate_keys)} campos...")
+        
         for key in candidate_keys:
             value = data_block.get(key)
             if value:
                 protocol = str(value).strip()
                 source = f"json:{key}"
+                _notify(progress_callback, f"✅ DEBUG: Protocolo encontrado no campo '{key}': {protocol}")
                 break
 
         if not protocol:
+            _notify(progress_callback, f"⚠️ DEBUG: Protocolo não encontrado nos campos esperados")
             maybe_text_field = data_block.get("texto")
             if maybe_text_field:
                 protocol = _extract_number_from_text(str(maybe_text_field))
                 if protocol:
                     source = "json:texto"
+                    _notify(progress_callback, f"✅ DEBUG: Protocolo encontrado no campo 'texto': {protocol}")
 
         pdf_url = payload.get("url") or payload.get("pdf_url")
+        if pdf_url:
+            _notify(progress_callback, f"🔍 DEBUG: URL do PDF encontrada: {pdf_url[:50]}...")
 
     if not protocol and pdf_url:
+        _notify(progress_callback, f"🔍 DEBUG: Tentando extrair do PDF...")
         protocol, pdf_meta = _extract_protocol_from_pdf(driver, pdf_url, progress_callback)
         metadata["pdf"] = pdf_meta
         if protocol:
             source = source or "pdf"
+            _notify(progress_callback, f"✅ DEBUG: Protocolo extraído do PDF: {protocol}")
 
     if protocol:
         _notify(progress_callback, f"📑 Protocolo capturado: {protocol}")
