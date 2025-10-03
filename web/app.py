@@ -543,6 +543,14 @@ def run_automation_thread(dia):
             def history_callback(grupo, cota, nome, valor, status, obs="", **kwargs):
                 # Salva no histórico via arquivo
                 filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), f'history_{dia}.json')
+                
+                protocolo_value = str(kwargs.get('protocolo', '')) if kwargs.get('protocolo') else '-'
+                documento_url_value = str(kwargs.get('documento_url', '')) if kwargs.get('documento_url') else ''
+                
+                # DEBUG LOG
+                progress_callback(dia, f"🔍 DEBUG WEB: history_callback recebeu protocolo={repr(kwargs.get('protocolo'))}")
+                progress_callback(dia, f"🔍 DEBUG WEB: protocolo_value após conversão = {repr(protocolo_value)}")
+                
                 entry = {
                     'hora': datetime.now().strftime('%H:%M:%S'),
                     'data': datetime.now().strftime('%Y-%m-%d'),
@@ -552,9 +560,11 @@ def run_automation_thread(dia):
                     'valor_lance': str(valor) if valor else '-',
                     'status': str(status) if status else 'Processado',
                     'observacao': str(obs) if obs else '',
-                    'protocolo': str(kwargs.get('protocolo', '')) if kwargs.get('protocolo') else '-',
-                    'documento_url': str(kwargs.get('documento_url', '')) if kwargs.get('documento_url') else ''
+                    'protocolo': protocolo_value,
+                    'documento_url': documento_url_value
                 }
+                
+                progress_callback(dia, f"🔍 DEBUG WEB: entry['protocolo'] = {repr(entry['protocolo'])}")
                 
                 try:
                     # Lê histórico existente

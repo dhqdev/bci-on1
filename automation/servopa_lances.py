@@ -335,6 +335,10 @@ def executar_lance(driver, progress_callback=None):
                             progress_callback,
                         )
 
+                        if progress_callback:
+                            progress_callback(f"🔍 DEBUG LANCE: protocol_info após _capture = {protocol_info}")
+                            progress_callback(f"🔍 DEBUG LANCE: protocol_info.get('protocol') = {protocol_info.get('protocol')}")
+
                         # Tenta clicar em OK se houver botão
                         try:
                             ok_button = driver.find_element(By.XPATH, 
@@ -367,6 +371,10 @@ def executar_lance(driver, progress_callback=None):
                     progress_callback,
                 )
 
+                if progress_callback:
+                    progress_callback(f"🔍 DEBUG LANCE (novo): protocol_info = {protocol_info}")
+                    progress_callback(f"🔍 DEBUG LANCE (novo): protocol_info.get('protocol') = {protocol_info.get('protocol')}")
+
                 return {
                     'success': True,
                     'already_exists': False,
@@ -388,6 +396,10 @@ def executar_lance(driver, progress_callback=None):
                 handles_before,
                 progress_callback,
             )
+
+            if progress_callback:
+                progress_callback(f"🔍 DEBUG LANCE (exception path): protocol_info = {protocol_info}")
+                progress_callback(f"🔍 DEBUG LANCE (exception path): protocol_info.get('protocol') = {protocol_info.get('protocol')}")
 
             return {
                 'success': True,
@@ -491,8 +503,14 @@ def _capture_protocol_from_docparser(driver, original_window, handles_before, pr
         if progress_callback:
             if result.protocol:
                 progress_callback(f"✅ DEBUG: Protocolo extraído: {result.protocol}")
+                progress_callback(f"🔍 DEBUG PAYLOAD: protocol_payload['protocol'] = {protocol_payload['protocol']}")
+                progress_callback(f"🔍 DEBUG PAYLOAD: protocol_payload['docparser_url'] = {protocol_payload['docparser_url']}")
+                progress_callback(f"🔍 DEBUG PAYLOAD: protocol_payload['source'] = {protocol_payload['source']}")
             else:
                 progress_callback(f"⚠️ DEBUG: Protocolo NÃO foi extraído!")
+                progress_callback(f"🔍 DEBUG: result object = {result}")
+                progress_callback(f"🔍 DEBUG: result.protocol = {result.protocol}")
+                progress_callback(f"🔍 DEBUG: result.metadata = {result.metadata}")
 
         if handle != original_window:
             try:
