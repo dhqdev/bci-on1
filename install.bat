@@ -320,18 +320,63 @@ echo pause >> run.bat
 echo [✓] Arquivo run.bat criado!
 
 echo.
+
+REM 6.5. Criar ícone personalizado e atalho
+echo [INFO] Criando ícone personalizado OXCASH...
+
+REM Verificar se Pillow está instalado
+python -c "import PIL" >nul 2>&1
+if %errorLevel% neq 0 (
+    echo [INFO] Instalando Pillow para criar ícone...
+    python -m pip install Pillow
+)
+
+REM Criar ícone
+python create_icon.py >nul 2>&1
+if exist oxcash_icon.ico (
+    echo [✓] Ícone personalizado criado!
+) else (
+    echo [⚠] Não foi possível criar ícone personalizado
+)
+
+REM Criar atalho na área de trabalho com ícone
+echo [INFO] Criando atalho na área de trabalho...
+
+set SCRIPT_TEMP="%TEMP%\create_bci_shortcut.vbs"
+
+echo Set oWS = WScript.CreateObject("WScript.Shell") > %SCRIPT_TEMP%
+echo sLinkFile = oWS.SpecialFolders("Desktop") ^& "\BCI-ON1 Web.lnk" >> %SCRIPT_TEMP%
+echo Set oLink = oWS.CreateShortcut(sLinkFile) >> %SCRIPT_TEMP%
+echo oLink.TargetPath = "%cd%\web\run_web.bat" >> %SCRIPT_TEMP%
+echo oLink.WorkingDirectory = "%cd%" >> %SCRIPT_TEMP%
+echo oLink.Description = "BCI-ON1 - Interface Web OXCASH" >> %SCRIPT_TEMP%
+if exist oxcash_icon.ico (
+    echo oLink.IconLocation = "%cd%\oxcash_icon.ico" >> %SCRIPT_TEMP%
+)
+echo oLink.Save >> %SCRIPT_TEMP%
+
+cscript //nologo %SCRIPT_TEMP% >nul 2>&1
+del %SCRIPT_TEMP%
+
+echo [✓] Atalho criado na área de trabalho!
+
+echo.
 echo ==========================================
 echo [✓] 🎉 INSTALAÇÃO CONCLUÍDA COM SUCESSO!
 echo ==========================================
 echo.
 echo [INFO] Como executar o sistema:
 echo.
-echo Interface Desktop (Tkinter):
-echo    Clique duas vezes em: run.bat
+echo Interface Web (Recomendado):
+echo    🖱️  Clique no atalho "BCI-ON1 Web" na área de trabalho
+echo    📁 Ou execute: web\run_web.bat
+echo    🌐 Depois acesse: http://localhost:5000
 echo.
-echo Interface Web (Moderna):
-echo    Clique duas vezes em: web\run_web.bat
-echo    Depois acesse: http://localhost:5000
+echo Interface Desktop (Legado):
+echo    📁 Execute: run.bat
+echo.
+echo 🎨 Ícone personalizado criado!
+echo 🔗 Atalho criado na área de trabalho!
 echo.
 echo [INFO] Sistema pronto para uso! 🚀
 echo.

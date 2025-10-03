@@ -25,39 +25,40 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <!-- Menu de navegação moderno com abas -->
+                <ul class="navbar-nav ms-auto nav-tabs-modern">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
                             <i class="fas fa-home"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/automation/dia8">
+                        <a class="nav-link {% if '/automation/dia8' in request.path %}active{% endif %}" href="/automation/dia8">
                             <i class="fas fa-robot"></i> Dia 8
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/automation/dia16">
-                            <i class="fas fa-robot"></i> Dia 16
+                        <a class="nav-link {% if '/automation/dia16' in request.path %}active{% endif %}" href="/automation/dia16">
+                            <i class="fas fa-calendar-alt"></i> Dia 16
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/whatsapp">
+                        <a class="nav-link {% if '/whatsapp' in request.path %}active{% endif %}" href="/whatsapp">
                             <i class="fab fa-whatsapp"></i> WhatsApp
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/history">
+                        <a class="nav-link {% if '/history' in request.path %}active{% endif %}" href="/history">
                             <i class="fas fa-history"></i> Histórico
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/credentials">
+                        <a class="nav-link {% if '/credentials' in request.path %}active{% endif %}" href="/credentials">
                             <i class="fas fa-key"></i> Credenciais
                         </a>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link btn btn-link" onclick="updateFromGitHub()" style="border:none; background:none; cursor:pointer;" title="Atualizar do GitHub">
+                        <button class="nav-link btn" onclick="updateFromGitHub()" style="border:none; background:rgba(255,255,255,0.1); cursor:pointer;" title="Atualizar do GitHub">
                             <i class="fas fa-sync-alt"></i> Atualizar
                         </button>
                     </li>
