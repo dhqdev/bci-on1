@@ -337,7 +337,44 @@ def executar_lance(driver, progress_callback=None):
         if progress_callback:
             progress_callback("🔍 Verificando resultado do registro...")
             
-        # Aguarda 500ms e verifica se algo mudou IMEDIATAMENTE
+        # CRÍTICO: Captura protocolo IMEDIATAMENTE se nova janela abrir
+        time.sleep(0.3)  # Aguarda 300ms apenas
+        handles_immediately = set(driver.window_handles)
+        new_handles_immediately = list(handles_immediately - handles_before)
+        
+        if len(new_handles_immediately) > 0:
+            if progress_callback:
+                progress_callback(f"⚡ JANELA DETECTADA IMEDIATAMENTE! Capturando protocolo AGORA...")
+            
+            # Captura protocolo SEM ESPERAR!
+            protocol_info = _capture_protocol_from_docparser(
+                driver,
+                original_window,
+                handles_before,
+                progress_callback,
+            )
+            
+            if progress_callback:
+                progress_callback(f"🔍 DEBUG LANCE (captura rápida): protocol_info = {protocol_info}")
+                progress_callback(f"🔍 DEBUG LANCE (captura rápida): protocol = {protocol_info.get('protocol')}")
+            
+            # Se capturou protocolo, retorna sucesso IMEDIATAMENTE
+            if protocol_info.get('protocol'):
+                return {
+                    'success': True,
+                    'already_exists': False,
+                    'message': 'Lance registrado com sucesso (captura rápida)',
+                    'valor_lance': valor_lanfix,
+                    'protocol_number': protocol_info.get('protocol'),
+                    'docparser_url': protocol_info.get('docparser_url'),
+                    'protocol_source': protocol_info.get('source'),
+                }
+        
+        # Se não detectou janela imediatamente, continua com fluxo normal
+        if progress_callback:
+            progress_callback(f"🔍 DEBUG: Nenhuma janela detectada imediatamente, continuando...")
+            
+        # Aguarda 500ms e verifica novamente
         time.sleep(0.5)
         if progress_callback:
             url_immediately = driver.current_url
@@ -500,34 +537,40 @@ def _capture_protocol_from_docparser(driver, original_window, handles_before, pr
         progress_callback("🔍 DEBUG: Iniciando captura de protocolo...")
         progress_callback(f"🔍 DEBUG: Janelas iniciais: {len(handles_before)}")
 
-    # Loop simplificado igual à aplicação local que FUNCIONA
-    wait_until = time.time() + 10
-    new_handles = []
-    check_count = 0
+    # ESTRATÉGIA RÁPIDA: Verifica IMEDIATAMENTE se já há nova janela
+    current_handles = set(driver.window_handles)
+    new_handles = list(current_handles - handles_before)
     
-    while time.time() < wait_until:
-        check_count += 1
-        handles_after = list(driver.window_handles)
-        new_handles = [h for h in handles_after if h not in handles_before]
-        current_url = driver.current_url
+    if len(new_handles) > 0:
+        if progress_callback:
+            progress_callback(f"⚡ NOVA JANELA JÁ ABERTA! Capturando IMEDIATAMENTE sem esperar!")
+    else:
+        # Se não há nova janela, aguarda um pouco
+        if progress_callback:
+            progress_callback(f"🔍 DEBUG: Aguardando nova janela ou mudança de URL...")
         
-        # LOG A CADA 2 SEGUNDOS (4 checks)
-        if check_count % 4 == 0 and progress_callback:
-            progress_callback(f"🔍 DEBUG Loop [{check_count}]: Janelas={len(handles_after)}, Novas={len(new_handles)}, URL={current_url[:60]}...")
+        wait_until = time.time() + 5  # Apenas 5 segundos (era 10)
+        check_count = 0
         
-        # Quebra IMEDIATAMENTE se detectar protocolo ou novas janelas
-        if new_handles or "docparser/view" in current_url:
-            if progress_callback:
-                progress_callback(f"🔍 DEBUG: ✅ DETECTADO após {check_count} checks!")
-                if new_handles:
-                    progress_callback(f"🔍 DEBUG: ✅ {len(new_handles)} nova(s) janela(s) detectada(s)!")
-                if "docparser/view" in current_url:
-                    progress_callback(f"🔍 DEBUG: ✅ URL de protocolo detectada: {current_url[:80]}...")
-            break
-        time.sleep(0.5)  # Meio segundo entre checagens
-    
-    if progress_callback:
-        progress_callback(f"🔍 DEBUG: Loop finalizado após {check_count} checks. Novas janelas: {len(new_handles)}")
+        while time.time() < wait_until:
+            check_count += 1
+            handles_after = list(driver.window_handles)
+            new_handles = [h for h in handles_after if h not in handles_before]
+            current_url = driver.current_url
+            
+            # LOG apenas a cada 2 segundos
+            if check_count % 4 == 0 and progress_callback:
+                progress_callback(f"🔍 DEBUG Loop [{check_count}]: Janelas={len(handles_after)}, Novas={len(new_handles)}")
+            
+            # Quebra IMEDIATAMENTE se detectar protocolo ou novas janelas
+            if new_handles or "docparser/view" in current_url:
+                if progress_callback:
+                    progress_callback(f"🔍 DEBUG: ✅ DETECTADO após {check_count} checks!")
+                break
+            time.sleep(0.5)
+        
+        if progress_callback:
+            progress_callback(f"🔍 DEBUG: Loop finalizado. Novas janelas: {len(new_handles)}")
 
     candidate_handles = new_handles + [original_window]
 
