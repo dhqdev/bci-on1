@@ -435,28 +435,41 @@ def _capture_protocol_from_docparser(driver, original_window, handles_before, pr
         progress_callback("🔍 DEBUG: Iniciando captura de protocolo...")
         progress_callback(f"🔍 DEBUG: Janelas antes: {len(handles_before)}")
 
-    wait_until = time.time() + 10
+    wait_until = time.time() + 15  # Aumentado para 15 segundos
     new_handles = []
+    detected_url = None
+    
     while time.time() < wait_until:
         handles_after = list(driver.window_handles)
         new_handles = [h for h in handles_after if h not in handles_before]
         current_url = driver.current_url
         
-        if progress_callback and len(new_handles) > 0:
-            progress_callback(f"🔍 DEBUG: {len(new_handles)} nova(s) janela(s) detectada(s)")
-        
-        # EXPANDIDO: Procura por múltiplos padrões de URL
-        if new_handles or "docparser/view" in current_url or "docgen/lance" in current_url or "/lance/" in current_url:
+        if len(new_handles) > 0:
             if progress_callback:
-                progress_callback(f"🔍 DEBUG: URL ou nova janela detectada!")
+                progress_callback(f"🔍 DEBUG: {len(new_handles)} nova(s) janela(s) detectada(s)")
+            # IMEDIATAMENTE sai do loop quando detectar nova janela
             break
-        time.sleep(1)
+        
+        # EXPANDIDO: Procura por múltiplos padrões de URL na janela atual também
+        if "docparser/view" in current_url or "docgen/lance" in current_url or "/lance/" in current_url:
+            if progress_callback:
+                progress_callback(f"🔍 DEBUG: URL com protocolo detectada na janela atual!")
+            detected_url = current_url
+            break
+            
+        time.sleep(0.5)  # Reduzido de 1s para 0.5s = mais responsivo
 
     if progress_callback:
         progress_callback(f"🔍 DEBUG: Janelas depois: {len(driver.window_handles)}")
         progress_callback(f"🔍 DEBUG: Novas janelas: {len(new_handles)}")
+        if detected_url:
+            progress_callback(f"🔍 DEBUG: URL detectada na janela atual: {detected_url[:80]}...")
 
+    # IMPORTANTE: Prioriza NOVAS janelas, depois tenta a original
     candidate_handles = new_handles + [original_window]
+    
+    if progress_callback:
+        progress_callback(f"🔍 DEBUG: Verificando {len(candidate_handles)} janela(s) para protocolo...")
 
     for idx, handle in enumerate(candidate_handles):
         try:
@@ -495,6 +508,9 @@ def _capture_protocol_from_docparser(driver, original_window, handles_before, pr
             if progress_callback:
                 progress_callback("🔍 DEBUG: URL no formato /view/BASE64")
         
+        if progress_callback:
+            progress_callback(f"🔍 DEBUG: Chamando extract_protocol_from_docparser com URL: {extracted_url[:80]}...")
+        
         result = extract_protocol_from_docparser(driver, extracted_url, progress_callback)
         protocol_payload['protocol'] = result.protocol
         protocol_payload['docparser_url'] = result.docparser_url or current_url
@@ -512,17 +528,28 @@ def _capture_protocol_from_docparser(driver, original_window, handles_before, pr
                 progress_callback(f"🔍 DEBUG: result.protocol = {result.protocol}")
                 progress_callback(f"🔍 DEBUG: result.metadata = {result.metadata}")
 
+        # IMPORTANTE: Fecha aba do PDF e volta para lances
         if handle != original_window:
             try:
+                if progress_callback:
+                    progress_callback(f"🔄 DEBUG: Fechando aba do PDF (handle {idx + 1})...")
                 driver.close()
-            except Exception:
-                pass
+                if progress_callback:
+                    progress_callback(f"✅ DEBUG: Aba do PDF fechada com sucesso")
+            except Exception as close_error:
+                if progress_callback:
+                    progress_callback(f"⚠️ DEBUG: Erro ao fechar aba: {close_error}")
         else:
             try:
+                if progress_callback:
+                    progress_callback(f"🔄 DEBUG: Voltando para página de lances (was in original window)...")
                 driver.back()
                 WebDriverWait(driver, 10).until(EC.url_contains("/vendas/lances"))
-            except Exception:
-                pass
+                if progress_callback:
+                    progress_callback(f"✅ DEBUG: Retornado para página de lances")
+            except Exception as back_error:
+                if progress_callback:
+                    progress_callback(f"⚠️ DEBUG: Erro ao voltar (back): {back_error}")
 
         break
 
