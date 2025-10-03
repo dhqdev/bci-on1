@@ -40,15 +40,28 @@ bash <(curl -fsSL https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-li
 
 #### Windows (PowerShell como Administrador)
 
-**🌟 OPÇÃO 1 - PowerShell Script (MAIS CONFIÁVEL):**
+**🌟 MÉTODO MAIS FÁCIL (Sem problemas de ExecutionPolicy):**
 ```powershell
+irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/install-rapido.ps1 | iex
+```
+
+**OPÇÃO 2 - Download e Execução Manual:**
+```powershell
+# Se der erro de ExecutionPolicy, use este antes:
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+
+# Depois execute:
 irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.ps1 -OutFile setup.ps1; .\setup.ps1
 ```
 
-**OPÇÃO 2 - Instalador Batch Completo:**
-```powershell
-irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.bat -OutFile setup.bat; .\setup.bat
+**OPÇÃO 3 - Sem PowerShell (Prompt de Comando):**
+```cmd
+git clone https://github.com/dhqdev/bci-on1.git
+cd bci-on1
+install.bat
 ```
+
+⚠️ **Problemas com ExecutionPolicy?** Veja: [INSTALACAO_WINDOWS_POWERSHELL.md](INSTALACAO_WINDOWS_POWERSHELL.md)
 
 **OPÇÃO 3 - Instalador Batch Simplificado (se os outros travarem):**
 ```powershell
