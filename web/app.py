@@ -152,12 +152,44 @@ def api_evolution_config():
 @app.route('/api/history/clear/<dia>', methods=['POST'])
 def api_clear_history(dia):
     """Limpa histórico de um dia específico"""
-    if dia not in ['dia8', 'dia16', 'all']:
+    if dia not in ['dia8', 'dia16', 'all', 'errors']:
         return jsonify({'success': False, 'error': 'Dia inválido'})
     
     try:
-        if dia == 'all':
-            # Limpa ambos os históricos
+        if dia == 'errors':
+            # Limpa APENAS registros com erro em ambos os dias
+            dias_to_clean = ['dia8', 'dia16']
+            total_removed = 0
+            
+            for d in dias_to_clean:
+                filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), f'history_{d}.json')
+                
+                if os.path.exists(filepath):
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    
+                    # Filtra APENAS os que NÃO são erro
+                    data_filtered = [
+                        entry for entry in data 
+                        if not ('❌' in entry.get('status', '') or 
+                                'Erro' in entry.get('status', '') or 
+                                'erro' in entry.get('status', '').lower())
+                    ]
+                    
+                    removed = len(data) - len(data_filtered)
+                    total_removed += removed
+                    
+                    # Salva apenas os não-erros
+                    with open(filepath, 'w', encoding='utf-8') as f:
+                        json.dump(data_filtered, f, indent=2, ensure_ascii=False)
+            
+            return jsonify({
+                'success': True, 
+                'message': f'{total_removed} registros com erro removidos'
+            })
+        
+        elif dia == 'all':
+            # Limpa ambos os históricos COMPLETAMENTE
             dias = ['dia8', 'dia16']
         else:
             dias = [dia]

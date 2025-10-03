@@ -10,6 +10,9 @@
             <button class="btn btn-primary" onclick="refreshHistory()">
                 <i class="fas fa-sync-alt"></i> Atualizar
             </button>
+            <button class="btn btn-warning" onclick="confirmClearErrors()">
+                <i class="fas fa-exclamation-triangle"></i> Limpar Erros
+            </button>
             <button class="btn btn-danger" onclick="confirmClearHistory()">
                 <i class="fas fa-trash"></i> Limpar Tudo
             </button>
@@ -140,6 +143,27 @@ async function loadHistory(dia) {
 function refreshHistory() {
     loadHistory('dia8');
     loadHistory('dia16');
+}
+
+async function confirmClearErrors() {
+    if (confirm('⚠️ Tem certeza que deseja LIMPAR APENAS OS ERROS?\n\nRegistros com sucesso serão mantidos.')) {
+        try {
+            const response = await fetch('/api/history/clear/errors', {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('✅ ' + data.message);
+                refreshHistory();
+            } else {
+                alert('❌ Erro: ' + data.error);
+            }
+        } catch (error) {
+            alert('❌ Erro ao limpar erros: ' + error);
+        }
+    }
 }
 
 async function confirmClearHistory() {

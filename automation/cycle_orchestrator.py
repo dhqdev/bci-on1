@@ -235,11 +235,18 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                         try:
                             valor_lance = lance_result.get('valor_lance', 'N/A')
                             
+                            # DEBUG: Log do valor capturado
+                            if progress_callback:
+                                progress_callback(f"🔍 DEBUG - Valor capturado: '{valor_lance}'")
+                            
                             # Formata valor: só adiciona % se não for N/A
-                            if valor_lance and valor_lance != 'N/A':
+                            if valor_lance and valor_lance != 'N/A' and valor_lance.strip() != '':
                                 valor_formatado = f"{valor_lance}%"
                             else:
                                 valor_formatado = "N/A"
+                            
+                            if progress_callback:
+                                progress_callback(f"🔍 DEBUG - Valor formatado: '{valor_formatado}'")
                             
                             if lance_result.get('already_exists', False):
                                 observacao = "Lance já existia (protocolo anterior detectado)"

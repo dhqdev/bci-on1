@@ -203,6 +203,9 @@ async function startAutomation() {
     try {
         addLog('🚀 Iniciando automação...', 'info');
         
+        // HABILITA BOTÃO PARAR IMEDIATAMENTE (não espera resposta)
+        updateAutomationStatus(true);
+        
         const response = await fetch(`/api/automation/start/${dia}`, {
             method: 'POST'
         });
@@ -213,9 +216,11 @@ async function startAutomation() {
             addLog('✅ Automação iniciada com sucesso!', 'success');
         } else {
             addLog('❌ Erro: ' + data.error, 'error');
+            updateAutomationStatus(false);  // Reverte se falhar
         }
     } catch (error) {
         addLog('❌ Erro ao iniciar: ' + error, 'error');
+        updateAutomationStatus(false);  // Reverte se falhar
     }
 }
 
@@ -224,6 +229,9 @@ async function stopAutomation() {
     try {
         addLog('⏹️ Parando automação...', 'warning');
         
+        // DESABILITA BOTÃO PARAR IMEDIATAMENTE (não espera resposta)
+        updateAutomationStatus(false);
+        
         const response = await fetch(`/api/automation/stop/${dia}`, {
             method: 'POST'
         });
@@ -231,7 +239,7 @@ async function stopAutomation() {
         const data = await response.json();
         
         if (data.success) {
-            addLog('✅ Automação parada!', 'success');
+            addLog('✅ ' + data.message, 'success');
         } else {
             addLog('❌ Erro: ' + data.error, 'error');
         }
