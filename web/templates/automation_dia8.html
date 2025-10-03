@@ -91,14 +91,19 @@ function connectWebSocket() {
         addLog('Conectado ao servidor', 'success');
         
         // Verifica status atual da automação
-        fetch(`/api/automation/status/${dia}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.running) {
-                    updateAutomationStatus(true);
-                }
-            })
-            .catch(err => console.error('Erro ao verificar status:', err));
+        // MAS respeita se usuário está tentando parar
+        if (!window.isStopping) {
+            fetch(`/api/automation/status/${dia}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.running) {
+                        updateAutomationStatus(true);
+                    } else {
+                        updateAutomationStatus(false);
+                    }
+                })
+                .catch(err => console.error('Erro ao verificar status:', err));
+        }
     });
     
     socket.on('log', function(data) {
@@ -128,26 +133,6 @@ function connectWebSocket() {
         }
     });
 }
-
-// Força verificação de status ao conectar
-socket.on('connect', function() {
-    addLog('Conectado ao servidor', 'success');
-    
-    // Verifica status atual da automação
-    // MAS respeita se usuário está tentando parar
-    if (!window.isStopping) {
-        fetch(`/api/automation/status/${dia}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.running) {
-                    updateAutomationStatus(true);
-                } else {
-                    updateAutomationStatus(false);
-                }
-            })
-            .catch(err => console.error('Erro ao verificar status:', err));
-    }
-});
 
 // Adiciona log
 function addLog(message, type = 'info') {
