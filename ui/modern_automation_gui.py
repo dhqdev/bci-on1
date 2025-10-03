@@ -9,9 +9,28 @@ import json
 import os
 from datetime import datetime
 import queue
+import sys
+
+# Bloqueia acesso direto ao sistema desktop
+ALLOW_DESKTOP_ACCESS = False
 
 class ModernAutomationGUI:
     def __init__(self):
+        if not ALLOW_DESKTOP_ACCESS:
+            print("=" * 80)
+            print("⚠️  AVISO: Interface Desktop Desabilitada")
+            print("=" * 80)
+            print()
+            print("🌐 O sistema agora funciona apenas via interface WEB.")
+            print()
+            print("📌 Para usar o sistema, execute:")
+            print("   cd web && python app.py")
+            print()
+            print("🌍 Depois acesse: http://localhost:5000")
+            print()
+            print("=" * 80)
+            sys.exit(0)
+        
         self.root = tk.Tk()
         self.root.title("🏆 OXCASH - Sistema de Automação Profissional")
         self.root.geometry("1200x850")
@@ -127,6 +146,7 @@ class ModernAutomationGUI:
         # Criar todas as abas
         self.create_automation_tab()
         self.create_automation_tab_dia16()
+        self.create_boletos_tab()  # NOVA: Aba de Boletos
         self.create_credentials_tab()
         self.create_whatsapp_tab()  # Aba unificada de WhatsApp
         self.create_history_tab()
@@ -378,6 +398,299 @@ class ModernAutomationGUI:
         
         self.general_status_dia16 = tk.Label(button_frame, text="Sistema pronto", font=('Arial', 10, 'bold'), fg='#28a745')
         self.general_status_dia16.pack(side='right', padx=10)
+    
+    def create_boletos_tab(self):
+        """Aba de Boletos - Kanban com 2 colunas (Dia 8 e Dia 16)"""
+        tab_frame = tk.Frame(self.notebook, bg=self.colors['light'])
+        self.notebook.add(tab_frame, text='📄 Boletos')
+        
+        # Container principal com padding
+        main_container = tk.Frame(tab_frame, bg=self.colors['light'])
+        main_container.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # ========== HEADER ==========
+        header_border = tk.Frame(main_container, bg=self.colors['border'])
+        header_border.pack(fill='x', pady=(0, 15))
+        header_inner = tk.Frame(header_border, bg=self.colors['white'])
+        header_inner.pack(padx=1, pady=1, fill='x')
+        
+        header_content = tk.Frame(header_inner, bg=self.colors['white'])
+        header_content.pack(fill='x', padx=20, pady=15)
+        
+        tk.Label(header_content, text="📄 Kanban de Boletos Servopa Outubro", 
+                font=('Arial', 16, 'bold'), bg=self.colors['white'], fg=self.colors['primary']).pack(anchor='w')
+        tk.Label(header_content, 
+                text="Visualização sincronizada com o Todoist - Duas colunas: Vencimento dia 08 e Vencimento dia 16",
+                font=('Arial', 10), bg=self.colors['white'], fg=self.colors['text_light']).pack(anchor='w', pady=(5, 0))
+        
+        # ========== BOTÃO DE IMPORTAÇÃO ==========
+        import_frame = tk.Frame(main_container, bg=self.colors['light'])
+        import_frame.pack(fill='x', pady=(0, 15))
+        
+        tk.Button(import_frame, text="🔄 Importar do Todoist", font=('Arial', 11, 'bold'),
+                 bg=self.colors['success'], fg='white', command=self.import_boletos_from_todoist,
+                 padx=30, pady=10, relief='flat', cursor='hand2').pack(side='left')
+        
+        self.boletos_status_label = tk.Label(import_frame, text="Clique em Importar para sincronizar", 
+                                             font=('Arial', 10), bg=self.colors['light'], fg=self.colors['text_light'])
+        self.boletos_status_label.pack(side='left', padx=15)
+        
+        # ========== KANBAN DE 2 COLUNAS ==========
+        kanban_container = tk.Frame(main_container, bg=self.colors['light'])
+        kanban_container.pack(fill='both', expand=True)
+        
+        # COLUNA DIA 08
+        dia08_border = tk.Frame(kanban_container, bg=self.colors['border'])
+        dia08_border.pack(side='left', fill='both', expand=True, padx=(0, 10))
+        
+        dia08_frame = tk.Frame(dia08_border, bg=self.colors['white'])
+        dia08_frame.pack(padx=1, pady=1, fill='both', expand=True)
+        
+        # Header Dia 08
+        dia08_header = tk.Frame(dia08_frame, bg=self.colors['secondary'], height=50)
+        dia08_header.pack(fill='x')
+        dia08_header.pack_propagate(False)
+        
+        tk.Label(dia08_header, text="📅 Vencimento dia 08", font=('Arial', 14, 'bold'), 
+                bg=self.colors['secondary'], fg='white').pack(pady=12)
+        
+        # Container scrollável para cards Dia 08
+        dia08_canvas_frame = tk.Frame(dia08_frame, bg=self.colors['white'])
+        dia08_canvas_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        dia08_canvas = tk.Canvas(dia08_canvas_frame, bg=self.colors['white'], highlightthickness=0)
+        dia08_scrollbar = ttk.Scrollbar(dia08_canvas_frame, orient="vertical", command=dia08_canvas.yview)
+        
+        self.dia08_cards_container = tk.Frame(dia08_canvas, bg=self.colors['white'])
+        self.dia08_cards_container.bind(
+            "<Configure>",
+            lambda e: dia08_canvas.configure(scrollregion=dia08_canvas.bbox("all"))
+        )
+        
+        dia08_canvas.create_window((0, 0), window=self.dia08_cards_container, anchor="nw")
+        dia08_canvas.configure(yscrollcommand=dia08_scrollbar.set)
+        
+        dia08_canvas.pack(side="left", fill="both", expand=True)
+        dia08_scrollbar.pack(side="right", fill="y")
+        
+        # COLUNA DIA 16
+        dia16_border = tk.Frame(kanban_container, bg=self.colors['border'])
+        dia16_border.pack(side='left', fill='both', expand=True, padx=(10, 0))
+        
+        dia16_frame = tk.Frame(dia16_border, bg=self.colors['white'])
+        dia16_frame.pack(padx=1, pady=1, fill='both', expand=True)
+        
+        # Header Dia 16
+        dia16_header = tk.Frame(dia16_frame, bg=self.colors['warning'], height=50)
+        dia16_header.pack(fill='x')
+        dia16_header.pack_propagate(False)
+        
+        tk.Label(dia16_header, text="📅 Vencimento dia 16", font=('Arial', 14, 'bold'), 
+                bg=self.colors['warning'], fg='white').pack(pady=12)
+        
+        # Container scrollável para cards Dia 16
+        dia16_canvas_frame = tk.Frame(dia16_frame, bg=self.colors['white'])
+        dia16_canvas_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        dia16_canvas = tk.Canvas(dia16_canvas_frame, bg=self.colors['white'], highlightthickness=0)
+        dia16_scrollbar = ttk.Scrollbar(dia16_canvas_frame, orient="vertical", command=dia16_canvas.yview)
+        
+        self.dia16_cards_container = tk.Frame(dia16_canvas, bg=self.colors['white'])
+        self.dia16_cards_container.bind(
+            "<Configure>",
+            lambda e: dia16_canvas.configure(scrollregion=dia16_canvas.bbox("all"))
+        )
+        
+        dia16_canvas.create_window((0, 0), window=self.dia16_cards_container, anchor="nw")
+        dia16_canvas.configure(yscrollcommand=dia16_scrollbar.set)
+        
+        dia16_canvas.pack(side="left", fill="both", expand=True)
+        dia16_scrollbar.pack(side="right", fill="y")
+        
+        # Carregar dados salvos se existirem
+        self.load_boletos_data()
+        
+    def import_boletos_from_todoist(self):
+        """Importa dados do board de Boletos do Todoist"""
+        self.boletos_status_label.config(text="⏳ Importando do Todoist...", fg=self.colors['warning'])
+        
+        def import_thread():
+            try:
+                from auth.servopa_auth import create_driver
+                from selenium.webdriver.common.by import By
+                from selenium.webdriver.support.ui import WebDriverWait
+                from selenium.webdriver.support import expected_conditions as EC
+                from utils.todoist_board_extractor import navigate_to_board_project_boletos, extract_boletos_board
+                import time
+                
+                # Carrega credenciais
+                credentials = {
+                    'todoist': {
+                        'usuario': self.todoist_login_var.get().strip(),
+                        'senha': self.todoist_senha_var.get().strip()
+                    }
+                }
+                
+                if not credentials['todoist']['usuario'] or not credentials['todoist']['senha']:
+                    raise Exception("Credenciais do Todoist não informadas")
+                
+                # Cria driver
+                driver = create_driver(headless=False)
+                
+                try:
+                    # Login Todoist
+                    driver.get("https://todoist.com/auth/login")
+                    time.sleep(3)
+                    
+                    wait = WebDriverWait(driver, 20)
+                    
+                    email_input = wait.until(EC.presence_of_element_located((By.ID, "element-0")))
+                    email_input.send_keys(credentials['todoist']['usuario'])
+                    
+                    password_input = wait.until(EC.presence_of_element_located((By.ID, "element-2")))
+                    password_input.send_keys(credentials['todoist']['senha'])
+                    
+                    login_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
+                    login_button.click()
+                    time.sleep(10)
+                    
+                    # Navega para board de Boletos
+                    def progress_callback(msg):
+                        self.root.after(0, lambda: self.boletos_status_label.config(text=msg, fg=self.colors['primary']))
+                    
+                    if not navigate_to_board_project_boletos(driver, progress_callback):
+                        raise Exception("Falha ao navegar para board de Boletos")
+                    
+                    # Extrai dados
+                    boletos_data = extract_boletos_board(driver, progress_callback)
+                    
+                    if not boletos_data:
+                        raise Exception("Falha ao extrair dados do board")
+                    
+                    # Salva dados
+                    self.save_boletos_data(boletos_data)
+                    
+                    # Atualiza interface
+                    self.root.after(0, lambda: self.display_boletos_cards(boletos_data))
+                    
+                    total_dia08 = len(boletos_data['dia08'])
+                    total_dia16 = len(boletos_data['dia16'])
+                    
+                    self.root.after(0, lambda: self.boletos_status_label.config(
+                        text=f"✅ Importado: {total_dia08} boletos (dia 08) e {total_dia16} boletos (dia 16)", 
+                        fg=self.colors['success']))
+                    
+                finally:
+                    driver.quit()
+                    
+            except Exception as e:
+                self.root.after(0, lambda: self.boletos_status_label.config(
+                    text=f"❌ Erro: {str(e)[:50]}", fg=self.colors['danger']))
+        
+        thread = threading.Thread(target=import_thread)
+        thread.daemon = True
+        thread.start()
+    
+    def display_boletos_cards(self, boletos_data):
+        """Exibe cards de boletos no kanban"""
+        # Limpa containers
+        for widget in self.dia08_cards_container.winfo_children():
+            widget.destroy()
+        for widget in self.dia16_cards_container.winfo_children():
+            widget.destroy()
+        
+        # Cria cards para Dia 08
+        for idx, boleto in enumerate(boletos_data['dia08']):
+            self.create_boleto_card(self.dia08_cards_container, boleto, idx)
+        
+        # Cria cards para Dia 16
+        for idx, boleto in enumerate(boletos_data['dia16']):
+            self.create_boleto_card(self.dia16_cards_container, boleto, idx)
+    
+    def create_boleto_card(self, parent, boleto, index):
+        """Cria um card de boleto"""
+        # Card container com borda
+        card_border = tk.Frame(parent, bg=self.colors['border'])
+        card_border.pack(fill='x', pady=5)
+        
+        card = tk.Frame(card_border, bg=self.colors['white'])
+        card.pack(padx=1, pady=1, fill='x')
+        
+        # Cor de destaque no topo
+        color = self.colors['success'] if boleto.get('is_completed') else self.colors['secondary']
+        color_bar = tk.Frame(card, bg=color, height=3)
+        color_bar.pack(fill='x')
+        
+        # Conteúdo do card
+        content = tk.Frame(card, bg=self.colors['white'])
+        content.pack(fill='x', padx=12, pady=10)
+        
+        # Nome do cliente
+        tk.Label(content, text=boleto['nome'], font=('Arial', 11, 'bold'), 
+                bg=self.colors['white'], fg=self.colors['dark'], anchor='w').pack(fill='x')
+        
+        # Informação de cotas
+        if boleto.get('cotas'):
+            tk.Label(content, text=boleto['cotas'], font=('Arial', 9), 
+                    bg=self.colors['white'], fg=self.colors['text_light'], anchor='w').pack(fill='x', pady=(5, 0))
+        
+        # Status
+        status_text = "✅ Concluído" if boleto.get('is_completed') else "⬜ Pendente"
+        status_color = self.colors['success'] if boleto.get('is_completed') else self.colors['text_light']
+        tk.Label(content, text=status_text, font=('Arial', 8), 
+                bg=self.colors['white'], fg=status_color, anchor='w').pack(fill='x', pady=(3, 0))
+    
+    def save_boletos_data(self, boletos_data):
+        """Salva dados dos boletos em arquivo JSON"""
+        import json
+        boletos_file = 'boletos_data.json'
+        
+        # Remove elementos não serializáveis
+        clean_data = {
+            'dia08': [],
+            'dia16': [],
+            'last_import': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        for boleto in boletos_data['dia08']:
+            clean_data['dia08'].append({
+                'nome': boleto['nome'],
+                'cotas': boleto.get('cotas', ''),
+                'is_completed': boleto.get('is_completed', False)
+            })
+        
+        for boleto in boletos_data['dia16']:
+            clean_data['dia16'].append({
+                'nome': boleto['nome'],
+                'cotas': boleto.get('cotas', ''),
+                'is_completed': boleto.get('is_completed', False)
+            })
+        
+        with open(boletos_file, 'w', encoding='utf-8') as f:
+            json.dump(clean_data, f, indent=2, ensure_ascii=False)
+    
+    def load_boletos_data(self):
+        """Carrega dados salvos dos boletos"""
+        import json
+        import os
+        boletos_file = 'boletos_data.json'
+        
+        if os.path.exists(boletos_file):
+            try:
+                with open(boletos_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                
+                self.display_boletos_cards(data)
+                
+                total_dia08 = len(data.get('dia08', []))
+                total_dia16 = len(data.get('dia16', []))
+                last_import = data.get('last_import', 'Desconhecida')
+                
+                self.boletos_status_label.config(
+                    text=f"📊 Dados carregados: {total_dia08} boletos (dia 08), {total_dia16} boletos (dia 16) | Última importação: {last_import}", 
+                    fg=self.colors['primary'])
+            except Exception as e:
+                self.boletos_status_label.config(text=f"⚠️ Erro ao carregar dados: {e}", fg=self.colors['warning'])
         
     def create_credentials_tab(self):
         """Aba de credenciais"""
@@ -2278,5 +2591,17 @@ if __name__ == "__main__":
         self.root.mainloop()
 
 if __name__ == "__main__":
-    app = ModernAutomationGUI()
-    app.run()
+    print("=" * 80)
+    print("⚠️  AVISO: Interface Desktop Desabilitada")
+    print("=" * 80)
+    print()
+    print("🌐 O sistema agora funciona apenas via interface WEB.")
+    print()
+    print("📌 Para usar o sistema, execute:")
+    print("   cd web && python app.py")
+    print()
+    print("🌍 Depois acesse: http://localhost:5000")
+    print()
+    print("=" * 80)
+    import sys
+    sys.exit(0)

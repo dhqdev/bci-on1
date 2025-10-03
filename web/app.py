@@ -65,6 +65,11 @@ def credentials():
     """Página de credenciais"""
     return render_template('credentials.html')
 
+@app.route('/boletos')
+def boletos():
+    """Página de Kanban de Boletos"""
+    return render_template('boletos.html')
+
 # ========== API REST ==========
 
 @app.route('/api/stats')
@@ -148,6 +153,119 @@ def api_evolution_config():
             return jsonify({'success': True, 'message': 'Configuração salva com sucesso'})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/boletos', methods=['GET'])
+def api_boletos():
+    """Retorna dados dos boletos"""
+    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+    
+    try:
+        if os.path.exists(filepath):
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return jsonify({'success': True, 'data': data})
+        else:
+            return jsonify({'success': True, 'data': {'dia08': [], 'dia16': []}})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/boletos/import', methods=['POST'])
+def api_boletos_import():
+    """Importa boletos do Todoist via API REST"""
+    try:
+        from utils.todoist_rest_api import TodoistRestAPI
+        
+        # Token do Todoist (pode ser movido para credentials.json futuramente)
+        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
+        
+        # Emite progresso via WebSocket
+        def emit_progress(message):
+            socketio.emit('boletos_progress', {'message': message})
+        
+        emit_progress('🔄 Conectando à API do Todoist...')
+        
+        # Cria cliente da API
+        api = TodoistRestAPI(TODOIST_TOKEN)
+        
+        # Extrai dados via API REST
+        boletos_data = api.extract_boletos_board(
+            project_name="Boletos Servopa Outubro",
+            section_dia08="Vencimento dia 08",
+            section_dia16="Vencimento dia 16",
+            progress_callback=emit_progress
+        )
+        
+        # Salva dados
+        clean_data = {
+            'dia08': [],
+            'dia16': [],
+            'last_import': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        for boleto in boletos_data['dia08']:
+            clean_data['dia08'].append({
+                'nome': boleto['nome'],
+                'cotas': boleto.get('cotas', ''),
+                'task_id': boleto.get('task_id', ''),
+                'is_completed': boleto.get('is_completed', False)
+            })
+        
+        for boleto in boletos_data['dia16']:
+            clean_data['dia16'].append({
+                'nome': boleto['nome'],
+                'cotas': boleto.get('cotas', ''),
+                'task_id': boleto.get('task_id', ''),
+                'is_completed': boleto.get('is_completed', False)
+            })
+        
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        
+        with open(boletos_filepath, 'w', encoding='utf-8') as f:
+            json.dump(clean_data, f, indent=2, ensure_ascii=False)
+        
+        emit_progress('✅ Importação concluída!')
+        
+        total_dia08 = len(clean_data['dia08'])
+        total_dia16 = len(clean_data['dia16'])
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Importado: {total_dia08} boletos (dia 08) e {total_dia16} boletos (dia 16)',
+            'data': clean_data
+        })
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/boletos/toggle/<task_id>', methods=['POST'])
+def api_boletos_toggle(task_id):
+    """Marca/desmarca uma tarefa no Todoist"""
+    try:
+        from utils.todoist_rest_api import TodoistRestAPI
+        
+        # Token do Todoist
+        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
+        
+        data = request.json
+        is_completed = data.get('is_completed', False)
+        
+        # Cria cliente da API
+        api = TodoistRestAPI(TODOIST_TOKEN)
+        
+        if is_completed:
+            # Marca como concluída
+            api.close_task(task_id)
+        else:
+            # Reabre tarefa
+            api.reopen_task(task_id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Tarefa atualizada no Todoist'
+        })
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/history/clear/<dia>', methods=['POST'])
 def api_clear_history(dia):

@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+
+{% block title %}Boletos - OXCASH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kanban-column {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 0;
+        overflow: hidden;
+    }
+    
+    .kanban-header {
+        padding: 20px;
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: white;
+        text-align: center;
+    }
+    
+    .kanban-header.dia08 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .kanban-header.dia16 {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .kanban-cards {
+        padding: 15px;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .boleto-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
+        border-left: 4px solid #667eea;
+    }
+    
+    .boleto-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    
+    .boleto-card.completed {
+        border-left-color: #28a745;
+        background: #f8fff9;
+    }
+    
+    .boleto-nome {
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: #2d3748;
+        margin-bottom: 8px;
+    }
+    
+    .boleto-cotas {
+        font-size: 0.9rem;
+        color: #718096;
+        margin-bottom: 6px;
+    }
+    
+    .boleto-status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .boleto-status.pendente {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .boleto-status.concluido {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .import-section {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-import {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: transform 0.2s;
+    }
+    
+    .btn-import:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.15em;
+    }
+    
+    .status-message {
+        margin-left: 15px;
+        font-weight: 500;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #718096;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-2">
+                <i class="fas fa-file-invoice"></i> Kanban de Boletos Servopa Outubro
+            </h2>
+            <p class="text-muted">
+                Visualização sincronizada com o Todoist - Duas colunas: Vencimento dia 08 e Vencimento dia 16
+            </p>
+        </div>
+    </div>
+    
+    <!-- Seção de Importação -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="import-section">
+                <button class="btn btn-primary btn-import" onclick="importBoletos()" id="btnImport">
+                    <i class="fas fa-sync-alt"></i> Importar do Todoist
+                </button>
+                <button class="btn btn-outline-secondary ms-2" onclick="loadBoletos(true)" id="btnRefresh" title="Recarregar dados salvos">
+                    <i class="fas fa-redo"></i> Atualizar
+                </button>
+                <span class="status-message" id="statusMessage">Clique em Importar para sincronizar</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Kanban de 2 Colunas -->
+    <div class="row">
+        <!-- Coluna Dia 08 -->
+        <div class="col-md-6 mb-4">
+            <div class="kanban-column">
+                <div class="kanban-header dia08">
+                    <i class="fas fa-calendar-day"></i> Vencimento dia 08
+                </div>
+                <div class="kanban-cards" id="cardsDia08">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Nenhum boleto carregado</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Coluna Dia 16 -->
+        <div class="col-md-6 mb-4">
+            <div class="kanban-column">
+                <div class="kanban-header dia16">
+                    <i class="fas fa-calendar-alt"></i> Vencimento dia 16
+                </div>
+                <div class="kanban-cards" id="cardsDia16">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Nenhum boleto carregado</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Cache global para manter os dados dos boletos
+    var boletosCache = null;
+    var isFirstLoad = true;
+    
+    console.log('✅ Script de boletos carregado - Cache inicializado');
+    
+    const socket = io();
+    
+    // Carrega dados ao iniciar e quando a página se torna visível
+    window.addEventListener('DOMContentLoaded', () => {
+        loadBoletos();
+    });
+    
+    // Detecta quando a página volta a ser visível (mudou de aba e voltou)
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && boletosCache && !isFirstLoad) {
+            // Restaura os dados do cache sem fazer nova requisição
+            displayBoletos(boletosCache);
+            console.log('🔄 Dados restaurados do cache');
+        }
+    });
+    
+    // Escuta progresso da importação via WebSocket
+    socket.on('boletos_progress', (data) => {
+        updateStatus(data.message, 'info');
+    });
+    
+    // Função para carregar boletos
+    async function loadBoletos(forceReload = false) {
+        // Se já tem dados no cache e não é reload forçado, usa o cache
+        if (boletosCache && !forceReload && !isFirstLoad) {
+            displayBoletos(boletosCache);
+            console.log('📦 Usando dados do cache');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/boletos');
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                // Armazena no cache
+                boletosCache = result.data;
+                isFirstLoad = false;
+                
+                displayBoletos(result.data);
+                
+                const total_dia08 = result.data.dia08?.length || 0;
+                const total_dia16 = result.data.dia16?.length || 0;
+                const lastImport = result.data.last_import || 'Nunca';
+                
+                updateStatus(`📊 Dados carregados: ${total_dia08} boletos (dia 08), ${total_dia16} boletos (dia 16) | Última importação: ${lastImport}`, 'success');
+            }
+        } catch (error) {
+            console.error('Erro ao carregar boletos:', error);
+            updateStatus('⚠️ Erro ao carregar dados salvos', 'warning');
+        }
+    }
+    
+    // Função para importar boletos
+    async function importBoletos() {
+        const btnImport = document.getElementById('btnImport');
+        const originalHTML = btnImport.innerHTML;
+        
+        // Desabilita botão
+        btnImport.disabled = true;
+        btnImport.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Importando...';
+        updateStatus('⏳ Importando do Todoist...', 'info');
+        
+        try {
+            const response = await fetch('/api/boletos/import', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Atualiza cache com novos dados
+                boletosCache = result.data;
+                
+                displayBoletos(result.data);
+                updateStatus('✅ ' + result.message, 'success');
+            } else {
+                updateStatus('❌ Erro: ' + result.error, 'danger');
+            }
+        } catch (error) {
+            console.error('Erro ao importar:', error);
+            updateStatus('❌ Erro ao importar: ' + error.message, 'danger');
+        } finally {
+            // Reabilita botão
+            btnImport.disabled = false;
+            btnImport.innerHTML = originalHTML;
+        }
+    }
+    
+    // Função para exibir boletos
+    function displayBoletos(data) {
+        const cardsDia08 = document.getElementById('cardsDia08');
+        const cardsDia16 = document.getElementById('cardsDia16');
+        
+        // Limpa cards
+        cardsDia08.innerHTML = '';
+        cardsDia16.innerHTML = '';
+        
+        // Verifica se há dados
+        if (!data.dia08 || data.dia08.length === 0) {
+            cardsDia08.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Nenhum boleto para dia 08</p>
+                </div>
+            `;
+        } else {
+            data.dia08.forEach((boleto, index) => {
+                cardsDia08.innerHTML += createBoletoCard(boleto, index);
+            });
+        }
+        
+        if (!data.dia16 || data.dia16.length === 0) {
+            cardsDia16.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Nenhum boleto para dia 16</p>
+                </div>
+            `;
+        } else {
+            data.dia16.forEach((boleto, index) => {
+                cardsDia16.innerHTML += createBoletoCard(boleto, index);
+            });
+        }
+    }
+    
+    // Função para criar card de boleto
+    function createBoletoCard(boleto, index) {
+        const completedClass = boleto.is_completed ? 'completed' : '';
+        const statusClass = boleto.is_completed ? 'concluido' : 'pendente';
+        const statusText = boleto.is_completed ? '✅ Concluído' : '⬜ Pendente';
+        const taskId = boleto.task_id || '';
+        
+        return `
+            <div class="boleto-card ${completedClass}" data-task-id="${taskId}">
+                <div class="d-flex align-items-start">
+                    <input type="checkbox" 
+                           class="form-check-input me-3 mt-1" 
+                           ${boleto.is_completed ? 'checked' : ''} 
+                           onchange="toggleBoletoStatus('${taskId}', this.checked)"
+                           style="cursor: pointer; width: 20px; height: 20px;">
+                    <div class="flex-grow-1">
+                        <div class="boleto-nome">${boleto.nome}</div>
+                        ${boleto.cotas ? `<div class="boleto-cotas">${boleto.cotas}</div>` : ''}
+                        <span class="boleto-status ${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Função para alternar status do boleto
+    async function toggleBoletoStatus(taskId, isCompleted) {
+        try {
+            const response = await fetch(`/api/boletos/toggle/${taskId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_completed: isCompleted })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log('✅ Status atualizado no Todoist');
+                
+                // Atualiza o cache também
+                if (boletosCache) {
+                    // Procura e atualiza no cache
+                    for (let dia of ['dia08', 'dia16']) {
+                        if (boletosCache[dia]) {
+                            const boletoIndex = boletosCache[dia].findIndex(b => b.task_id === taskId);
+                            if (boletoIndex !== -1) {
+                                boletosCache[dia][boletoIndex].is_completed = isCompleted;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Atualiza visualmente o card
+                const card = document.querySelector(`[data-task-id="${taskId}"]`);
+                if (card) {
+                    if (isCompleted) {
+                        card.classList.add('completed');
+                        card.querySelector('.boleto-status').className = 'boleto-status concluido';
+                        card.querySelector('.boleto-status').textContent = '✅ Concluído';
+                    } else {
+                        card.classList.remove('completed');
+                        card.querySelector('.boleto-status').className = 'boleto-status pendente';
+                        card.querySelector('.boleto-status').textContent = '⬜ Pendente';
+                    }
+                }
+            } else {
+                alert('Erro ao atualizar no Todoist: ' + result.error);
+                // Reverte o checkbox
+                const card = document.querySelector(`[data-task-id="${taskId}"]`);
+                if (card) {
+                    const checkbox = card.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !isCompleted;
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao alternar status:', error);
+            alert('Erro ao atualizar no Todoist');
+            // Reverte o checkbox
+            const card = document.querySelector(`[data-task-id="${taskId}"]`);
+            if (card) {
+                const checkbox = card.querySelector('input[type="checkbox"]');
+                checkbox.checked = !isCompleted;
+            }
+        }
+    }
+    
+    // Função para atualizar status
+    function updateStatus(message, type) {
+        const statusMessage = document.getElementById('statusMessage');
+        statusMessage.textContent = message;
+        
+        // Remove classes anteriores
+        statusMessage.classList.remove('text-success', 'text-danger', 'text-warning', 'text-info', 'text-muted');
+        
+        // Adiciona nova classe
+        switch(type) {
+            case 'success':
+                statusMessage.classList.add('text-success');
+                break;
+            case 'danger':
+                statusMessage.classList.add('text-danger');
+                break;
+            case 'warning':
+                statusMessage.classList.add('text-warning');
+                break;
+            case 'info':
+                statusMessage.classList.add('text-info');
+                break;
+            default:
+                statusMessage.classList.add('text-muted');
+        }
+    }
+</script>
+{% endblock %}

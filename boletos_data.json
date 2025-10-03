@@ -1,0 +1,427 @@
+{
+  "dia08": [
+    {
+      "nome": "Rafael Ferreira",
+      "cotas": "5 cotas",
+      "task_id": "9585006636",
+      "is_completed": false
+    },
+    {
+      "nome": "Sagah Educação e Cultura",
+      "cotas": "16 cotas",
+      "task_id": "9585006658",
+      "is_completed": false
+    },
+    {
+      "nome": "Gustavo Carvalho Pavan",
+      "cotas": "8 cotas",
+      "task_id": "9585006664",
+      "is_completed": false
+    },
+    {
+      "nome": "Gavar Crescer",
+      "cotas": "16 cotas",
+      "task_id": "9585006669",
+      "is_completed": false
+    },
+    {
+      "nome": "Gadal Educação",
+      "cotas": "16 cotas",
+      "task_id": "9585006677",
+      "is_completed": false
+    },
+    {
+      "nome": "Instituto Educacional Crescer",
+      "cotas": "15 cotas",
+      "task_id": "9585006684",
+      "is_completed": false
+    },
+    {
+      "nome": "Tomi Akio",
+      "cotas": "4 cotas",
+      "task_id": "9585006691",
+      "is_completed": false
+    },
+    {
+      "nome": "Kadosh Centro Educacional",
+      "cotas": "16 cotas",
+      "task_id": "9585006697",
+      "is_completed": false
+    },
+    {
+      "nome": "Pedro Ihms",
+      "cotas": "2 cotas",
+      "task_id": "9585006709",
+      "is_completed": false
+    },
+    {
+      "nome": "Pedro Henrique",
+      "cotas": "146 - 3414",
+      "task_id": "9585006721",
+      "is_completed": false
+    },
+    {
+      "nome": "Antonio Alves",
+      "cotas": "4077 - 1556",
+      "task_id": "9585006727",
+      "is_completed": false
+    },
+    {
+      "nome": "Antonio Carlos (Rosi)",
+      "cotas": "2 cotas",
+      "task_id": "9585006741",
+      "is_completed": false
+    },
+    {
+      "nome": "Natan Guimarães",
+      "cotas": "3 cotas",
+      "task_id": "9585006563",
+      "is_completed": false
+    },
+    {
+      "nome": "Marcos Júnior",
+      "cotas": "3557 - 1557",
+      "task_id": "9605650089",
+      "is_completed": false
+    },
+    {
+      "nome": "Josué Aparecido - Pai",
+      "cotas": "1123 - 1550",
+      "task_id": "9585006588",
+      "is_completed": false
+    },
+    {
+      "nome": "Heber Netzer",
+      "cotas": "3110 - 1556",
+      "task_id": "9585006609",
+      "is_completed": false
+    }
+  ],
+  "dia16": [
+    {
+      "nome": "Thiago Baptistini",
+      "cotas": "2 cotas",
+      "task_id": "9585006769",
+      "is_completed": false
+    },
+    {
+      "nome": "Florida Eireli - Mariara",
+      "cotas": "304 - 1545",
+      "task_id": "9585006779",
+      "is_completed": false
+    },
+    {
+      "nome": "Beatriz Miranda",
+      "cotas": "1920 - 1553",
+      "task_id": "9585006798",
+      "is_completed": false
+    },
+    {
+      "nome": "Kellen Helena",
+      "cotas": "1551 - 1555",
+      "task_id": "9585006803",
+      "is_completed": false
+    },
+    {
+      "nome": "Marcus Corrêa",
+      "cotas": "2507 - 1560",
+      "task_id": "9585006815",
+      "is_completed": false
+    },
+    {
+      "nome": "João Batista Marcucci",
+      "cotas": "4 cotas",
+      "task_id": "9585006824",
+      "is_completed": false
+    },
+    {
+      "nome": "Nelson Gonçalves",
+      "cotas": "2 cotas",
+      "task_id": "9585006830",
+      "is_completed": false
+    },
+    {
+      "nome": "Karina Lastorina",
+      "cotas": "2 cotas mandar código de barra",
+      "task_id": "9585006840",
+      "is_completed": false
+    },
+    {
+      "nome": "Fernanda Moraes",
+      "cotas": "2 cotas mandar separado",
+      "task_id": "9585006851",
+      "is_completed": false
+    },
+    {
+      "nome": "Leopoldo",
+      "cotas": "1467 - 1562",
+      "task_id": "9585006868",
+      "is_completed": false
+    },
+    {
+      "nome": "Ludyane Vieira",
+      "cotas": "1427 - 1553",
+      "task_id": "9585006878",
+      "is_completed": false
+    },
+    {
+      "nome": "José Marinheiro",
+      "cotas": "10 cotas",
+      "task_id": "9585006888",
+      "is_completed": false
+    },
+    {
+      "nome": "Danilo Faustin - Chu",
+      "cotas": "933 - 1560",
+      "task_id": "9585006902",
+      "is_completed": false
+    },
+    {
+      "nome": "Fábio Carlos",
+      "cotas": "2260 - 1553",
+      "task_id": "9585006907",
+      "is_completed": false
+    },
+    {
+      "nome": "Emiliana Roberta",
+      "cotas": "919 - 1561",
+      "task_id": "9585006914",
+      "is_completed": false
+    },
+    {
+      "nome": "Renne Vedrossi",
+      "cotas": "3 cotas",
+      "task_id": "9585006923",
+      "is_completed": false
+    },
+    {
+      "nome": "Natan Guimarães",
+      "cotas": "3 cotas",
+      "task_id": "9585006935",
+      "is_completed": false
+    },
+    {
+      "nome": "Wagner de Sousa",
+      "cotas": "1877 - 1553",
+      "task_id": "9585006948",
+      "is_completed": false
+    },
+    {
+      "nome": "Guilherme Cavoto Biucci",
+      "cotas": "806 - 1557",
+      "task_id": "9585006954",
+      "is_completed": false
+    },
+    {
+      "nome": "Vinicius Polpeta - Pai",
+      "cotas": "5 cotas",
+      "task_id": "9585006965",
+      "is_completed": false
+    },
+    {
+      "nome": "Pamella Firmino",
+      "cotas": "1306 - 1559",
+      "task_id": "9585006974",
+      "is_completed": false
+    },
+    {
+      "nome": "Icaveta Participações - Anderson",
+      "cotas": "3 cotas",
+      "task_id": "9585006981",
+      "is_completed": false
+    },
+    {
+      "nome": "Sidnei Coelho",
+      "cotas": "5454 - 1566",
+      "task_id": "9585006993",
+      "is_completed": false
+    },
+    {
+      "nome": "Maycon Antônio - Naninha",
+      "cotas": "3 cotas",
+      "task_id": "9585007026",
+      "is_completed": false
+    },
+    {
+      "nome": "André Toshihiro - Naninha",
+      "cotas": "224-8 - 1553",
+      "task_id": "9585007036",
+      "is_completed": false
+    },
+    {
+      "nome": "Elaine Alves - Naninha",
+      "cotas": "",
+      "task_id": "9585007045",
+      "is_completed": false
+    },
+    {
+      "nome": "Gabriel Taveira - Oscar",
+      "cotas": "6 cotas",
+      "task_id": "9585007083",
+      "is_completed": false
+    },
+    {
+      "nome": "Valmir Lopes",
+      "cotas": "955 - 1545",
+      "task_id": "9585007089",
+      "is_completed": false
+    },
+    {
+      "nome": "Mancha",
+      "cotas": "735 - 1545",
+      "task_id": "9585007098",
+      "is_completed": false
+    },
+    {
+      "nome": "Tiago Camargos",
+      "cotas": "1350 - 1561",
+      "task_id": "9585007100",
+      "is_completed": false
+    },
+    {
+      "nome": "Ihms Neto Imobiliária",
+      "cotas": "2 cotas",
+      "task_id": "9585007107",
+      "is_completed": false
+    },
+    {
+      "nome": "Estewan Adam",
+      "cotas": "2012 - 1553",
+      "task_id": "9585007116",
+      "is_completed": false
+    },
+    {
+      "nome": "Flávio Luiz",
+      "cotas": "2495 - 1561",
+      "task_id": "9585007126",
+      "is_completed": false
+    },
+    {
+      "nome": "Silvani Firmino",
+      "cotas": "2 cotas",
+      "task_id": "9585007136",
+      "is_completed": false
+    },
+    {
+      "nome": "Oscar Ihms Júnior",
+      "cotas": "321 - 1545",
+      "task_id": "9585007142",
+      "is_completed": false
+    },
+    {
+      "nome": "Oscar Ihms Neto",
+      "cotas": "1267 - 1559",
+      "task_id": "9585007153",
+      "is_completed": false
+    },
+    {
+      "nome": "Rafael Lima",
+      "cotas": "2727 - 1559",
+      "task_id": "9585007171",
+      "is_completed": false
+    },
+    {
+      "nome": "Chaofun",
+      "cotas": "1538 - 1559",
+      "task_id": "9585007179",
+      "is_completed": false
+    },
+    {
+      "nome": "Augusto da Silva",
+      "cotas": "5 cotas",
+      "task_id": "9585007193",
+      "is_completed": false
+    },
+    {
+      "nome": "Dra Vânia",
+      "cotas": "5 cotas",
+      "task_id": "9585007202",
+      "is_completed": false
+    },
+    {
+      "nome": "Hugo da Silva",
+      "cotas": "5 cotas",
+      "task_id": "9585007210",
+      "is_completed": false
+    },
+    {
+      "nome": "Deborah Dourado",
+      "cotas": "4 cotas",
+      "task_id": "9585007223",
+      "is_completed": false
+    },
+    {
+      "nome": "Laércio",
+      "cotas": "3 cotas",
+      "task_id": "9585007233",
+      "is_completed": false
+    },
+    {
+      "nome": "Gustavo Pavan",
+      "cotas": "2293 - 1565",
+      "task_id": "9585007245",
+      "is_completed": false
+    },
+    {
+      "nome": "Mauricio Carnielli",
+      "cotas": "2 cotas",
+      "task_id": "9585007263",
+      "is_completed": false
+    },
+    {
+      "nome": "Adriel Menardi",
+      "cotas": "2020 - 1563",
+      "task_id": "9585007276",
+      "is_completed": false
+    },
+    {
+      "nome": "Luis Henrique Camargo",
+      "cotas": "3067 - 1566",
+      "task_id": "9585007282",
+      "is_completed": false
+    },
+    {
+      "nome": "Marcelo Costa",
+      "cotas": "2 cotas",
+      "task_id": "9585007329",
+      "is_completed": false
+    },
+    {
+      "nome": "Fernando Afonso",
+      "cotas": "2165 - 1563",
+      "task_id": "9585007333",
+      "is_completed": false
+    },
+    {
+      "nome": "Giovanni Lovato",
+      "cotas": "20 cotas",
+      "task_id": "9605642067",
+      "is_completed": false
+    },
+    {
+      "nome": "Aldo Luiz",
+      "cotas": "5 cotas",
+      "task_id": "9605642542",
+      "is_completed": false
+    },
+    {
+      "nome": "Gessi Lima",
+      "cotas": "5 cotas",
+      "task_id": "9605643151",
+      "is_completed": false
+    },
+    {
+      "nome": "Marcia Cavassani",
+      "cotas": "6 cotas",
+      "task_id": "9605647401",
+      "is_completed": false
+    },
+    {
+      "nome": "Hugo Martinolli",
+      "cotas": "2 cotas",
+      "task_id": "9585006759",
+      "is_completed": false
+    }
+  ],
+  "last_import": "2025-10-03 14:45:51"
+}
