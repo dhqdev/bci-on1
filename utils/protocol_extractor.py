@@ -67,8 +67,15 @@ def _extract_number_from_text(text: str) -> Optional[str]:
 def _download_pdf(
     driver: Optional[WebDriver], pdf_url: str, timeout: int = 15
 ) -> Tuple[bytes, Dict[str, Optional[str]]]:
-    cookies = {}
+    cookies: Dict[str, str] = {}
     user_agent = "Mozilla/5.0"
+    response_info: Dict[str, Optional[str]] = {
+        "attempt": "requests",
+        "status_code": None,
+        "content_type": None,
+        "content_disposition": None,
+        "url": pdf_url,
+    }
 
     if driver:
         try:
@@ -86,17 +93,91 @@ def _download_pdf(
         "Referer": "https://www.consorcioservopa.com.br/",
     }
 
-    response = requests.get(pdf_url, headers=headers, cookies=cookies, timeout=timeout)
-    response.raise_for_status()
+    errors: list[str] = []
 
-    response_info = {
-        "status_code": str(response.status_code),
-        "content_type": response.headers.get("Content-Type"),
-        "content_disposition": response.headers.get("Content-Disposition"),
-        "url": response.url,
-    }
+    try:
+        response = requests.get(pdf_url, headers=headers, cookies=cookies, timeout=timeout)
+        response.raise_for_status()
 
-    return response.content, response_info
+        response_info.update(
+            {
+                "status_code": str(response.status_code),
+                "content_type": response.headers.get("Content-Type"),
+                "content_disposition": response.headers.get("Content-Disposition"),
+                "url": response.url,
+            }
+        )
+
+        return response.content, response_info
+
+    except Exception as error:
+        response_info["error"] = str(error)
+        errors.append(f"requests: {error}")
+
+    if driver:
+        try:
+            script = """
+                const url = arguments[0];
+                const callback = arguments[arguments.length - 1];
+
+                fetch(url, { credentials: 'include' })
+                    .then(response => {
+                        if (!response.ok) {
+                            callback({ success: false, status: response.status, statusText: response.statusText });
+                            return;
+                        }
+
+                        Promise.all([
+                            response.arrayBuffer(),
+                            response.headers.get('Content-Type'),
+                            response.headers.get('Content-Disposition'),
+                            response.url,
+                            response.status,
+                        ])
+                        .then(([buffer, contentType, contentDisposition, finalUrl, status]) => {
+                            const bytes = new Uint8Array(buffer);
+                            const chunkSize = 0x8000;
+                            let binary = '';
+                            for (let i = 0; i < bytes.length; i += chunkSize) {
+                                const chunk = bytes.subarray(i, i + chunkSize);
+                                binary += String.fromCharCode.apply(null, chunk);
+                            }
+                            const base64 = btoa(binary);
+                            callback({
+                                success: true,
+                                base64,
+                                contentType,
+                                contentDisposition,
+                                finalUrl,
+                                status,
+                            });
+                        })
+                        .catch(err => callback({ success: false, error: err.message }));
+                    })
+                    .catch(err => callback({ success: false, error: err.message }));
+            """
+
+            result = driver.execute_async_script(script, pdf_url)
+
+            if result and result.get("success") and result.get("base64"):
+                response_info.update(
+                    {
+                        "attempt": "browser-fetch",
+                        "status_code": str(result.get("status")) if result.get("status") else response_info.get("status_code"),
+                        "content_type": result.get("contentType") or response_info.get("content_type"),
+                        "content_disposition": result.get("contentDisposition") or response_info.get("content_disposition"),
+                        "url": result.get("finalUrl") or response_info.get("url"),
+                    }
+                )
+
+                return base64.b64decode(result["base64"]), response_info
+
+            errors.append(f"browser-fetch: {result}")
+
+        except Exception as error:  # pragma: no cover - Selenium/JS dependent
+            errors.append(f"browser-fetch: {error}")
+
+    raise RuntimeError("; ".join(errors) if errors else "Unable to download PDF")
 
 
 def _extract_protocol_from_pdf(
