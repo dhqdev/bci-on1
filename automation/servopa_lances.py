@@ -295,23 +295,33 @@ def executar_lance(driver, progress_callback=None):
         if progress_callback:
             progress_callback("💾 Registrando lance...")
         
+        # CRÍTICO: Aguarda JavaScript da página carregar completamente
+        time.sleep(2)
+        
+        # DEBUG: Verifica se jQuery está carregado e se há event listeners
+        if progress_callback:
+            try:
+                jquery_loaded = driver.execute_script("return typeof jQuery !== 'undefined';")
+                progress_callback(f"🔍 DEBUG: jQuery carregado? {jquery_loaded}")
+                
+                if jquery_loaded:
+                    # Verifica se há eventos jQuery no botão
+                    has_events = driver.execute_script("""
+                        var btn = document.querySelector('a.printBt');
+                        if (btn && jQuery._data) {
+                            var events = jQuery._data(btn, 'events');
+                            return events ? Object.keys(events) : [];
+                        }
+                        return [];
+                    """)
+                    if has_events:
+                        progress_callback(f"🔍 DEBUG: Eventos jQuery no botão: {has_events}")
+            except Exception as e:
+                progress_callback(f"⚠️ DEBUG: Erro ao verificar jQuery: {e}")
+        
         registrar_button = wait.until(EC.element_to_be_clickable(
             (By.CSS_SELECTOR, "a.printBt")
         ))
-
-        # DEBUG: Inspeciona o botão Registrar
-        if progress_callback:
-            try:
-                btn_href = registrar_button.get_attribute("href")
-                btn_onclick = registrar_button.get_attribute("onclick")
-                btn_target = registrar_button.get_attribute("target")
-                btn_text = registrar_button.text
-                progress_callback(f"🔍 DEBUG BOTÃO: text='{btn_text}'")
-                progress_callback(f"🔍 DEBUG BOTÃO: href='{btn_href}'")
-                progress_callback(f"🔍 DEBUG BOTÃO: onclick='{btn_onclick}'")
-                progress_callback(f"🔍 DEBUG BOTÃO: target='{btn_target}'")
-            except Exception as e:
-                progress_callback(f"⚠️ DEBUG: Erro ao inspecionar botão: {e}")
 
         original_window = driver.current_window_handle
         handles_before = set(driver.window_handles)
@@ -321,15 +331,48 @@ def executar_lance(driver, progress_callback=None):
             progress_callback(f"🔍 DEBUG: URL ANTES de clicar Registrar: {url_before[:80]}...")
             progress_callback(f"🔍 DEBUG: Handles ANTES: {len(handles_before)}")
 
-        registrar_button.click()
+        # Clica usando JavaScript para garantir que event listeners sejam acionados
+        driver.execute_script("arguments[0].click();", registrar_button)
 
         if progress_callback:
             progress_callback("🔍 Verificando resultado do registro...")
-            time.sleep(1)  # Aguarda 1 segundo
-            url_after_click = driver.current_url
-            progress_callback(f"🔍 DEBUG: URL LOGO APÓS clicar: {url_after_click[:80]}...")
+            
+        # Aguarda 500ms e verifica se algo mudou IMEDIATAMENTE
+        time.sleep(0.5)
+        if progress_callback:
+            url_immediately = driver.current_url
+            handles_immediately = len(driver.window_handles)
+            progress_callback(f"🔍 DEBUG: 500ms após clicar: Janelas={handles_immediately}, URL={url_immediately[:60]}...")
+        
+        time.sleep(1)  # Mais 1 segundo
+        if progress_callback:
+            url_1s = driver.current_url
+            handles_1s = len(driver.window_handles)
+            progress_callback(f"🔍 DEBUG: 1.5s após clicar: Janelas={handles_1s}, URL={url_1s[:60]}...")
 
-        time.sleep(3)  # Aguarda popup aparecer se houver
+        time.sleep(2)  # Total de 3.5 segundos (era 3)
+        
+        # DEBUG: Procura por iframe ou modal que pode conter o PDF
+        if progress_callback:
+            try:
+                iframes = driver.find_elements(By.TAG_NAME, "iframe")
+                progress_callback(f"🔍 DEBUG: {len(iframes)} iframe(s) encontrado(s) na página")
+                for i, iframe in enumerate(iframes):
+                    iframe_src = iframe.get_attribute("src") or ""
+                    if iframe_src:
+                        progress_callback(f"🔍 DEBUG: iframe {i+1}: {iframe_src[:80]}...")
+                
+                # Procura por elementos com docparser/view
+                elements_with_docparser = driver.find_elements(By.XPATH, "//*[contains(@href, 'docparser') or contains(@src, 'docparser')]")
+                if elements_with_docparser:
+                    progress_callback(f"🔍 DEBUG: {len(elements_with_docparser)} elemento(s) com 'docparser' encontrado(s)!")
+                    for elem in elements_with_docparser[:3]:  # Apenas primeiros 3
+                        tag = elem.tag_name
+                        href = elem.get_attribute("href") or ""
+                        src = elem.get_attribute("src") or ""
+                        progress_callback(f"🔍 DEBUG: <{tag}> href='{href[:50]}' src='{src[:50]}'")
+            except Exception as e:
+                progress_callback(f"⚠️ DEBUG: Erro ao procurar iframe/docparser: {e}")
         
         # Tenta encontrar o popup de erro
         try:
