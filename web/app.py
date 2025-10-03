@@ -149,6 +149,30 @@ def api_evolution_config():
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/api/history/clear/<dia>', methods=['POST'])
+def api_clear_history(dia):
+    """Limpa histórico de um dia específico"""
+    if dia not in ['dia8', 'dia16', 'all']:
+        return jsonify({'success': False, 'error': 'Dia inválido'})
+    
+    try:
+        if dia == 'all':
+            # Limpa ambos os históricos
+            dias = ['dia8', 'dia16']
+        else:
+            dias = [dia]
+        
+        for d in dias:
+            filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), f'history_{d}.json')
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump([], f, indent=2)
+        
+        msg = 'Todos os históricos limpos' if dia == 'all' else f'Histórico do {dia} limpo'
+        return jsonify({'success': True, 'message': msg})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/api/update-from-github', methods=['POST'])
 def api_update_from_github():
     """Atualiza código do GitHub"""
