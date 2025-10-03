@@ -299,13 +299,35 @@ def executar_lance(driver, progress_callback=None):
             (By.CSS_SELECTOR, "a.printBt")
         ))
 
+        # DEBUG: Inspeciona o botão Registrar
+        if progress_callback:
+            try:
+                btn_href = registrar_button.get_attribute("href")
+                btn_onclick = registrar_button.get_attribute("onclick")
+                btn_target = registrar_button.get_attribute("target")
+                btn_text = registrar_button.text
+                progress_callback(f"🔍 DEBUG BOTÃO: text='{btn_text}'")
+                progress_callback(f"🔍 DEBUG BOTÃO: href='{btn_href}'")
+                progress_callback(f"🔍 DEBUG BOTÃO: onclick='{btn_onclick}'")
+                progress_callback(f"🔍 DEBUG BOTÃO: target='{btn_target}'")
+            except Exception as e:
+                progress_callback(f"⚠️ DEBUG: Erro ao inspecionar botão: {e}")
+
         original_window = driver.current_window_handle
         handles_before = set(driver.window_handles)
+        
+        if progress_callback:
+            url_before = driver.current_url
+            progress_callback(f"🔍 DEBUG: URL ANTES de clicar Registrar: {url_before[:80]}...")
+            progress_callback(f"🔍 DEBUG: Handles ANTES: {len(handles_before)}")
 
         registrar_button.click()
 
         if progress_callback:
             progress_callback("🔍 Verificando resultado do registro...")
+            time.sleep(1)  # Aguarda 1 segundo
+            url_after_click = driver.current_url
+            progress_callback(f"🔍 DEBUG: URL LOGO APÓS clicar: {url_after_click[:80]}...")
 
         time.sleep(3)  # Aguarda popup aparecer se houver
         
@@ -433,24 +455,36 @@ def _capture_protocol_from_docparser(driver, original_window, handles_before, pr
 
     if progress_callback:
         progress_callback("🔍 DEBUG: Iniciando captura de protocolo...")
+        progress_callback(f"🔍 DEBUG: Janelas iniciais: {len(handles_before)}")
 
     # Loop simplificado igual à aplicação local que FUNCIONA
     wait_until = time.time() + 10
     new_handles = []
+    check_count = 0
+    
     while time.time() < wait_until:
+        check_count += 1
         handles_after = list(driver.window_handles)
         new_handles = [h for h in handles_after if h not in handles_before]
         current_url = driver.current_url
         
+        # LOG A CADA 2 SEGUNDOS (4 checks)
+        if check_count % 4 == 0 and progress_callback:
+            progress_callback(f"🔍 DEBUG Loop [{check_count}]: Janelas={len(handles_after)}, Novas={len(new_handles)}, URL={current_url[:60]}...")
+        
         # Quebra IMEDIATAMENTE se detectar protocolo ou novas janelas
         if new_handles or "docparser/view" in current_url:
             if progress_callback:
+                progress_callback(f"🔍 DEBUG: ✅ DETECTADO após {check_count} checks!")
                 if new_handles:
                     progress_callback(f"🔍 DEBUG: ✅ {len(new_handles)} nova(s) janela(s) detectada(s)!")
                 if "docparser/view" in current_url:
                     progress_callback(f"🔍 DEBUG: ✅ URL de protocolo detectada: {current_url[:80]}...")
             break
         time.sleep(0.5)  # Meio segundo entre checagens
+    
+    if progress_callback:
+        progress_callback(f"🔍 DEBUG: Loop finalizado após {check_count} checks. Novas janelas: {len(new_handles)}")
 
     candidate_handles = new_handles + [original_window]
 
