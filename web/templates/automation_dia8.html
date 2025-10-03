@@ -227,10 +227,8 @@ async function startAutomation() {
 // Para automação
 async function stopAutomation() {
     try {
+        // NÃO desabilita botão ainda - permite clicar múltiplas vezes se necessário
         addLog('⏹️ Parando automação...', 'warning');
-        
-        // DESABILITA BOTÃO PARAR IMEDIATAMENTE (não espera resposta)
-        updateAutomationStatus(false);
         
         const response = await fetch(`/api/automation/stop/${dia}`, {
             method: 'POST'
@@ -240,6 +238,8 @@ async function stopAutomation() {
         
         if (data.success) {
             addLog('✅ ' + data.message, 'success');
+            // Só desabilita depois que confirmar que parou
+            updateAutomationStatus(false);
         } else {
             addLog('❌ Erro: ' + data.error, 'error');
         }
