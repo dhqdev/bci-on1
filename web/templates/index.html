@@ -222,11 +222,13 @@ async function loadStats() {
         const response = await fetch('/api/stats');
         const data = await response.json();
         
+        console.log('Estatísticas carregadas:', data);
+        
         // Atualiza cards
-        document.getElementById('stats-dia8-total').textContent = data.dia8.total;
-        document.getElementById('stats-dia8-success').textContent = data.dia8.success;
-        document.getElementById('stats-dia16-total').textContent = data.dia16.total;
-        document.getElementById('stats-dia16-success').textContent = data.dia16.success;
+        document.getElementById('stats-dia8-total').textContent = data.dia8.total || 0;
+        document.getElementById('stats-dia8-success').textContent = data.dia8.success || 0;
+        document.getElementById('stats-dia16-total').textContent = data.dia16.total || 0;
+        document.getElementById('stats-dia16-success').textContent = data.dia16.success || 0;
         
         // Atualiza status
         updateAutomationStatus('dia8', data.running.dia8);

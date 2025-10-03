@@ -197,13 +197,18 @@ def api_start_automation(dia):
     if app_state[f'automation_{dia}_running']:
         return jsonify({'success': False, 'error': 'Automação já está rodando'})
     
+    # Marca como rodando ANTES de iniciar thread
+    app_state[f'automation_{dia}_running'] = True
+    
+    # Notifica interface IMEDIATAMENTE
+    socketio.emit('automation_status', {'dia': dia, 'running': True})
+    socketio.emit('log', {'dia': dia, 'message': '🚀 Iniciando automação...'})
+    socketio.emit('progress', {'dia': dia, 'value': 5, 'message': 'Preparando...'})
+    
     # Inicia thread de automação
     thread = threading.Thread(target=run_automation_thread, args=(dia,))
     thread.daemon = True
     thread.start()
-    
-    app_state[f'automation_{dia}_running'] = True
-    socketio.emit('automation_status', {'dia': dia, 'running': True})
     
     return jsonify({'success': True, 'message': f'Automação {dia} iniciada'})
 
@@ -213,21 +218,26 @@ def api_stop_automation(dia):
     if dia not in ['dia8', 'dia16']:
         return jsonify({'success': False, 'error': 'Dia inválido'})
     
+    # Marca para parar
     app_state[f'automation_{dia}_running'] = False
     
     # Fecha driver se existir
     driver_key = f'driver_{dia}'
     if app_state[driver_key]:
         try:
+            progress_callback(dia, "🔒 Fechando navegador...")
             app_state[driver_key].quit()
             app_state[driver_key] = None
-        except:
-            pass
+            progress_callback(dia, "✅ Navegador fechado")
+        except Exception as e:
+            progress_callback(dia, f"⚠️ Erro ao fechar navegador: {e}")
     
+    # Atualiza interface
     socketio.emit('automation_status', {'dia': dia, 'running': False})
     socketio.emit('log', {'dia': dia, 'message': '⏹️ Automação interrompida pelo usuário'})
+    socketio.emit('progress', {'dia': dia, 'value': 0, 'message': 'Parado'})
     
-    return jsonify({'success': True, 'message': f'Automação {dia} parada'})
+    return jsonify({'success': True, 'message': f'Automação {dia} parada e navegador fechado'})
 
 @app.route('/api/whatsapp/send', methods=['POST'])
 def api_whatsapp_send():
@@ -420,29 +430,39 @@ def run_automation_thread(dia):
                 entry = {
                     'hora': datetime.now().strftime('%H:%M:%S'),
                     'data': datetime.now().strftime('%Y-%m-%d'),
-                    'grupo': str(grupo),
-                    'cota': str(cota),
-                    'nome': nome,
-                    'valor_lance': valor,
-                    'status': status,
-                    'observacao': obs,
-                    'protocolo': kwargs.get('protocolo', ''),
-                    'documento_url': kwargs.get('documento_url', '')
+                    'grupo': str(grupo) if grupo else '-',
+                    'cota': str(cota) if cota else '-',
+                    'nome': str(nome) if nome else '-',
+                    'valor_lance': str(valor) if valor else '-',
+                    'status': str(status) if status else 'Processado',
+                    'observacao': str(obs) if obs else '',
+                    'protocolo': str(kwargs.get('protocolo', '')) if kwargs.get('protocolo') else '-',
+                    'documento_url': str(kwargs.get('documento_url', '')) if kwargs.get('documento_url') else ''
                 }
                 
                 try:
+                    # Lê histórico existente
                     if os.path.exists(filepath):
-                        with open(filepath, 'r') as f:
+                        with open(filepath, 'r', encoding='utf-8') as f:
                             data = json.load(f)
                     else:
                         data = []
                     
+                    # Adiciona nova entrada
                     data.append(entry)
                     
-                    with open(filepath, 'w') as f:
+                    # Salva de volta
+                    with open(filepath, 'w', encoding='utf-8') as f:
                         json.dump(data, f, indent=2, ensure_ascii=False)
                     
+                    # Log de confirmação
+                    progress_callback(dia, f"📝 Histórico salvo: {nome} - {status}")
+                    
                     # Notifica via WebSocket
+                    socketio.emit('history_update', {'dia': dia, 'entry': entry})
+                    
+                except Exception as e:
+                    progress_callback(dia, f"⚠️ Erro ao salvar histórico: {e}")
                     socketio.emit('history_update', {'dia': dia, 'entry': entry})
                 except:
                     pass

@@ -4,15 +4,24 @@
 
 {% block content %}
 <div class="container-fluid">
-    <h1 class="mb-4"><i class="fas fa-history"></i> Histórico de Lances</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-history"></i> Histórico de Lances</h1>
+        <button class="btn btn-primary" onclick="refreshHistory()">
+            <i class="fas fa-sync-alt"></i> Atualizar
+        </button>
+    </div>
     
     <!-- Tabs -->
     <ul class="nav nav-tabs mb-4" role="tablist">
         <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dia8-tab">Dia 8</button>
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dia8-tab">
+                Dia 8 <span class="badge bg-primary ms-2" id="count-dia8">0</span>
+            </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dia16-tab">Dia 16</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dia16-tab">
+                Dia 16 <span class="badge bg-warning ms-2" id="count-dia16">0</span>
+            </button>
         </li>
     </ul>
     
@@ -72,6 +81,7 @@ const socket = io();
 
 socket.on('history_update', function(data) {
     // Atualiza quando novo registro é adicionado
+    console.log('Novo histórico recebido:', data);
     loadHistory(data.dia);
 });
 
@@ -81,9 +91,14 @@ async function loadHistory(dia) {
         const result = await response.json();
         
         const tbody = document.getElementById(`history-${dia}`);
+        const countBadge = document.getElementById(`count-${dia}`);
         tbody.innerHTML = '';
         
         if (result.success && result.data && result.data.length > 0) {
+            // Atualiza contagem
+            countBadge.textContent = result.data.length;
+            
+            // Mostra do mais recente para o mais antigo
             result.data.reverse().forEach(entry => {
                 const row = tbody.insertRow();
                 row.innerHTML = `
@@ -97,13 +112,19 @@ async function loadHistory(dia) {
                 `;
             });
         } else {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Sem dados ainda. Execute uma automação para gerar histórico.</td></tr>';
+            countBadge.textContent = '0';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Sem dados ainda. Execute uma automação para gerar histórico.</td></tr>';
         }
     } catch (error) {
         console.error('Erro ao carregar histórico:', error);
         const tbody = document.getElementById(`history-${dia}`);
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar dados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">❌ Erro ao carregar dados: ' + error + '</td></tr>';
     }
+}
+
+function refreshHistory() {
+    loadHistory('dia8');
+    loadHistory('dia16');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -111,10 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadHistory('dia16');
     
     // Atualiza a cada 5 segundos
-    setInterval(() => {
-        loadHistory('dia8');
-        loadHistory('dia16');
-    }, 5000);
+    setInterval(refreshHistory, 5000);
 });
 </script>
 {% endblock %}

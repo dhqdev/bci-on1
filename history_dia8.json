@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "hora": "20:42:30",
+    "data": "2025-10-02",
+    "grupo": "001",
+    "cota": "123",
+    "nome": "Teste Cliente 1",
+    "valor_lance": "R$ 1.500,00",
+    "status": "✅ Sucesso",
+    "observacao": "Lance enviado com sucesso",
+    "protocolo": "PROT12345",
+    "documento_url": ""
+  },
+  {
+    "hora": "20:43:15",
+    "data": "2025-10-02",
+    "grupo": "002",
+    "cota": "456",
+    "nome": "Teste Cliente 2",
+    "valor_lance": "R$ 2.000,00",
+    "status": "✅ Sucesso",
+    "observacao": "",
+    "protocolo": "-",
+    "documento_url": ""
+  }
+]
