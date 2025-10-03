@@ -193,6 +193,22 @@ if exist requirements.txt (
     python -m pip install --upgrade pip --quiet
     python -m pip install -r requirements.txt --upgrade --quiet
     echo [OK] Dependências atualizadas!
+
+    echo [INFO] Verificando integridade do código...
+    python -m compileall automation web >nul 2>&1
+    if %errorLevel% == 0 (
+        echo [OK] Código compilado com sucesso (automation/, web/)
+    ) else (
+        echo [AVISO] Falha ao compilar automation/ ou web/. Recomendado revisar o código atualizado.
+    )
+
+    echo [INFO] Executando teste rápido de extração de protocolo...
+    python test_protocol_flow_complete.py >nul 2>&1
+    if %errorLevel% == 0 (
+        echo [OK] Teste de protocolo executado com sucesso!
+    ) else (
+        echo [AVISO] O teste de protocolo encontrou problemas. Consulte test_protocol_flow_complete.py.
+    )
 ) else (
     echo [AVISO] requirements.txt não encontrado
 )

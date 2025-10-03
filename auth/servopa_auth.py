@@ -47,7 +47,7 @@ def create_driver(headless=False):
         "profile.password_manager_enabled": False,
         "profile.default_content_setting_values.notifications": 2,
         # Simula plugins
-        "plugins.always_open_pdf_externally": True
+        "plugins.always_open_pdf_externally": False
     }
     options.add_experimental_option("prefs", prefs)
     

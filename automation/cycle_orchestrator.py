@@ -228,6 +228,7 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                     result['success'] = True
                     result['protocol_number'] = lance_result.get('protocol_number')
                     result['docparser_url'] = lance_result.get('docparser_url')
+                    result['documento_url'] = lance_result.get('documento_url')
                     stats['completed'] += 1
                     
                     # ========== REGISTRA NO HISTÓRICO (SUCESSO) ==========
@@ -255,6 +256,9 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                                 valor_formatado,
                                 status,
                                 observacao,
+                                protocolo=lance_result.get('protocol_number'),
+                                documento_url=lance_result.get('documento_url'),
+                                docparser_url=lance_result.get('docparser_url'),
                             )
                                 
                         except Exception as hist_error:

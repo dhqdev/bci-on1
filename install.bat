@@ -235,6 +235,24 @@ if %errorLevel% == 0 (
 
 echo.
 
+echo [INFO] Verificando integridade do código...
+python -m compileall automation web >nul 2>&1
+if %errorLevel% == 0 (
+    echo [✓] Código compilado com sucesso (automation/, web/)
+) else (
+    echo [⚠] Aviso: falha ao compilar automation/ ou web/. Verifique mensagens acima.
+)
+
+echo [INFO] Testando extração de protocolo...
+python test_protocol_flow_complete.py >nul 2>&1
+if %errorLevel% == 0 (
+    echo [✓] Teste de protocolo executado com sucesso!
+) else (
+    echo [⚠] Aviso: teste de protocolo encontrou problemas. Veja test_protocol_flow_complete.py.
+)
+
+echo.
+
 REM 5.5. Criar arquivo de configuração da Evolution API
 echo [INFO] Verificando arquivo de configuração da Evolution API...
 

@@ -50,11 +50,12 @@
                             <th>Grupo</th>
                             <th>Cota</th>
                             <th>Nome</th>
+                            <th>Protocolo</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="history-dia8">
-                        <tr><td colspan="5" class="text-center text-muted">Carregando...</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -75,11 +76,12 @@
                             <th>Grupo</th>
                             <th>Cota</th>
                             <th>Nome</th>
+                            <th>Protocolo</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="history-dia16">
-                        <tr><td colspan="5" class="text-center text-muted">Carregando...</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -115,11 +117,19 @@ async function loadHistory(dia) {
             // Mostra do mais recente para o mais antigo
             result.data.reverse().forEach(entry => {
                 const row = tbody.insertRow();
+
+                const protocolo = entry.protocolo && entry.protocolo !== '' ? entry.protocolo : '-';
+                const documentUrl = entry.documento_url || entry.docparser_url || '';
+                const protocoloHtml = (protocolo !== '-' && documentUrl)
+                    ? `<a href="${documentUrl}" target="_blank" rel="noopener">${protocolo}</a>`
+                    : protocolo;
+
                 row.innerHTML = `
                     <td>${entry.hora || '-'}</td>
                     <td>${entry.grupo || '-'}</td>
                     <td>${entry.cota || '-'}</td>
                     <td>${entry.nome || '-'}</td>
+                    <td>${protocoloHtml}</td>
                     <td>${entry.status || '-'}</td>
                 `;
             });

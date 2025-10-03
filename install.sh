@@ -493,6 +493,23 @@ else
 fi
 
 echo ""
+
+# 9.1. Validar fluxo de protocolo e integridade do código
+print_status "Executando verificação adicional do fluxo de protocolo..."
+
+if $VENV_PYTHON -m compileall automation web > /dev/null 2>&1; then
+    print_success "Compilação de bytecode concluída para automation/ e web/."
+else
+    print_warning "Aviso: falha ao compilar automation/ ou web/. Verifique mensagens acima."
+fi
+
+if $VENV_PYTHON test_protocol_flow_complete.py > /dev/null 2>&1; then
+    print_success "Teste de extração de protocolo executado com sucesso!"
+else
+    print_warning "Aviso: teste de extração de protocolo encontrou problemas. Consulte test_protocol_flow_complete.py."
+fi
+
+echo ""
 echo "=========================================="
 print_success "🎉 INSTALAÇÃO CONCLUÍDA COM SUCESSO!"
 echo "=========================================="

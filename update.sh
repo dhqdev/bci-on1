@@ -255,6 +255,20 @@ update_dependencies() {
         pip install --upgrade pip -q
         pip install -r requirements.txt --upgrade -q
         print_success "Dependências atualizadas!"
+
+        print_info "Executando verificação de integridade do código..."
+        if python -m compileall automation web > /dev/null 2>&1; then
+            print_success "Compilação de bytecode concluída."
+        else
+            print_warning "Falha durante a compilação de automation/ ou web/. Verifique o código atualizado."
+        fi
+
+        print_info "Rodando teste rápido de extração de protocolo..."
+        if python test_protocol_flow_complete.py > /dev/null 2>&1; then
+            print_success "Teste de protocolo finalizado com sucesso!"
+        else
+            print_warning "O teste de protocolo apontou problemas. Revise test_protocol_flow_complete.py para detalhes."
+        fi
     fi
 }
 

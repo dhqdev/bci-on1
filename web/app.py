@@ -544,6 +544,10 @@ def run_automation_thread(dia):
                 # Salva no histórico via arquivo
                 filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), f'history_{dia}.json')
                 
+                protocolo_valor = kwargs.get('protocolo')
+                documento_url = kwargs.get('documento_url')
+                docparser_url = kwargs.get('docparser_url')
+
                 entry = {
                     'hora': datetime.now().strftime('%H:%M:%S'),
                     'data': datetime.now().strftime('%Y-%m-%d'),
@@ -551,6 +555,9 @@ def run_automation_thread(dia):
                     'cota': str(cota) if cota else '-',
                     'nome': str(nome) if nome else '-',
                     'valor_lance': str(valor) if valor else '-',
+                    'protocolo': str(protocolo_valor) if protocolo_valor else '',
+                    'documento_url': str(documento_url) if documento_url else '',
+                    'docparser_url': str(docparser_url) if docparser_url else '',
                     'status': str(status) if status else 'Processado',
                     'observacao': str(obs) if obs else '',
                 }

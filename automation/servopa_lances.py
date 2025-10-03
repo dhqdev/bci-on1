@@ -2,15 +2,167 @@
 # Módulo completo para automação de lances no Servopa
 
 import time
+from typing import Optional, Tuple
+from urllib.parse import parse_qs, urlparse
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from utils.protocol_extractor import (
+    ProtocolExtractionResult,
+    extract_protocol_from_docparser,
+)
+
 TIMEOUT = 20
 SERVOPA_PAINEL_URL = "https://www.consorcioservopa.com.br/vendas/painel"
 SERVOPA_LANCES_URL = "https://www.consorcioservopa.com.br/vendas/lances"
+
+
+def _resolve_docparser_candidate(url: Optional[str]) -> Optional[str]:
+    """Retorna a string apropriada para o extrator de protocolo."""
+    if not url:
+        return None
+
+    url = url.strip()
+    if not url:
+        return None
+
+    lowered = url.lower()
+
+    if lowered.startswith("http") and "docparser" in lowered:
+        # URL já no formato /docparser/view/<base64>
+        return url
+
+    if "docgen" in lowered:
+        try:
+            parsed = urlparse(url)
+            data_values = parse_qs(parsed.query).get("data")
+            if data_values:
+                return data_values[0]
+        except Exception:
+            return None
+
+    if url.startswith("eyJ"):
+        # Base64 puro
+        return url
+
+    return None
+
+
+def _capture_protocol_document(
+    driver,
+    handles_before: set,
+    original_handle: str,
+    original_url: str,
+    progress_callback=None,
+    wait_seconds: int = 12,
+) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    """Captura o número de protocolo a partir da aba/URL gerada após registrar."""
+
+    protocol_number: Optional[str] = None
+    docparser_url: Optional[str] = None
+    documento_url: Optional[str] = None
+    target_handle: Optional[str] = None
+
+    deadline = time.time() + wait_seconds
+    candidate_url: Optional[str] = None
+
+    while time.time() < deadline and not candidate_url:
+        try:
+            handles_now = driver.window_handles
+        except Exception:
+            handles_now = []
+
+        new_handles = [handle for handle in handles_now if handle not in handles_before]
+
+        if new_handles:
+            target_handle = new_handles[-1]
+            try:
+                driver.switch_to.window(target_handle)
+            except Exception as error:
+                if progress_callback:
+                    progress_callback(f"⚠️ [PROTOCOLO] Erro ao acessar nova aba: {error}")
+                target_handle = None
+            else:
+                inner_deadline = time.time() + 5
+                while time.time() < inner_deadline:
+                    try:
+                        current_url = driver.current_url
+                    except Exception:
+                        current_url = ""
+
+                    if current_url and current_url.lower() != "about:blank":
+                        candidate_url = current_url
+                        break
+                    time.sleep(0.5)
+
+        else:
+            try:
+                current_url = driver.current_url
+            except Exception:
+                current_url = ""
+
+            if (
+                current_url
+                and current_url != original_url
+                and (
+                    "docparser" in current_url.lower()
+                    or "docgen" in current_url.lower()
+                    or current_url.strip().startswith("eyJ")
+                )
+            ):
+                candidate_url = current_url
+
+        if not candidate_url:
+            time.sleep(0.5)
+
+    candidate = _resolve_docparser_candidate(candidate_url)
+
+    if candidate:
+        try:
+            if progress_callback:
+                preview = candidate_url[:80] if candidate_url else candidate[:80]
+                progress_callback(f"🔗 [PROTOCOLO] Documento detectado: {preview}...")
+
+            extraction: ProtocolExtractionResult = extract_protocol_from_docparser(
+                driver,
+                candidate,
+                progress_callback,
+            )
+
+            protocol_number = extraction.protocol
+            docparser_url = extraction.docparser_url or candidate_url or candidate
+            documento_url = extraction.pdf_url or docparser_url
+
+            if progress_callback:
+                if protocol_number:
+                    progress_callback(f"📑 [PROTOCOLO] Número capturado: {protocol_number}")
+                else:
+                    progress_callback("⚠️ [PROTOCOLO] Documento aberto, mas número não foi identificado")
+
+        except Exception as error:
+            if progress_callback:
+                progress_callback(f"⚠️ [PROTOCOLO] Erro ao extrair protocolo: {error}")
+    else:
+        if progress_callback:
+            progress_callback("ℹ️ [PROTOCOLO] Nenhum documento de protocolo detectado")
+
+    # Fecha a aba extra, se aberta, e retorna para a original
+    try:
+        if target_handle and target_handle in driver.window_handles:
+            driver.close()
+            driver.switch_to.window(original_handle)
+            time.sleep(1)
+        else:
+            if driver.current_window_handle != original_handle and original_handle in driver.window_handles:
+                driver.switch_to.window(original_handle)
+    except Exception as error:
+        if progress_callback:
+            progress_callback(f"⚠️ [PROTOCOLO] Falha ao restaurar aba original: {error}")
+
+    return protocol_number, docparser_url, documento_url
 
 
 def alterar_consorcio(driver, progress_callback=None):
@@ -297,6 +449,10 @@ def executar_lance(driver, progress_callback=None):
             (By.CSS_SELECTOR, "a.printBt")
         ))
 
+        handles_before = set(driver.window_handles)
+        original_handle = driver.current_window_handle
+        original_url = driver.current_url
+
         registrar_button.click()
 
         if progress_callback:
@@ -304,6 +460,10 @@ def executar_lance(driver, progress_callback=None):
 
         time.sleep(3)  # Aguarda processamento
         
+        protocol_number: Optional[str] = None
+        docparser_url: Optional[str] = None
+        documento_url: Optional[str] = None
+
         # Tenta encontrar o popup de erro
         try:
             # Procura por popup/alert com a mensagem de protocolo obrigatório
@@ -338,18 +498,30 @@ def executar_lance(driver, progress_callback=None):
                             'already_exists': True,
                             'message': 'Lance já foi registrado anteriormente',
                             'valor_lance': valor_lanfix,
+                            'protocol_number': None,
+                            'docparser_url': None,
+                            'documento_url': None,
                         }
             
             # Se não encontrou popup, lance foi registrado com sucesso agora
             if not popup_text_found:
                 if progress_callback:
                     progress_callback("✅ Lance registrado com sucesso!")
-
+                protocol_number, docparser_url, documento_url = _capture_protocol_document(
+                    driver,
+                    handles_before,
+                    original_handle,
+                    original_url,
+                    progress_callback,
+                )
                 return {
                     'success': True,
                     'already_exists': False,
                     'message': 'Lance registrado com sucesso',
                     'valor_lance': valor_lanfix,
+                    'protocol_number': protocol_number,
+                    'docparser_url': docparser_url,
+                    'documento_url': documento_url,
                 }
                 
         except Exception as popup_error:
@@ -357,11 +529,22 @@ def executar_lance(driver, progress_callback=None):
             if progress_callback:
                 progress_callback(f"✅ Lance registrado (verificação de popup: {popup_error})")
 
+            protocol_number, docparser_url, documento_url = _capture_protocol_document(
+                driver,
+                handles_before,
+                original_handle,
+                original_url,
+                progress_callback,
+            )
+
             return {
                 'success': True,
                 'already_exists': False,
                 'message': 'Lance registrado',
                 'valor_lance': valor_lanfix,
+                'protocol_number': protocol_number,
+                'docparser_url': docparser_url,
+                'documento_url': documento_url,
             }
         
     except Exception as e:
@@ -371,7 +554,10 @@ def executar_lance(driver, progress_callback=None):
             'success': False,
             'already_exists': False,
             'message': f'Erro: {e}',
-            'valor_lance': 'N/A'
+            'valor_lance': 'N/A',
+            'protocol_number': None,
+            'docparser_url': None,
+            'documento_url': None,
         }
 
 
@@ -428,6 +614,9 @@ def processar_lance_completo(driver, grupo, cota, progress_callback=None):
         result['steps_completed'].append('executar_lance')
         result['already_exists'] = lance_result.get('already_exists', False)
         result['lance_message'] = lance_result.get('message', '')
+        result['protocol_number'] = lance_result.get('protocol_number')
+        result['docparser_url'] = lance_result.get('docparser_url')
+        result['documento_url'] = lance_result.get('documento_url')
         
         # Sucesso!
         result['success'] = True
