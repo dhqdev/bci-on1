@@ -4,9 +4,10 @@
 Interface web moderna para o sistema de automação
 """
 
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
+from functools import wraps
 import json
 import os
 import sys
@@ -17,7 +18,10 @@ from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'oxcash-automation-2024'
+app.config['SECRET_KEY'] = 'oxcash-automation-2024-secure-key'
+app.config['SESSION_COOKIE_SECURE'] = False  # True em produção com HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -33,39 +37,124 @@ app_state = {
     }
 }
 
-# ========== ROTAS PRINCIPAIS ==========
+# ========== MIDDLEWARE DE AUTENTICAÇÃO ==========
+
+def login_required(f):
+    """Decorator para proteger rotas que requerem autenticação"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ========== ROTAS DE AUTENTICAÇÃO ==========
+
+@app.route('/login')
+def login():
+    """Página de login"""
+    # Se já estiver logado, redireciona para dashboard
+    if 'user' in session:
+        return redirect(url_for('index'))
+    return render_template('login.html')
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    """API de login - aceita qualquer email/senha para desenvolvimento"""
+    data = request.get_json()
+    email = data.get('email', '').strip()
+    password = data.get('password', '')
+    
+    if not email or not password:
+        return jsonify({
+            'success': False,
+            'error': 'Email e senha são obrigatórios'
+        }), 400
+    
+    # Em produção, validar credenciais no banco de dados
+    # Por enquanto, aceita qualquer combinação
+    user = {
+        'id': '1',
+        'email': email,
+        'name': 'Usuário OXCASH',
+        'role': 'admin'
+    }
+    
+    # Salva usuário na sessão
+    session['user'] = user
+    session.permanent = True
+    
+    return jsonify({
+        'success': True,
+        'user': user,
+        'message': 'Login realizado com sucesso!'
+    })
+
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    """API de logout"""
+    session.pop('user', None)
+    return jsonify({
+        'success': True,
+        'message': 'Logout realizado com sucesso!'
+    })
+
+@app.route('/api/check-auth')
+def check_auth():
+    """Verifica se usuário está autenticado"""
+    if 'user' in session:
+        return jsonify({
+            'authenticated': True,
+            'user': session['user']
+        })
+    return jsonify({'authenticated': False})
+
+# ========== ROTAS PRINCIPAIS (PROTEGIDAS) ==========
 
 @app.route('/')
+@login_required
 def index():
     """Dashboard principal"""
-    return render_template('index.html')
+    return render_template('index_modern.html')
 
 @app.route('/automation/dia8')
+@login_required
 def automation_dia8():
     """Página de automação Dia 8"""
     return render_template('automation_dia8.html')
 
 @app.route('/automation/dia16')
+@login_required
 def automation_dia16():
     """Página de automação Dia 16"""
     return render_template('automation_dia16.html')
 
 @app.route('/whatsapp')
+@login_required
 def whatsapp():
     """Página de envio WhatsApp"""
     return render_template('whatsapp.html')
 
 @app.route('/history')
+@login_required
 def history():
     """Página de histórico"""
     return render_template('history.html')
 
+@app.route('/profile')
+@login_required
+def profile():
+    """Página de perfil do usuário"""
+    return render_template('profile.html')
+
 @app.route('/credentials')
+@login_required
 def credentials():
     """Página de credenciais"""
     return render_template('credentials.html')
 
 @app.route('/boletos')
+@login_required
 def boletos():
     """Página de Kanban de Boletos"""
     return render_template('boletos.html')
@@ -259,6 +348,23 @@ def api_boletos_toggle(task_id):
             # Reabre tarefa
             api.reopen_task(task_id)
         
+        # Atualiza arquivo local também
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        if os.path.exists(boletos_filepath):
+            with open(boletos_filepath, 'r', encoding='utf-8') as f:
+                boletos_data = json.load(f)
+            
+            # Atualiza status no cache local
+            for dia_key in ['dia08', 'dia16']:
+                if dia_key in boletos_data:
+                    for boleto in boletos_data[dia_key]:
+                        if boleto.get('task_id') == task_id:
+                            boleto['is_completed'] = is_completed
+                            break
+            
+            with open(boletos_filepath, 'w', encoding='utf-8') as f:
+                json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+        
         return jsonify({
             'success': True,
             'message': 'Tarefa atualizada no Todoist'
@@ -266,6 +372,70 @@ def api_boletos_toggle(task_id):
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/boletos/sync', methods=['POST'])
+def api_boletos_sync():
+    """Sincroniza status dos boletos do Todoist para o site (bidirecional)"""
+    try:
+        from utils.todoist_rest_api import TodoistRestAPI
+        
+        # Token do Todoist
+        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
+        
+        # Carrega dados locais
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        if not os.path.exists(boletos_filepath):
+            return jsonify({'success': False, 'error': 'Nenhum dado local encontrado'})
+        
+        try:
+            with open(boletos_filepath, 'r', encoding='utf-8') as f:
+                local_data = json.load(f)
+        except json.JSONDecodeError as e:
+            return jsonify({'success': False, 'error': f'Erro ao ler dados locais: {str(e)}'})
+        
+        # Busca dados atualizados do Todoist
+        api = TodoistRestAPI(TODOIST_TOKEN)
+        
+        try:
+            updated_data = api.extract_boletos_board(
+                project_name="Boletos Servopa Outubro",
+                section_dia08="Vencimento dia 08",
+                section_dia16="Vencimento dia 16"
+            )
+        except Exception as e:
+            return jsonify({'success': False, 'error': f'Erro ao buscar dados do Todoist: {str(e)}'})
+        
+        # Conta mudanças
+        changes = 0
+        for dia_key in ['dia08', 'dia16']:
+            local_tasks = {t.get('task_id'): t for t in local_data.get(dia_key, []) if t.get('task_id')}
+            updated_tasks = {t.get('task_id'): t for t in updated_data.get(dia_key, []) if t.get('task_id')}
+            
+            for task_id, updated_task in updated_tasks.items():
+                if task_id in local_tasks:
+                    local_task = local_tasks[task_id]
+                    if local_task.get('is_completed') != updated_task.get('is_completed'):
+                        changes += 1
+        
+        # Salva dados atualizados
+        try:
+            with open(boletos_filepath, 'w', encoding='utf-8') as f:
+                json.dump(updated_data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            return jsonify({'success': False, 'error': f'Erro ao salvar dados: {str(e)}'})
+        
+        return jsonify({
+            'success': True,
+            'changes': changes,
+            'data': updated_data,
+            'message': f'{changes} alterações sincronizadas do Todoist' if changes > 0 else 'Tudo sincronizado'
+        })
+            
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Erro na sincronização: {error_details}")
+        return jsonify({'success': False, 'error': f'Erro na sincronização: {str(e)}'})
 
 @app.route('/api/history/clear/<dia>', methods=['POST'])
 def api_clear_history(dia):

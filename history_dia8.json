@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "hora": "16:45:07",
+    "data": "2025-10-03",
+    "grupo": "1556",
+    "cota": "2777",
+    "nome": "Rafael Ferreira",
+    "valor_lance": "N/A",
+    "protocolo": "445920",
+    "documento_url": "https://www.consorcioservopa.com.br/docparser/view/eyJ1cmwiOiJodHRwczovL3d3dy5jb25zb3JjaW9zZXJ2b3BhLmNvbS5ici9kb2NnZW4vbGFuY2UvaW5kZXgucGhwIiwiZGF0YSI6eyJudW1fcHJvdG9jb2xvX2FudCI6IjQ0NTkyMCIsImRpZ2l0byI6IjUiLCJncnVwbyI6IjE1NTYiLCJwbGFubyI6IjI3NzciLCJubUNsaWVudGUiOiJSQUZBRUwgVklOSUNJVVMgREUgVFVMTElPIEZFUlJFSVJBIiwibnJBc3NlbWIiOiIxOCIsImR0RWRpdGFkYSI6IjE2LzEwLzIwMjUiLCJockVkaXRhZGEiOiIxNjowMCIsImxvY2FsIjoiU0VSVk9QQSBTQSBDT01FUkNJTyBFIElORFVTVFJJQSIsImJlbV9yZWZlcmVuY2lhIjoiQ1JFRElUTyBQL0lNT1ZFTCAwMjAiLCJ0eExhbmZpeCI6IjE1IiwidmxMYW5maXgiOiI1OC4zNDIsNjQiLCJxdExhbmZpZCI6IiIsInR4TGFuZmlkIjoiIiwidmxMYW5maWQiOiIiLCJ0eExhbmxpdiI6IiIsInZsTGFubGl2IjoiUiQgMCwwMCIsImRhdGEiOiIwMy8xMC8yMDI1IiwiaG9yYSI6IjE2OjQ0Iiwic3RfZXZlbnRvIjoiRiIsImRzRGVzY3IxNSI6IiJ9fQ==",
+    "docparser_url": "https://www.consorcioservopa.com.br/docparser/view/eyJ1cmwiOiJodHRwczovL3d3dy5jb25zb3JjaW9zZXJ2b3BhLmNvbS5ici9kb2NnZW4vbGFuY2UvaW5kZXgucGhwIiwiZGF0YSI6eyJudW1fcHJvdG9jb2xvX2FudCI6IjQ0NTkyMCIsImRpZ2l0byI6IjUiLCJncnVwbyI6IjE1NTYiLCJwbGFubyI6IjI3NzciLCJubUNsaWVudGUiOiJSQUZBRUwgVklOSUNJVVMgREUgVFVMTElPIEZFUlJFSVJBIiwibnJBc3NlbWIiOiIxOCIsImR0RWRpdGFkYSI6IjE2LzEwLzIwMjUiLCJockVkaXRhZGEiOiIxNjowMCIsImxvY2FsIjoiU0VSVk9QQSBTQSBDT01FUkNJTyBFIElORFVTVFJJQSIsImJlbV9yZWZlcmVuY2lhIjoiQ1JFRElUTyBQL0lNT1ZFTCAwMjAiLCJ0eExhbmZpeCI6IjE1IiwidmxMYW5maXgiOiI1OC4zNDIsNjQiLCJxdExhbmZpZCI6IiIsInR4TGFuZmlkIjoiIiwidmxMYW5maWQiOiIiLCJ0eExhbmxpdiI6IiIsInZsTGFubGl2IjoiUiQgMCwwMCIsImRhdGEiOiIwMy8xMC8yMDI1IiwiaG9yYSI6IjE2OjQ0Iiwic3RfZXZlbnRvIjoiRiIsImRzRGVzY3IxNSI6IiJ9fQ==",
+    "status": "✅ Sucesso",
+    "observacao": "Lance registrado com sucesso"
+  },
+  {
+    "hora": "16:45:43",
+    "data": "2025-10-03",
+    "grupo": "1556",
+    "cota": "2772",
+    "nome": "Gadal Crescee",
+    "valor_lance": "N/A",
+    "protocolo": "453543",
+    "documento_url": "https://www.consorcioservopa.com.br/docparser/view/eyJ1cmwiOiJodHRwczovL3d3dy5jb25zb3JjaW9zZXJ2b3BhLmNvbS5ici9kb2NnZW4vbGFuY2UvaW5kZXgucGhwIiwiZGF0YSI6eyJudW1fcHJvdG9jb2xvX2FudCI6IjQ1MzU0MyIsImRpZ2l0byI6IjQiLCJncnVwbyI6IjE1NTYiLCJwbGFubyI6IjI3NzIiLCJubUNsaWVudGUiOiJHQURBTCBFRFVDQUNBTyBFIENVTFRVUkEgTFREQSIsIm5yQXNzZW1iIjoiMTgiLCJkdEVkaXRhZGEiOiIxNi8xMC8yMDI1IiwiaHJFZGl0YWRhIjoiMTY6MDAiLCJsb2NhbCI6IlNFUlZPUEEgU0EgQ09NRVJDSU8gRSBJTkRVU1RSSUEiLCJiZW1fcmVmZXJlbmNpYSI6IkNSRURJVE8gUC9JTU9WRUwgMDIwIiwidHhMYW5maXgiOiIxNSIsInZsTGFuZml4IjoiNTguNDc0LDIyIiwicXRMYW5maWQiOiIiLCJ0eExhbmZpZCI6IiIsInZsTGFuZmlkIjoiIiwidHhMYW5saXYiOiIiLCJ2bExhbmxpdiI6IlIkIDAsMDAiLCJkYXRhIjoiMDMvMTAvMjAyNSIsImhvcmEiOiIxNjo0NSIsInN0X2V2ZW50byI6IkYiLCJkc0Rlc2NyMTUiOiIifX0=",
+    "docparser_url": "https://www.consorcioservopa.com.br/docparser/view/eyJ1cmwiOiJodHRwczovL3d3dy5jb25zb3JjaW9zZXJ2b3BhLmNvbS5ici9kb2NnZW4vbGFuY2UvaW5kZXgucGhwIiwiZGF0YSI6eyJudW1fcHJvdG9jb2xvX2FudCI6IjQ1MzU0MyIsImRpZ2l0byI6IjQiLCJncnVwbyI6IjE1NTYiLCJwbGFubyI6IjI3NzIiLCJubUNsaWVudGUiOiJHQURBTCBFRFVDQUNBTyBFIENVTFRVUkEgTFREQSIsIm5yQXNzZW1iIjoiMTgiLCJkdEVkaXRhZGEiOiIxNi8xMC8yMDI1IiwiaHJFZGl0YWRhIjoiMTY6MDAiLCJsb2NhbCI6IlNFUlZPUEEgU0EgQ09NRVJDSU8gRSBJTkRVU1RSSUEiLCJiZW1fcmVmZXJlbmNpYSI6IkNSRURJVE8gUC9JTU9WRUwgMDIwIiwidHhMYW5maXgiOiIxNSIsInZsTGFuZml4IjoiNTguNDc0LDIyIiwicXRMYW5maWQiOiIiLCJ0eExhbmZpZCI6IiIsInZsTGFuZmlkIjoiIiwidHhMYW5saXYiOiIiLCJ2bExhbmxpdiI6IlIkIDAsMDAiLCJkYXRhIjoiMDMvMTAvMjAyNSIsImhvcmEiOiIxNjo0NSIsInN0X2V2ZW50byI6IkYiLCJkc0Rlc2NyMTUiOiIifX0=",
+    "status": "✅ Sucesso",
+    "observacao": "Lance registrado com sucesso"
+  }
+]

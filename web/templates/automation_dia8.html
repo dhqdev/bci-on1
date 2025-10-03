@@ -1,8 +1,44 @@
-{% extends "base.html" %}
+{% extends "base_modern.html" %}
 
 {% block title %}Automação Dia 8 - OXCASH{% endblock %}
 
 {% block content %}
+<style>
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .d-flex.gap-3 {
+            flex-direction: column;
+            gap: 12px !important;
+        }
+        
+        .d-flex.gap-3 .btn {
+            width: 100%;
+        }
+        
+        .d-flex.gap-3 .ms-auto {
+            margin-left: 0 !important;
+            margin-top: 10px;
+        }
+        
+        .status-badge {
+            width: 100%;
+            text-align: center;
+        }
+        
+        .log-container {
+            max-height: 300px;
+        }
+        
+        h1.display-5 {
+            font-size: 1.5rem;
+        }
+        
+        .lead {
+            font-size: 1rem;
+        }
+    }
+</style>
+
 <div class="container-fluid">
     <!-- Header -->
     <div class="row mb-4">
@@ -80,15 +116,27 @@
 
 {% block extra_js %}
 <script>
-let socket;
+// Usa o socket global do base_modern.html
 const dia = 'dia8';
 
 // Conecta ao WebSocket
 function connectWebSocket() {
-    socket = io();
+    // Socket já está conectado globalmente no base_modern.html
+    // Apenas adiciona os listeners específicos desta página
+    
+    if (typeof socket === 'undefined') {
+        console.error('❌ Socket global não encontrado!');
+        addLog('❌ Erro: WebSocket não disponível', 'error');
+        return;
+    }
+    
+    // Remove listeners antigos para evitar duplicação
+    socket.off('log');
+    socket.off('progress');
+    socket.off('automation_status');
     
     socket.on('connect', function() {
-        addLog('Conectado ao servidor', 'success');
+        addLog('✅ Conectado ao servidor', 'success');
         
         // Verifica status atual da automação
         // MAS respeita se usuário está tentando parar OU se acabou de trocar de aba

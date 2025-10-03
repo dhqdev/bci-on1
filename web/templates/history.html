@@ -1,19 +1,335 @@
-{% extends "base.html" %}
+{% extends "base_modern.html" %}
 
 {% block title %}Histórico - OXCASH{% endblock %}
 
 {% block content %}
+<style>
+    /* Botões melhorados */
+    .btn-group {
+        gap: 12px;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .btn-refresh {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 10px 24px;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-refresh:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-refresh:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-clear-errors {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border: none;
+        color: white;
+        padding: 10px 24px;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(240, 147, 251, 0.25);
+    }
+    
+    .btn-clear-errors:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
+        color: white;
+    }
+    
+    .btn-clear-errors:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(240, 147, 251, 0.3);
+    }
+    
+    .btn-clear-all {
+        background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
+        border: none;
+        color: white;
+        padding: 10px 24px;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(252, 74, 26, 0.25);
+    }
+    
+    .btn-clear-all:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(252, 74, 26, 0.4);
+        color: white;
+    }
+    
+    .btn-clear-all:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(252, 74, 26, 0.3);
+    }
+    
+    .history-table .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        background: rgba(102, 126, 234, 0.12);
+        color: #4c51bf;
+    }
+
+    .history-table .status-chip i {
+        font-size: 0.8rem;
+    }
+
+    .history-table .status-chip.success {
+        background: rgba(72, 187, 120, 0.15);
+        color: #2f855a;
+    }
+
+    .history-table .status-chip.error {
+        background: rgba(245, 101, 101, 0.18);
+        color: #c53030;
+    }
+
+    [data-theme="dark"] .history-table .status-chip {
+        background: rgba(102, 126, 234, 0.15);
+        color: #a3bffa;
+    }
+
+    [data-theme="dark"] .history-table .status-chip.success {
+        background: rgba(72, 187, 120, 0.25);
+        color: #9ae6b4;
+    }
+
+    [data-theme="dark"] .history-table .status-chip.error {
+        background: rgba(245, 101, 101, 0.25);
+        color: #feb2b2;
+    }
+
+    /* Força cores em tema escuro */
+    .history-table {
+        background: transparent !important;
+    }
+    
+    /* Força cores nas células da tabela */
+    .history-table table tbody td {
+        color: var(--text-secondary) !important;
+        background: transparent !important;
+    }
+    
+    [data-theme="dark"] .history-table table tbody td {
+        color: var(--text-secondary) !important;
+        background: transparent !important;
+    }
+    
+    [data-theme="dark"] .history-table table tbody td.text-center.text-muted {
+        color: var(--text-tertiary) !important;
+        background: transparent !important;
+    }
+    
+    [data-theme="dark"] .history-table table tbody td.text-center {
+        background: transparent !important;
+    }
+    
+    [data-theme="dark"] .text-muted {
+        color: var(--text-tertiary) !important;
+    }
+    
+    /* Links na tabela */
+    .history-table table tbody td a {
+        color: #667eea !important;
+        text-decoration: none;
+    }
+    
+    [data-theme="dark"] .history-table table tbody td a {
+        color: #a3bffa !important;
+        text-decoration: none;
+    }
+    
+    .history-table table tbody td a:hover {
+        text-decoration: underline !important;
+    }
+
+    /* Mobile: Tabelas responsivas */
+    @media (max-width: 768px) {
+        /* Header mobile */
+        .d-flex.justify-content-between.align-items-center {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 16px;
+        }
+        
+        .d-flex.justify-content-between.align-items-center h1 {
+            text-align: center;
+            font-size: 1.5rem !important;
+        }
+        
+        /* Botões suaves em grid 3 colunas */
+        .btn-group {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            padding: 8px 6px !important;
+            font-size: 0.75rem !important;
+            white-space: nowrap;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            border-radius: 10px !important;
+        }
+        
+        .btn-group .btn i {
+            font-size: 1.1rem;
+        }
+        
+        /* Tabs mobile */
+        .nav-tabs {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .nav-tabs .nav-link {
+            font-size: 0.9rem;
+            padding: 10px 12px;
+        }
+        
+        /* Botão "Limpar Dia X" mobile */
+        .d-flex.justify-content-end.mb-3 {
+            justify-content: center !important;
+            margin-bottom: 12px !important;
+        }
+        
+        .d-flex.justify-content-end.mb-3 .btn {
+            font-size: 0.85rem;
+            padding: 6px 12px;
+        }
+        
+        /* Tabela em cards */
+        .history-table {
+            overflow: visible !important;
+        }
+        
+        .history-table table {
+            font-size: 0.85rem;
+            white-space: normal;
+        }
+
+        .history-table table thead {
+            display: none;
+        }
+        
+        .history-table table tbody tr {
+            display: block;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .history-table table tbody tr {
+            background: var(--bg-secondary);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .history-table table tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        .history-table table tbody td:last-child {
+            border-bottom: none;
+        }
+
+        .history-table table tbody td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+            flex-shrink: 0;
+        }
+        
+        .history-table table tbody td:nth-child(n) {
+            word-break: break-word;
+        }
+
+        .history-table table tbody td[colspan] {
+            display: block;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .history-table table tbody td[colspan]::before {
+            content: none;
+        }
+
+        .history-table table tbody td a {
+            word-break: break-all;
+            color: #667eea;
+            text-decoration: underline;
+        }
+        
+        /* Status chips mobile */
+        .history-table .status-chip {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            white-space: nowrap;
+        }
+    }
+    
+    /* Mobile pequeno (< 400px) */
+    @media (max-width: 400px) {
+        .btn-group .btn {
+            font-size: 0.7rem !important;
+            padding: 6px 4px !important;
+        }
+        
+        .btn-group .btn i {
+            font-size: 1rem;
+        }
+        
+        .d-flex.justify-content-between.align-items-center h1 {
+            font-size: 1.3rem !important;
+        }
+    }
+</style>
+
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="fas fa-history"></i> Histórico de Lances</h1>
         <div class="btn-group">
-            <button class="btn btn-primary" onclick="refreshHistory()">
+            <button class="btn btn-refresh" onclick="refreshHistory()">
                 <i class="fas fa-sync-alt"></i> Atualizar
             </button>
-            <button class="btn btn-warning" onclick="confirmClearErrors()">
+            <button class="btn btn-clear-errors" onclick="confirmClearErrors()">
                 <i class="fas fa-exclamation-triangle"></i> Limpar Erros
             </button>
-            <button class="btn btn-danger" onclick="confirmClearHistory()">
+            <button class="btn btn-clear-all" onclick="confirmClearHistory()">
                 <i class="fas fa-trash"></i> Limpar Tudo
             </button>
         </div>
@@ -92,13 +408,33 @@
 
 {% block extra_js %}
 <script>
-// Conecta WebSocket para atualização em tempo real
-const socket = io();
+// Usa o socket global do base_modern.html
 
-socket.on('history_update', function(data) {
-    // Atualiza quando novo registro é adicionado
-    console.log('Novo histórico recebido:', data);
-    loadHistory(data.dia);
+// Adiciona listener para histórico
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📊 Página de histórico carregada');
+    
+    // Remove listeners antigos para evitar duplicação
+    if (typeof socket !== 'undefined') {
+        socket.off('history_update');
+        
+        socket.on('history_update', function(data) {
+            // Atualiza quando novo registro é adicionado
+            console.log('📊 Novo histórico recebido:', data);
+            loadHistory(data.dia);
+        });
+        
+        console.log('✅ Listener de histórico registrado');
+    } else {
+        console.error('❌ Socket global não encontrado!');
+    }
+    
+    // Carrega histórico inicial
+    loadHistory('dia8');
+    loadHistory('dia16');
+    
+    // Atualiza a cada 5 segundos
+    setInterval(refreshHistory, 5000);
 });
 
 async function loadHistory(dia) {
@@ -123,14 +459,15 @@ async function loadHistory(dia) {
                 const protocoloHtml = (protocolo !== '-' && documentUrl)
                     ? `<a href="${documentUrl}" target="_blank" rel="noopener">${protocolo}</a>`
                     : protocolo;
+                const statusHtml = buildStatusChip(entry.status);
 
                 row.innerHTML = `
-                    <td>${entry.hora || '-'}</td>
-                    <td>${entry.grupo || '-'}</td>
-                    <td>${entry.cota || '-'}</td>
-                    <td>${entry.nome || '-'}</td>
-                    <td>${protocoloHtml}</td>
-                    <td>${entry.status || '-'}</td>
+                    <td data-label="Hora">${entry.hora || '-'}</td>
+                    <td data-label="Grupo">${entry.grupo || '-'}</td>
+                    <td data-label="Cota">${entry.cota || '-'}</td>
+                    <td data-label="Nome">${entry.nome || '-'}</td>
+                    <td data-label="Protocolo">${protocoloHtml}</td>
+                    <td data-label="Status">${statusHtml}</td>
                 `;
             });
         } else {
@@ -147,6 +484,27 @@ async function loadHistory(dia) {
 function refreshHistory() {
     loadHistory('dia8');
     loadHistory('dia16');
+}
+
+function buildStatusChip(statusRaw) {
+    const status = (statusRaw || '-').toString();
+    const normalized = status.toLowerCase();
+    if (status === '-' || status.trim() === '') {
+        return '<span class="status-chip"><i class="fas fa-info-circle"></i>Sem status</span>';
+    }
+
+    let cssClass = '';
+    let icon = 'fa-info-circle';
+
+    if (normalized.includes('sucesso') || normalized.includes('ok') || normalized.includes('conclu')) {
+        cssClass = 'success';
+        icon = 'fa-check-circle';
+    } else if (normalized.includes('erro') || normalized.includes('falha') || normalized.includes('error')) {
+        cssClass = 'error';
+        icon = 'fa-times-circle';
+    }
+
+    return `<span class="status-chip ${cssClass}"><i class="fas ${icon}"></i>${status}</span>`;
 }
 
 async function confirmClearErrors() {
@@ -211,13 +569,5 @@ async function clearSingleHistory(dia) {
         }
     }
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    loadHistory('dia8');
-    loadHistory('dia16');
-    
-    // Atualiza a cada 5 segundos
-    setInterval(refreshHistory, 5000);
-});
 </script>
 {% endblock %}

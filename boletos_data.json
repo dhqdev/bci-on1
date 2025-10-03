@@ -1,42 +1,6 @@
 {
   "dia08": [
     {
-      "nome": "Rafael Ferreira",
-      "cotas": "5 cotas",
-      "task_id": "9585006636",
-      "is_completed": false
-    },
-    {
-      "nome": "Sagah Educação e Cultura",
-      "cotas": "16 cotas",
-      "task_id": "9585006658",
-      "is_completed": false
-    },
-    {
-      "nome": "Gustavo Carvalho Pavan",
-      "cotas": "8 cotas",
-      "task_id": "9585006664",
-      "is_completed": false
-    },
-    {
-      "nome": "Gavar Crescer",
-      "cotas": "16 cotas",
-      "task_id": "9585006669",
-      "is_completed": false
-    },
-    {
-      "nome": "Gadal Educação",
-      "cotas": "16 cotas",
-      "task_id": "9585006677",
-      "is_completed": false
-    },
-    {
-      "nome": "Instituto Educacional Crescer",
-      "cotas": "15 cotas",
-      "task_id": "9585006684",
-      "is_completed": false
-    },
-    {
       "nome": "Tomi Akio",
       "cotas": "4 cotas",
       "task_id": "9585006691",
@@ -94,6 +58,42 @@
       "nome": "Heber Netzer",
       "cotas": "3110 - 1556",
       "task_id": "9585006609",
+      "is_completed": false
+    },
+    {
+      "nome": "Rafael Ferreira",
+      "cotas": "5 cotas",
+      "task_id": "9585006636",
+      "is_completed": false
+    },
+    {
+      "nome": "Sagah Educação e Cultura",
+      "cotas": "16 cotas",
+      "task_id": "9585006658",
+      "is_completed": false
+    },
+    {
+      "nome": "Gustavo Carvalho Pavan",
+      "cotas": "8 cotas",
+      "task_id": "9585006664",
+      "is_completed": false
+    },
+    {
+      "nome": "Gadal Educação",
+      "cotas": "16 cotas",
+      "task_id": "9585006677",
+      "is_completed": false
+    },
+    {
+      "nome": "Gavar Crescer",
+      "cotas": "16 cotas",
+      "task_id": "9585006669",
+      "is_completed": false
+    },
+    {
+      "nome": "Instituto Educacional Crescer",
+      "cotas": "15 cotas",
+      "task_id": "9585006684",
       "is_completed": false
     }
   ],
@@ -422,6 +422,5 @@
       "task_id": "9585006759",
       "is_completed": false
     }
-  ],
-  "last_import": "2025-10-03 14:45:51"
+  ]
 }

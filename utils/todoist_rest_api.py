@@ -119,9 +119,10 @@ class TodoistRestAPI:
         url = f"{self.BASE_URL}/tasks/{task_id}/close"
         response = requests.post(url, headers=self.headers)
         response.raise_for_status()
-        return True
+        # close_task retorna 204 No Content em sucesso
+        return response.status_code == 204
     
-    def reopen_task(self, task_id: str) -> Dict:
+    def reopen_task(self, task_id: str) -> bool:
         """
         Reabre uma tarefa concluída
         
@@ -129,12 +130,13 @@ class TodoistRestAPI:
             task_id: ID da tarefa
             
         Returns:
-            Dados da tarefa reaberta
+            True se sucesso (retorna 204 No Content)
         """
         url = f"{self.BASE_URL}/tasks/{task_id}/reopen"
         response = requests.post(url, headers=self.headers)
         response.raise_for_status()
-        return response.json()
+        # reopen_task retorna 204 No Content em sucesso
+        return response.status_code == 204
     
     def extract_boletos_board(self, project_name: str = "Boletos Servopa Outubro", 
                             section_dia08: str = "Vencimento dia 08",

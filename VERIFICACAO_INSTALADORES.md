@@ -15,8 +15,7 @@
 - ✅ selenium>=4.15.0
 - ✅ webdriver-manager>=4.0.1
 - ✅ pdfplumber>=0.11.0
-- ✅ beautifulsoup4>=4.12.0
-- ✅ python-dotenv>=1.0.0
+- ✅ beautifulsoup4>=4.12.0- ✅ python-dotenv>=1.0.0
 - ✅ schedule>=1.2.0
 - ✅ Pillow>=10.0.0
 - ✅ Flask>=3.0.0

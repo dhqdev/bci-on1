@@ -1,6 +1,75 @@
-{% extends "base.html" %}
+{% extends "base_modern.html" %}
 
 {% block title %}WhatsApp - OXCASH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .whatsapp-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .whatsapp-group {
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    [data-theme="dark"] .whatsapp-group {
+        background: var(--bg-secondary);
+    }
+    
+    .whatsapp-group:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    [data-theme="dark"] .whatsapp-group:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    
+    .whatsapp-group.dia8 {
+        border-top: 4px solid #007bff;
+    }
+    
+    .whatsapp-group.dia16 {
+        border-top: 4px solid #ffc107;
+    }
+    
+    .whatsapp-group-header {
+        font-size: 1.2rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--border-color);
+        color: var(--text-primary);
+    }
+    
+    /* Readonly field styling */
+    #api-url {
+        background: #f0f0f0 !important;
+        color: #333 !important;
+        cursor: not-allowed;
+    }
+    
+    [data-theme="dark"] #api-url {
+        background: #2a2a2a !important;
+        color: #bbb !important;
+    }
+    
+    /* Responsivo: empilha em mobile */
+    @media (max-width: 768px) {
+        .whatsapp-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -16,7 +85,7 @@
         <div class="card-body">
             <div class="mb-3">
                 <label class="form-label"><strong>URL da API:</strong></label>
-                <input type="text" class="form-control" id="api-url" value="https://zap.tekvosoft.com" readonly style="background: #f0f0f0;">
+                <input type="text" class="form-control" id="api-url" value="https://zap.tekvosoft.com" readonly>
             </div>
             <div class="mb-3">
                 <label class="form-label"><strong>Nome da Instância:</strong></label>
