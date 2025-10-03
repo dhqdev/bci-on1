@@ -1,0 +1,183 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║  ✅ SISTEMA ATUALIZADO COM SUCESSO!                            ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+🎉 O BCI-ON1 agora está muito mais fácil de usar no Linux!
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  📝 ARQUIVOS CRIADOS/ATUALIZADOS                              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+✨ NOVOS ARQUIVOS:
+
+1. 🚀 iniciar.sh
+   → Launcher principal com menu interativo visual
+   → USE ESTE para iniciar o sistema!
+
+2. 📖 GUIA_RAPIDO_LINUX.md
+   → Documentação completa com todos os detalhes
+   → Solução de problemas
+   → Exemplos práticos
+
+3. 📝 COMO_EXECUTAR_LINUX.sh
+   → Guia visual rápido (execute para ver)
+   → Mostra os passos de forma clara
+
+4. 📋 README_LINUX.md
+   → README específico para Linux
+   → Resumo completo do sistema
+
+5. ⚡ INICIO_RAPIDO.md
+   → Guia ultra-rápido para começar
+   → Passo a passo visual
+
+
+🔧 ARQUIVOS CORRIGIDOS:
+
+1. run.sh
+   → Agora ativa ambiente virtual corretamente
+   → Redireciona para interface web
+
+2. web/run_web.sh
+   → Verificação completa do sistema
+   → Ativa ambiente virtual automaticamente
+   → Instala dependências se necessário
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🚀 COMO USAR AGORA                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+Abra o terminal e execute:
+
+   cd /home/david/bci-on1
+   bash iniciar.sh
+
+
+Você verá um menu visual com opções:
+
+   [1] 🌐 Iniciar Interface Web (RECOMENDADO)
+   [2] 📊 Ver Status do Sistema  
+   [3] 📝 Ver Logs e Histórico
+   [4] ⚙️  Configurar Credenciais
+   [5] 🔄 Reinstalar Sistema
+   [0] 🚪 Sair
+
+
+Digite 1 e acesse: http://localhost:5000
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🎯 PROBLEMA RESOLVIDO                                        ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+ANTES (❌ dava erro):
+   cd web
+   python app.py
+   → ModuleNotFoundError: No module named 'flask'
+
+
+AGORA (✅ funciona):
+   bash iniciar.sh           # Opção 1
+   ou
+   bash web/run_web.sh       # Direto
+
+
+O sistema agora:
+✅ Ativa o ambiente virtual automaticamente
+✅ Verifica todas as dependências
+✅ Mostra mensagens claras de erro
+✅ Guia você passo a passo
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  📚 DOCUMENTAÇÃO DISPONÍVEL                                   ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+Para ver o guia visual rápido:
+   bash COMO_EXECUTAR_LINUX.sh
+
+Para ler documentação completa:
+   cat GUIA_RAPIDO_LINUX.md
+
+Para início rápido:
+   cat INICIO_RAPIDO.md
+
+Para README Linux:
+   cat README_LINUX.md
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  💡 DICAS ÚTEIS                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. Criar atalho no terminal:
+   echo "alias bci='cd /home/david/bci-on1 && bash iniciar.sh'" >> ~/.bashrc
+   source ~/.bashrc
+   
+   Depois use apenas: bci
+
+
+2. Verificar status do sistema:
+   bash iniciar.sh → Opção [2]
+
+
+3. Ver logs recentes:
+   bash iniciar.sh → Opção [3]
+
+
+4. Reinstalar se algo der errado:
+   bash install.sh
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🎓 ENTENDENDO O SISTEMA                                      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+O BCI-ON1 é um robô que automatiza:
+
+1. 📥 Extração de Protocolos
+   → Baixa PDFs do Todoist
+   → Extrai números de protocolo
+
+2. 🎯 Lances Automáticos
+   → Faz login no Servopa
+   → Busca cada protocolo
+   → Registra lances automaticamente
+
+3. 💬 Notificações WhatsApp
+   → Envia mensagens via Evolution API
+   → Confirma sucesso/falha
+
+4. 🔄 Agendamento Inteligente
+   → Ciclo Dia 8: primeira tentativa
+   → Ciclo Dia 16: segunda tentativa
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  ✅ INSTALAÇÃO                                                ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+O sistema detectou que você já tem:
+   ✅ Python 3.12.3
+   ✅ Google Chrome 136.0.7103.92
+   ✅ Ambiente virtual configurado
+   ✅ Todas as dependências instaladas
+
+
+Está tudo pronto para usar!
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║  🚀 EXECUTE AGORA:                                             ║
+║                                                                ║
+║     cd /home/david/bci-on1                                     ║
+║     bash iniciar.sh                                            ║
+║                                                                ║
+║  Depois escolha opção [1] para abrir a interface web!         ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
