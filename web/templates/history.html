@@ -50,12 +50,11 @@
                             <th>Grupo</th>
                             <th>Cota</th>
                             <th>Nome</th>
-                            <th>Protocolo</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="history-dia8">
-                        <tr><td colspan="6" class="text-center text-muted">Carregando...</td></tr>
+                        <tr><td colspan="5" class="text-center text-muted">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -76,12 +75,11 @@
                             <th>Grupo</th>
                             <th>Cota</th>
                             <th>Nome</th>
-                            <th>Protocolo</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="history-dia16">
-                        <tr><td colspan="6" class="text-center text-muted">Carregando...</td></tr>
+                        <tr><td colspan="5" class="text-center text-muted">Carregando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -122,7 +120,6 @@ async function loadHistory(dia) {
                     <td>${entry.grupo || '-'}</td>
                     <td>${entry.cota || '-'}</td>
                     <td>${entry.nome || '-'}</td>
-                    <td>${entry.protocolo || '-'}</td>
                     <td>${entry.status || '-'}</td>
                 `;
             });
