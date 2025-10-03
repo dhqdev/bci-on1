@@ -2,20 +2,21 @@
 
 ## ❌ Problema Identificado
 
+### Sintoma 1: Nas páginas de automação (Dia 8/16)
 Quando o usuário trocava de aba do navegador durante a automação, o sistema **parava a execução automaticamente**.
 
-### Causa Raiz
+**Causa**: O navegador desconectava o WebSocket ao trocar de aba, e ao reconectar (quando você voltava), ele verificava o status da automação, causando interferência.
 
-1. **Mudança de visibilidade da página**: Quando você troca de aba, o navegador dispara o evento `visibilitychange`
-2. **Reconexão do WebSocket**: O navegador pode pausar/desconectar o WebSocket quando a aba fica invisível
-3. **Verificação automática de status**: Ao reconectar (quando volta para a aba), o código fazia `fetch('/api/automation/status/...')` 
-4. **Conflito de estado**: Essa verificação poderia desabilitar os botões ou interferir na execução
+### Sintoma 2: No Dashboard (Visualizador)
+Quando o usuário trocava de aba, o **visualizador de screenshots parava de atualizar**, mesmo com a automação rodando no backend.
+
+**Causa**: O navegador **pausa** `setInterval` quando a aba fica invisível. Ao voltar, o timer retoma, mas pode ter perdido várias atualizações, causando a impressão de que "parou".
 
 ## ✅ Solução Implementada
 
-### 1. Detecção de Troca de Abas
+### 1. Proteção nas Páginas de Automação (Dia 8/16)
 
-Adicionado listener para `visibilitychange`:
+Adicionado listener para `visibilitychange` que bloqueia verificações de status ao trocar de aba:
 
 ```javascript
 document.addEventListener('visibilitychange', function() {
@@ -26,7 +27,6 @@ document.addEventListener('visibilitychange', function() {
     } else {
         // Usuário voltou para a aba
         console.log('👁️ Aba ficou visível - desbloqueando após 3s');
-        // Aguarda 3 segundos antes de permitir verificações novamente
         setTimeout(() => {
             window.tabSwitched = false;
         }, 3000);
@@ -34,29 +34,59 @@ document.addEventListener('visibilitychange', function() {
 });
 ```
 
-### 2. Proteção na Reconexão
-
-Modificado o `socket.on('connect')` para respeitar a flag `window.tabSwitched`:
+Modificado o `socket.on('connect')` para respeitar a flag:
 
 ```javascript
 socket.on('connect', function() {
-    addLog('Conectado ao servidor', 'success');
-    
-    // Verifica status atual da automação
-    // MAS respeita se usuário está tentando parar OU se acabou de trocar de aba
     if (!window.isStopping && !window.tabSwitched) {
-        fetch(`/api/automation/status/${dia}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.running) {
-                    updateAutomationStatus(true);
-                } else {
-                    updateAutomationStatus(false);
-                }
-            })
-            .catch(err => console.error('Erro ao verificar status:', err));
+        fetch(`/api/automation/status/${dia}`)...
     } else {
-        console.log('⏸️ Verificação de status bloqueada (isStopping ou tabSwitched)');
+        console.log('⏸️ Verificação bloqueada');
+    }
+});
+```
+
+### 2. Proteção no Dashboard (Visualizador)
+
+**Atualização forçada ao voltar para a aba:**
+
+```javascript
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && currentViewerDia) {
+        // Aba voltou a ficar visível e tem automação ativa
+        console.log('👁️ Aba visível - forçando atualização de screenshot');
+        updateViewerScreenshot(); // Atualiza IMEDIATAMENTE
+    }
+});
+```
+
+**Reconexão WebSocket atualiza automaticamente:**
+
+```javascript
+socket.on('connect', function() {
+    // Se tinha automação ativa, força atualização
+    if (currentViewerDia) {
+        console.log('🔄 Reconectado - atualizando screenshot');
+        updateViewerScreenshot();
+    }
+});
+```
+
+**Logs em tempo real via WebSocket:**
+
+```javascript
+socket.on('log', function(data) {
+    // Adiciona logs do backend no visualizador
+    if (currentViewerDia && (data.dia === currentViewerDia || data.dia === 'general')) {
+        const type = getLogType(data.message);
+        addViewerLog(data.message, type);
+    }
+});
+
+socket.on('progress', function(data) {
+    // Atualiza barra de progresso em tempo real
+    if (currentViewerDia && data.dia === currentViewerDia) {
+        updateViewerProgress(data.value, data.message);
     }
 });
 ```
@@ -87,16 +117,36 @@ socket.on('connect', function() {
 
 ## 📁 Arquivos Modificados
 
-- ✅ `web/templates/automation_dia8.html`
-- ✅ `web/templates/automation_dia16.html`
+### Páginas de Automação:
+- ✅ `web/templates/automation_dia8.html` - Proteção contra verificação de status
+- ✅ `web/templates/automation_dia16.html` - Proteção contra verificação de status
+
+### Dashboard:
+- ✅ `web/templates/index.html` - Atualização forçada + WebSocket logs em tempo real
 
 ## 🧪 Como Testar
 
-1. Inicie a automação (Dia 8 ou Dia 16)
-2. Troque para outra aba do navegador
-3. Aguarde alguns segundos
-4. Volte para a aba da automação
-5. ✅ **Resultado esperado**: Automação continua rodando sem parar
+### Teste 1: Páginas de Automação (Dia 8/16)
+
+1. Acesse http://localhost:5000/automation/dia8
+2. Clique em **"Iniciar Automação"**
+3. **Troque para outra aba** do navegador
+4. Aguarde 5-10 segundos
+5. **Volte para a aba da automação**
+6. ✅ **Resultado esperado**: Automação continua rodando, logs aparecem
+
+### Teste 2: Dashboard (Visualizador)
+
+1. Acesse http://localhost:5000 (Dashboard)
+2. Clique em **"Iniciar"** em Automação Dia 8
+3. Observe o visualizador atualizando screenshots
+4. **Troque para outra aba** do navegador
+5. Aguarde 5-10 segundos
+6. **Volte para o Dashboard**
+7. ✅ **Resultado esperado**: 
+   - Screenshot atualiza **IMEDIATAMENTE** ao voltar
+   - Logs aparecem em tempo real
+   - Progresso continua atualizando
 
 ## 🔍 Logs no Console
 
