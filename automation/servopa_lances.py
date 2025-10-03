@@ -435,19 +435,27 @@ def _capture_protocol_from_docparser(driver, original_window, handles_before, pr
         progress_callback("🔍 DEBUG: Iniciando captura de protocolo...")
         progress_callback(f"🔍 DEBUG: Janelas antes: {len(handles_before)}")
 
-    wait_until = time.time() + 15  # Aumentado para 15 segundos
+    wait_until = time.time() + 15  # Timeout de 15 segundos
     new_handles = []
     detected_url = None
+    max_handles_seen = len(handles_before)
     
+    # Loop de checagem CONTÍNUA com polling rápido
     while time.time() < wait_until:
         handles_after = list(driver.window_handles)
         new_handles = [h for h in handles_after if h not in handles_before]
         current_url = driver.current_url
         
+        # Rastreia o máximo de janelas vistas (para detectar janelas que fecham rápido)
+        if len(handles_after) > max_handles_seen:
+            max_handles_seen = len(handles_after)
+            if progress_callback:
+                progress_callback(f"🔍 DEBUG: 🆕 Nova janela DETECTADA! Total agora: {len(handles_after)}")
+        
+        # Se detectou nova janela, captura IMEDIATAMENTE
         if len(new_handles) > 0:
             if progress_callback:
-                progress_callback(f"🔍 DEBUG: {len(new_handles)} nova(s) janela(s) detectada(s)")
-            # IMEDIATAMENTE sai do loop quando detectar nova janela
+                progress_callback(f"🔍 DEBUG: ✅ {len(new_handles)} nova(s) janela(s) capturada(s)! Extraindo protocolo AGORA...")
             break
         
         # EXPANDIDO: Procura por múltiplos padrões de URL na janela atual também
@@ -457,11 +465,12 @@ def _capture_protocol_from_docparser(driver, original_window, handles_before, pr
             detected_url = current_url
             break
             
-        time.sleep(0.5)  # Reduzido de 1s para 0.5s = mais responsivo
+        time.sleep(0.2)  # Polling MUITO rápido (200ms ao invés de 500ms)
 
     if progress_callback:
         progress_callback(f"🔍 DEBUG: Janelas depois: {len(driver.window_handles)}")
-        progress_callback(f"🔍 DEBUG: Novas janelas: {len(new_handles)}")
+        progress_callback(f"🔍 DEBUG: Máximo de janelas visto durante o loop: {max_handles_seen}")
+        progress_callback(f"🔍 DEBUG: Novas janelas ainda abertas: {len(new_handles)}")
         if detected_url:
             progress_callback(f"🔍 DEBUG: URL detectada na janela atual: {detected_url[:80]}...")
 
