@@ -8,8 +8,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from utils.protocol_extractor import extract_protocol_from_docparser
-
 TIMEOUT = 20
 SERVOPA_PAINEL_URL = "https://www.consorcioservopa.com.br/vendas/painel"
 SERVOPA_LANCES_URL = "https://www.consorcioservopa.com.br/vendas/lances"
@@ -295,121 +293,16 @@ def executar_lance(driver, progress_callback=None):
         if progress_callback:
             progress_callback("💾 Registrando lance...")
         
-        # CRÍTICO: Aguarda JavaScript da página carregar completamente
-        time.sleep(2)
-        
-        # DEBUG: Verifica se jQuery está carregado e se há event listeners
-        if progress_callback:
-            try:
-                jquery_loaded = driver.execute_script("return typeof jQuery !== 'undefined';")
-                progress_callback(f"🔍 DEBUG: jQuery carregado? {jquery_loaded}")
-                
-                if jquery_loaded:
-                    # Verifica se há eventos jQuery no botão
-                    has_events = driver.execute_script("""
-                        var btn = document.querySelector('a.printBt');
-                        if (btn && jQuery._data) {
-                            var events = jQuery._data(btn, 'events');
-                            return events ? Object.keys(events) : [];
-                        }
-                        return [];
-                    """)
-                    if has_events:
-                        progress_callback(f"🔍 DEBUG: Eventos jQuery no botão: {has_events}")
-            except Exception as e:
-                progress_callback(f"⚠️ DEBUG: Erro ao verificar jQuery: {e}")
-        
         registrar_button = wait.until(EC.element_to_be_clickable(
             (By.CSS_SELECTOR, "a.printBt")
         ))
 
-        original_window = driver.current_window_handle
-        handles_before = set(driver.window_handles)
-        
-        if progress_callback:
-            url_before = driver.current_url
-            progress_callback(f"🔍 DEBUG: URL ANTES de clicar Registrar: {url_before[:80]}...")
-            progress_callback(f"🔍 DEBUG: Handles ANTES: {len(handles_before)}")
-
-        # Clica usando JavaScript para garantir que event listeners sejam acionados
-        driver.execute_script("arguments[0].click();", registrar_button)
+        registrar_button.click()
 
         if progress_callback:
             progress_callback("🔍 Verificando resultado do registro...")
-            
-        # CRÍTICO: Captura protocolo IMEDIATAMENTE se nova janela abrir
-        time.sleep(0.3)  # Aguarda 300ms apenas
-        handles_immediately = set(driver.window_handles)
-        new_handles_immediately = list(handles_immediately - handles_before)
-        
-        if len(new_handles_immediately) > 0:
-            if progress_callback:
-                progress_callback(f"⚡ JANELA DETECTADA IMEDIATAMENTE! Capturando protocolo AGORA...")
-            
-            # Captura protocolo SEM ESPERAR!
-            protocol_info = _capture_protocol_from_docparser(
-                driver,
-                original_window,
-                handles_before,
-                progress_callback,
-            )
-            
-            if progress_callback:
-                progress_callback(f"🔍 DEBUG LANCE (captura rápida): protocol_info = {protocol_info}")
-                progress_callback(f"🔍 DEBUG LANCE (captura rápida): protocol = {protocol_info.get('protocol')}")
-            
-            # Se capturou protocolo, retorna sucesso IMEDIATAMENTE
-            if protocol_info.get('protocol'):
-                return {
-                    'success': True,
-                    'already_exists': False,
-                    'message': 'Lance registrado com sucesso (captura rápida)',
-                    'valor_lance': valor_lanfix,
-                    'protocol_number': protocol_info.get('protocol'),
-                    'docparser_url': protocol_info.get('docparser_url'),
-                    'protocol_source': protocol_info.get('source'),
-                }
-        
-        # Se não detectou janela imediatamente, continua com fluxo normal
-        if progress_callback:
-            progress_callback(f"🔍 DEBUG: Nenhuma janela detectada imediatamente, continuando...")
-            
-        # Aguarda 500ms e verifica novamente
-        time.sleep(0.5)
-        if progress_callback:
-            url_immediately = driver.current_url
-            handles_immediately = len(driver.window_handles)
-            progress_callback(f"🔍 DEBUG: 500ms após clicar: Janelas={handles_immediately}, URL={url_immediately[:60]}...")
-        
-        time.sleep(1)  # Mais 1 segundo
-        if progress_callback:
-            url_1s = driver.current_url
-            handles_1s = len(driver.window_handles)
-            progress_callback(f"🔍 DEBUG: 1.5s após clicar: Janelas={handles_1s}, URL={url_1s[:60]}...")
 
-        time.sleep(2)  # Total de 3.5 segundos (era 3)
-        
-        # DEBUG: Procura por iframe ou modal que pode conter o PDF
-        if progress_callback:
-            try:
-                iframes = driver.find_elements(By.TAG_NAME, "iframe")
-                progress_callback(f"🔍 DEBUG: {len(iframes)} iframe(s) encontrado(s) na página")
-                for i, iframe in enumerate(iframes):
-                    iframe_src = iframe.get_attribute("src") or ""
-                    if iframe_src:
-                        progress_callback(f"🔍 DEBUG: iframe {i+1}: {iframe_src[:80]}...")
-                
-                # Procura por elementos com docparser/view
-                elements_with_docparser = driver.find_elements(By.XPATH, "//*[contains(@href, 'docparser') or contains(@src, 'docparser')]")
-                if elements_with_docparser:
-                    progress_callback(f"🔍 DEBUG: {len(elements_with_docparser)} elemento(s) com 'docparser' encontrado(s)!")
-                    for elem in elements_with_docparser[:3]:  # Apenas primeiros 3
-                        tag = elem.tag_name
-                        href = elem.get_attribute("href") or ""
-                        src = elem.get_attribute("src") or ""
-                        progress_callback(f"🔍 DEBUG: <{tag}> href='{href[:50]}' src='{src[:50]}'")
-            except Exception as e:
-                progress_callback(f"⚠️ DEBUG: Erro ao procurar iframe/docparser: {e}")
+        time.sleep(3)  # Aguarda processamento
         
         # Tenta encontrar o popup de erro
         try:
@@ -429,17 +322,6 @@ def executar_lance(driver, progress_callback=None):
                         if progress_callback:
                             progress_callback("⚠️ Popup detectado: 'Número do Protocolo Anterior é obrigatório'")
                             progress_callback("✅ Lance JÁ FOI REGISTRADO anteriormente - considerando sucesso!")
-                        
-                        protocol_info = _capture_protocol_from_docparser(
-                            driver,
-                            original_window,
-                            handles_before,
-                            progress_callback,
-                        )
-
-                        if progress_callback:
-                            progress_callback(f"🔍 DEBUG LANCE: protocol_info após _capture = {protocol_info}")
-                            progress_callback(f"🔍 DEBUG LANCE: protocol_info.get('protocol') = {protocol_info.get('protocol')}")
 
                         # Tenta clicar em OK se houver botão
                         try:
@@ -456,61 +338,30 @@ def executar_lance(driver, progress_callback=None):
                             'already_exists': True,
                             'message': 'Lance já foi registrado anteriormente',
                             'valor_lance': valor_lanfix,
-                            'protocol_number': protocol_info.get('protocol'),
-                            'docparser_url': protocol_info.get('docparser_url'),
-                            'protocol_source': protocol_info.get('source'),
                         }
             
             # Se não encontrou popup, lance foi registrado com sucesso agora
             if not popup_text_found:
                 if progress_callback:
                     progress_callback("✅ Lance registrado com sucesso!")
-                
-                protocol_info = _capture_protocol_from_docparser(
-                    driver,
-                    original_window,
-                    handles_before,
-                    progress_callback,
-                )
-
-                if progress_callback:
-                    progress_callback(f"🔍 DEBUG LANCE (novo): protocol_info = {protocol_info}")
-                    progress_callback(f"🔍 DEBUG LANCE (novo): protocol_info.get('protocol') = {protocol_info.get('protocol')}")
 
                 return {
                     'success': True,
                     'already_exists': False,
                     'message': 'Lance registrado com sucesso',
                     'valor_lance': valor_lanfix,
-                    'protocol_number': protocol_info.get('protocol'),
-                    'docparser_url': protocol_info.get('docparser_url'),
-                    'protocol_source': protocol_info.get('source'),
                 }
                 
         except Exception as popup_error:
             # Se houve erro ao procurar popup, assume que lance foi registrado
             if progress_callback:
                 progress_callback(f"✅ Lance registrado (verificação de popup: {popup_error})")
-            
-            protocol_info = _capture_protocol_from_docparser(
-                driver,
-                original_window,
-                handles_before,
-                progress_callback,
-            )
-
-            if progress_callback:
-                progress_callback(f"🔍 DEBUG LANCE (exception path): protocol_info = {protocol_info}")
-                progress_callback(f"🔍 DEBUG LANCE (exception path): protocol_info.get('protocol') = {protocol_info.get('protocol')}")
 
             return {
                 'success': True,
                 'already_exists': False,
                 'message': 'Lance registrado',
                 'valor_lance': valor_lanfix,
-                'protocol_number': protocol_info.get('protocol'),
-                'docparser_url': protocol_info.get('docparser_url'),
-                'protocol_source': protocol_info.get('source'),
             }
         
     except Exception as e:
@@ -522,125 +373,6 @@ def executar_lance(driver, progress_callback=None):
             'message': f'Erro: {e}',
             'valor_lance': 'N/A'
         }
-
-
-def _capture_protocol_from_docparser(driver, original_window, handles_before, progress_callback=None) -> dict:
-    """Captura protocolo abrindo a aba gerada pelo registro do lance."""
-
-    protocol_payload = {
-        'protocol': None,
-        'docparser_url': None,
-        'source': None,
-    }
-
-    if progress_callback:
-        progress_callback("🔍 DEBUG: Iniciando captura de protocolo...")
-        progress_callback(f"🔍 DEBUG: Janelas iniciais: {len(handles_before)}")
-
-    # ESTRATÉGIA RÁPIDA: Verifica IMEDIATAMENTE se já há nova janela
-    current_handles = set(driver.window_handles)
-    new_handles = list(current_handles - handles_before)
-    
-    if len(new_handles) > 0:
-        if progress_callback:
-            progress_callback(f"⚡ NOVA JANELA JÁ ABERTA! Capturando IMEDIATAMENTE sem esperar!")
-    else:
-        # Se não há nova janela, aguarda um pouco
-        if progress_callback:
-            progress_callback(f"🔍 DEBUG: Aguardando nova janela ou mudança de URL...")
-        
-        wait_until = time.time() + 5  # Apenas 5 segundos (era 10)
-        check_count = 0
-        
-        while time.time() < wait_until:
-            check_count += 1
-            handles_after = list(driver.window_handles)
-            new_handles = [h for h in handles_after if h not in handles_before]
-            current_url = driver.current_url
-            
-            # LOG apenas a cada 2 segundos
-            if check_count % 4 == 0 and progress_callback:
-                progress_callback(f"🔍 DEBUG Loop [{check_count}]: Janelas={len(handles_after)}, Novas={len(new_handles)}")
-            
-            # Quebra IMEDIATAMENTE se detectar protocolo ou novas janelas
-            if new_handles or "docparser/view" in current_url:
-                if progress_callback:
-                    progress_callback(f"🔍 DEBUG: ✅ DETECTADO após {check_count} checks!")
-                break
-            time.sleep(0.5)
-        
-        if progress_callback:
-            progress_callback(f"🔍 DEBUG: Loop finalizado. Novas janelas: {len(new_handles)}")
-
-    candidate_handles = new_handles + [original_window]
-
-    if progress_callback:
-        progress_callback(f"🔍 DEBUG: Verificando {len(candidate_handles)} janela(s) para protocolo...")
-
-    for idx, handle in enumerate(candidate_handles):
-        try:
-            driver.switch_to.window(handle)
-            current_url = driver.current_url
-            
-            if progress_callback:
-                progress_callback(f"🔍 DEBUG: Verificando janela {idx + 1}/{len(candidate_handles)}")
-                progress_callback(f"🔍 DEBUG: URL = {current_url[:100]}...")
-            
-        except Exception as e:
-            if progress_callback:
-                progress_callback(f"⚠️ DEBUG: Erro ao mudar para janela: {e}")
-            continue
-
-        if "docparser/view" not in current_url:
-            if progress_callback:
-                progress_callback(f"⏭️ DEBUG: URL não contém '/docparser/view', pulando...")
-            continue
-
-        if progress_callback:
-            progress_callback("📄 Documento de protocolo detectado, extraindo dados...")
-
-        result = extract_protocol_from_docparser(driver, current_url, progress_callback)
-        protocol_payload['protocol'] = result.protocol
-        protocol_payload['docparser_url'] = result.docparser_url or current_url
-        protocol_payload['source'] = result.source
-
-        if progress_callback:
-            if result.protocol:
-                progress_callback(f"📑 Protocolo capturado: {result.protocol}")
-            else:
-                progress_callback(f"⚠️ DEBUG: Protocolo NÃO foi extraído!")
-                progress_callback(f"🔍 DEBUG: result.metadata = {result.metadata}")
-
-        # Fecha aba do PDF ou volta com back()
-        if handle != original_window:
-            try:
-                if progress_callback:
-                    progress_callback(f"🔄 DEBUG: Fechando aba do PDF...")
-                driver.close()
-            except Exception as close_error:
-                if progress_callback:
-                    progress_callback(f"⚠️ DEBUG: Erro ao fechar aba: {close_error}")
-        else:
-            try:
-                if progress_callback:
-                    progress_callback(f"🔄 DEBUG: Voltando para página de lances...")
-                driver.back()
-                WebDriverWait(driver, 10).until(EC.url_contains("/vendas/lances"))
-            except Exception as back_error:
-                if progress_callback:
-                    progress_callback(f"⚠️ DEBUG: Erro ao voltar (back): {back_error}")
-
-        break
-
-    try:
-        driver.switch_to.window(original_window)
-    except Exception:
-        pass
-
-    if progress_callback:
-        progress_callback(f"🔍 DEBUG: Protocolo final: {protocol_payload['protocol']}")
-
-    return protocol_payload
 
 
 def processar_lance_completo(driver, grupo, cota, progress_callback=None):
@@ -696,9 +428,6 @@ def processar_lance_completo(driver, grupo, cota, progress_callback=None):
         result['steps_completed'].append('executar_lance')
         result['already_exists'] = lance_result.get('already_exists', False)
         result['lance_message'] = lance_result.get('message', '')
-        result['protocol_number'] = lance_result.get('protocol_number')
-        result['protocol_source'] = lance_result.get('protocol_source')
-        result['docparser_url'] = lance_result.get('docparser_url')
         
         # Sucesso!
         result['success'] = True

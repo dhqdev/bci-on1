@@ -235,21 +235,11 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                         try:
                             valor_lance = lance_result.get('valor_lance', 'N/A')
                             
-                            # DEBUG: Log do valor capturado
-                            if progress_callback:
-                                progress_callback(f"🔍 DEBUG - Valor capturado: '{valor_lance}'")
-                                progress_callback(f"🔍 DEBUG CYCLE: lance_result.get('protocol_number') = {lance_result.get('protocol_number')}")
-                                progress_callback(f"🔍 DEBUG CYCLE: lance_result.get('docparser_url') = {lance_result.get('docparser_url')}")
-                                progress_callback(f"🔍 DEBUG CYCLE: result['protocol_number'] = {result['protocol_number']}")
-                            
                             # Formata valor: só adiciona % se não for N/A
                             if valor_lance and valor_lance != 'N/A' and valor_lance.strip() != '':
                                 valor_formatado = f"{valor_lance}%"
                             else:
                                 valor_formatado = "N/A"
-                            
-                            if progress_callback:
-                                progress_callback(f"🔍 DEBUG - Valor formatado: '{valor_formatado}'")
                             
                             if lance_result.get('already_exists', False):
                                 observacao = "Lance já existia (protocolo anterior detectado)"
@@ -258,9 +248,6 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                                 observacao = "Lance registrado com sucesso"
                                 status = "✅ Sucesso"
                             
-                            if progress_callback:
-                                progress_callback(f"🔍 DEBUG CYCLE: Chamando history_callback com protocolo={lance_result.get('protocol_number')}")
-                            
                             history_callback(
                                 grupo,
                                 cota,
@@ -268,12 +255,7 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                                 valor_formatado,
                                 status,
                                 observacao,
-                                protocolo=lance_result.get('protocol_number'),
-                                documento_url=lance_result.get('docparser_url'),
                             )
-                            
-                            if progress_callback:
-                                progress_callback(f"✅ DEBUG CYCLE: history_callback executado com sucesso!")
                                 
                         except Exception as hist_error:
                             if progress_callback:
