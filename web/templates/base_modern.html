@@ -2,7 +2,7 @@
 <html lang="pt-BR" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}OXCASH - Sistema de Automação{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
@@ -1377,10 +1377,29 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && data.data) {
-                        const total = (data.data.dia08?.length || 0) + (data.data.dia16?.length || 0);
+                        // Conta apenas boletos NÃO concluídos (pendentes)
+                        let pendentes = 0;
+                        
+                        if (data.data.dia08) {
+                            pendentes += data.data.dia08.filter(b => !b.is_completed).length;
+                        }
+                        
+                        if (data.data.dia16) {
+                            pendentes += data.data.dia16.filter(b => !b.is_completed).length;
+                        }
+                        
                         const badge = document.getElementById('boletos-badge');
                         if (badge) {
-                            badge.textContent = total;
+                            badge.textContent = pendentes;
+                            
+                            // Muda cor do badge baseado na quantidade
+                            if (pendentes === 0) {
+                                badge.className = 'badge bg-success';
+                            } else if (pendentes <= 5) {
+                                badge.className = 'badge bg-warning';
+                            } else {
+                                badge.className = 'badge bg-danger';
+                            }
                         }
                     }
                 })
@@ -1392,6 +1411,17 @@
         
         // Atualiza badge a cada 30 segundos
         setInterval(updateBoletosBadge, 30000);
+        
+        // Função global para notificar dashboard sobre mudanças
+        window.notifyDashboardUpdate = function() {
+            // Atualiza badge
+            updateBoletosBadge();
+            
+            // Se estiver na página principal, atualiza stats
+            if (typeof loadStats === 'function') {
+                loadStats();
+            }
+        };
         // ========== FIM BADGE DE BOLETOS ==========
     </script>
     

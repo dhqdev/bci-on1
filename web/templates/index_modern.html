@@ -384,14 +384,30 @@
 </div>
 
 <script>
-    // Carregar estatísticas
+    // Carregar estatísticas dos boletos
     async function loadStats() {
         try {
-            const response = await fetch('/api/stats');
+            // Busca dados dos boletos
+            const response = await fetch('/api/boletos');
             const data = await response.json();
             
-            // Atualizar contadores (implementar lógica real)
-            console.log('Stats loaded:', data);
+            if (data.success && data.data) {
+                const dia08 = data.data.dia08 || [];
+                const dia16 = data.data.dia16 || [];
+                
+                // Calcula totais
+                const total = dia08.length + dia16.length;
+                const completos = dia08.filter(b => b.is_completed).length + 
+                                 dia16.filter(b => b.is_completed).length;
+                const pendentes = total - completos;
+                
+                // Atualiza cards
+                document.getElementById('totalBoletos').textContent = total;
+                document.getElementById('boletosCompletos').textContent = completos;
+                document.getElementById('boletosPendentes').textContent = pendentes;
+                
+                console.log(`📊 Stats: ${total} total, ${completos} completos, ${pendentes} pendentes`);
+            }
         } catch (error) {
             console.error('Erro ao carregar estatísticas:', error);
         }
@@ -400,6 +416,9 @@
     // Carregar ao iniciar
     window.addEventListener('DOMContentLoaded', () => {
         loadStats();
+        
+        // Atualiza a cada 30 segundos
+        setInterval(loadStats, 30000);
     });
 </script>
 {% endblock %}

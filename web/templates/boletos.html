@@ -438,6 +438,11 @@ async function importBoletos() {
             if (typeof updateBoletosBadge === 'function') {
                 updateBoletosBadge();
             }
+            
+            // Notifica dashboard sobre mudanças
+            if (typeof window.notifyDashboardUpdate === 'function') {
+                window.notifyDashboardUpdate();
+            }
         } else {
             updateStatus('error', 'Erro: ' + (result.error || 'Erro desconhecido'));
         }
@@ -514,6 +519,16 @@ async function toggleStatus(taskId, isCompleted, dia) {
                     card.querySelector('.boleto-status').className = 'boleto-status pendente';
                     card.querySelector('.boleto-status').innerHTML = '<i class="fas fa-clock"></i> Pendente';
                 }
+            }
+            
+            // Atualiza badge de boletos pendentes no menu
+            if (typeof updateBoletosBadge === 'function') {
+                updateBoletosBadge();
+            }
+            
+            // Notifica dashboard sobre mudanças
+            if (typeof window.notifyDashboardUpdate === 'function') {
+                window.notifyDashboardUpdate();
             }
             
             console.log('Status atualizado com sucesso');
