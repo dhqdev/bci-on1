@@ -93,16 +93,27 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
         section_title = section['title']
         total_tasks_in_section = len(section['tasks'])
         
+        # NOVO: Verifica se TODAS as tarefas da coluna estão flegadas
+        pending_tasks = [t for t in section['tasks'] if not t.get('is_completed', False)]
+        completed_tasks = [t for t in section['tasks'] if t.get('is_completed', False)]
+        
         if progress_callback:
             progress_callback("")
             progress_callback("┌" + "─" * 58 + "┐")
             progress_callback(f"│ COLUNA {section_index}/{stats['total_sections']}: {section_title:<48}│")
             progress_callback(f"│ Grupo: {grupo:<51}│")
-            progress_callback(f"│ Tarefas: {total_tasks_in_section:<49}│")
+            progress_callback(f"│ Total: {total_tasks_in_section}  |  ✅ Flegadas: {len(completed_tasks)}  |  ⬜ Pendentes: {len(pending_tasks):<15}│")
             progress_callback("└" + "─" * 58 + "┘")
         
-        # Percorre cada linha (tarefa) nesta coluna
-        for task_index, task in enumerate(section['tasks'], 1):
+        # Se TODAS as tarefas estão flegadas, pula a coluna inteira
+        if len(pending_tasks) == 0:
+            if progress_callback:
+                progress_callback(f"✅ Coluna '{section_title}' totalmente flegada - PULANDO para próxima coluna")
+            stats['skipped'] += len(completed_tasks)
+            continue
+        
+        # Percorre APENAS as tarefas PENDENTES (não flegadas)
+        for task_index, task in enumerate(pending_tasks, 1):
             # Verifica se deve continuar
             if should_continue and not should_continue():
                 if progress_callback:
@@ -115,7 +126,7 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
             
             if progress_callback:
                 progress_callback("")
-                progress_callback(f"┌─ Tarefa {task_index}/{total_tasks_in_section} " + "─" * 40)
+                progress_callback(f"┌─ Tarefa {task_index}/{len(pending_tasks)} (Pendente) " + "─" * 30)
                 progress_callback(f"│  📝 Cota: {cota}")
                 progress_callback(f"│  👤 Nome: {nome}")
                 progress_callback(f"└" + "─" * 50)
@@ -262,12 +273,20 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                 result['error'] = str(e)
                 
                 # ========== REGISTRA NO HISTÓRICO (ERRO) ==========
+                # IMPORTANTE: NÃO registra no histórico se foi parado manualmente
                 if history_callback:
-                    try:
-                        history_callback(grupo, cota, nome, "N/A", "❌ Erro", str(e)[:200])
-                    except Exception as hist_error:
+                    # Verifica se foi parado pelo usuário
+                    if should_continue and not should_continue():
                         if progress_callback:
-                            progress_callback(f"⚠️ Aviso: Não foi possível registrar erro no histórico: {hist_error}")
+                            progress_callback(f"⏹️ Tarefa {task_index} não foi concluída devido à parada manual - NÃO será registrado no histórico")
+                        # NÃO chama history_callback se foi parado manualmente
+                    else:
+                        # Se foi erro real (não parada manual), registra no histórico
+                        try:
+                            history_callback(grupo, cota, nome, "N/A", "❌ Erro", str(e)[:200])
+                        except Exception as hist_error:
+                            if progress_callback:
+                                progress_callback(f"⚠️ Aviso: Não foi possível registrar erro no histórico: {hist_error}")
                 
                 if progress_callback:
                     progress_callback(f"❌ Erro na tarefa {task_index}: {e}")

@@ -105,6 +105,12 @@ def extract_complete_board(driver, progress_callback=None):
                         # ID da tarefa
                         task_id = task.get_attribute('id')
                         
+                        # Localiza checkbox para verificar se está flegado
+                        checkbox = task.find_element(By.CSS_SELECTOR, "button.task_checkbox")
+                        
+                        # IMPORTANTE: Verifica se tarefa está flegada (aria-checked="true")
+                        is_checked = checkbox.get_attribute('aria-checked') == 'true'
+                        
                         # Extrai número da cota (task_content)
                         cota_element = task.find_element(By.CSS_SELECTOR, "div.task_content")
                         cota = cota_element.text.strip()
@@ -116,20 +122,19 @@ def extract_complete_board(driver, progress_callback=None):
                         except NoSuchElementException:
                             nome = "Sem nome"
                         
-                        # Localiza checkbox para marcar depois
-                        checkbox = task.find_element(By.CSS_SELECTOR, "button.task_checkbox")
-                        
                         task_data = {
                             'cota': cota,
                             'nome': nome,
                             'task_id': task_id,
-                            'checkbox_element': checkbox
+                            'checkbox_element': checkbox,
+                            'is_completed': is_checked  # NOVO: indica se já está flegado
                         }
                         
                         section_data['tasks'].append(task_data)
                         
                         if progress_callback:
-                            progress_callback(f"      └─ Tarefa {task_index}: Cota {cota} - {nome}")
+                            status = "✅ Flegado" if is_checked else "⬜ Pendente"
+                            progress_callback(f"      └─ Tarefa {task_index}: Cota {cota} - {nome} [{status}]")
                         
                     except Exception as task_error:
                         if progress_callback:

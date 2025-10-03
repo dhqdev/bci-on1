@@ -89,6 +89,16 @@ function connectWebSocket() {
     
     socket.on('connect', function() {
         addLog('Conectado ao servidor', 'success');
+        
+        // Verifica status atual da automação
+        fetch(`/api/automation/status/${dia}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.running) {
+                    updateAutomationStatus(true);
+                }
+            })
+            .catch(err => console.error('Erro ao verificar status:', err));
     });
     
     socket.on('log', function(data) {
@@ -104,6 +114,7 @@ function connectWebSocket() {
     });
     
     socket.on('automation_status', function(data) {
+        console.log('📡 Status recebido:', data);
         if (data.dia === dia) {
             updateAutomationStatus(data.running);
         }

@@ -158,6 +158,13 @@ def api_update_from_github():
         # Obtém diretório do projeto
         project_dir = os.path.dirname(os.path.dirname(__file__))
         
+        # Primeiro, adiciona safe.directory para evitar dubious ownership
+        try:
+            safe_config_cmd = ['git', 'config', '--global', '--add', 'safe.directory', project_dir]
+            subprocess.run(safe_config_cmd, cwd=project_dir, capture_output=True, text=True, timeout=10)
+        except:
+            pass  # Se falhar, continua mesmo assim
+        
         # Executa git pull
         result = subprocess.run(
             ['git', 'pull', 'origin', 'main'],
@@ -187,6 +194,18 @@ def api_update_from_github():
         return jsonify({'success': False, 'error': 'Git não encontrado. Instale o Git primeiro.'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/automation/status/<dia>', methods=['GET'])
+def api_automation_status(dia):
+    """Retorna status atual da automação"""
+    if dia not in ['dia8', 'dia16']:
+        return jsonify({'success': False, 'error': 'Dia inválido'})
+    
+    return jsonify({
+        'success': True,
+        'running': app_state[f'automation_{dia}_running'],
+        'dia': dia
+    })
 
 @app.route('/api/automation/start/<dia>', methods=['POST'])
 def api_start_automation(dia):
