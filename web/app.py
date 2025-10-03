@@ -219,10 +219,11 @@ def api_start_automation(dia):
     # Marca como rodando ANTES de iniciar thread
     app_state[f'automation_{dia}_running'] = True
     
-    # Notifica interface IMEDIATAMENTE
-    socketio.emit('automation_status', {'dia': dia, 'running': True})
-    socketio.emit('log', {'dia': dia, 'message': '🚀 Iniciando automação...'})
-    socketio.emit('progress', {'dia': dia, 'value': 5, 'message': 'Preparando...'})
+    # Notifica interface IMEDIATAMENTE via WebSocket
+    with app.app_context():
+        socketio.emit('automation_status', {'dia': dia, 'running': True}, namespace='/')
+        socketio.emit('log', {'dia': dia, 'message': '🚀 Iniciando automação...'}, namespace='/')
+        socketio.emit('progress', {'dia': dia, 'value': 5, 'message': 'Preparando...'}, namespace='/')
     
     # Inicia thread de automação
     thread = threading.Thread(target=run_automation_thread, args=(dia,))
@@ -237,26 +238,32 @@ def api_stop_automation(dia):
     if dia not in ['dia8', 'dia16']:
         return jsonify({'success': False, 'error': 'Dia inválido'})
     
-    # Marca para parar
+    # Marca para parar PRIMEIRO
     app_state[f'automation_{dia}_running'] = False
+    
+    # Notifica IMEDIATAMENTE que está parando
+    with app.app_context():
+        socketio.emit('automation_status', {'dia': dia, 'running': False}, namespace='/')
+        socketio.emit('log', {'dia': dia, 'message': '⏹️ Parando automação...'}, namespace='/')
+        socketio.emit('progress', {'dia': dia, 'value': 0, 'message': 'Parando...'}, namespace='/')
     
     # Fecha driver se existir
     driver_key = f'driver_{dia}'
     if app_state[driver_key]:
         try:
-            progress_callback(dia, "🔒 Fechando navegador...")
+            progress_callback(dia, "🔒 Fechando navegador Chrome...")
             app_state[driver_key].quit()
             app_state[driver_key] = None
-            progress_callback(dia, "✅ Navegador fechado")
+            progress_callback(dia, "✅ Chrome fechado com sucesso!")
         except Exception as e:
-            progress_callback(dia, f"⚠️ Erro ao fechar navegador: {e}")
+            progress_callback(dia, f"⚠️ Navegador já estava fechado ou erro: {e}")
     
-    # Atualiza interface
-    socketio.emit('automation_status', {'dia': dia, 'running': False})
-    socketio.emit('log', {'dia': dia, 'message': '⏹️ Automação interrompida pelo usuário'})
-    socketio.emit('progress', {'dia': dia, 'value': 0, 'message': 'Parado'})
+    # Confirma parada
+    with app.app_context():
+        socketio.emit('log', {'dia': dia, 'message': '⏹️ Automação parada pelo usuário - histórico não será afetado'}, namespace='/')
+        socketio.emit('progress', {'dia': dia, 'value': 0, 'message': 'Parado'}, namespace='/')
     
-    return jsonify({'success': True, 'message': f'Automação {dia} parada e navegador fechado'})
+    return jsonify({'success': True, 'message': f'Automação {dia} parada e Chrome fechado'})
 
 @app.route('/api/whatsapp/send', methods=['POST'])
 def api_whatsapp_send():
@@ -379,7 +386,11 @@ def load_history_stats(filename):
 
 def progress_callback(dia, message):
     """Callback para enviar progresso via WebSocket"""
-    socketio.emit('log', {'dia': dia, 'message': message})
+    try:
+        with app.app_context():
+            socketio.emit('log', {'dia': dia, 'message': message}, namespace='/')
+    except Exception as e:
+        print(f"Erro ao enviar log: {e}")
 
 def run_automation_thread(dia):
     """Thread de automação"""

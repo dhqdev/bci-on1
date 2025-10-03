@@ -234,6 +234,13 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                     if history_callback:
                         try:
                             valor_lance = lance_result.get('valor_lance', 'N/A')
+                            
+                            # Formata valor: só adiciona % se não for N/A
+                            if valor_lance and valor_lance != 'N/A':
+                                valor_formatado = f"{valor_lance}%"
+                            else:
+                                valor_formatado = "N/A"
+                            
                             if lance_result.get('already_exists', False):
                                 observacao = "Lance já existia (protocolo anterior detectado)"
                                 status = "✅ Sucesso (já existia)"
@@ -245,7 +252,7 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                                 grupo,
                                 cota,
                                 nome,
-                                f"{valor_lance}%",
+                                valor_formatado,
                                 status,
                                 observacao,
                                 protocolo=lance_result.get('protocol_number'),
