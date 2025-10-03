@@ -64,26 +64,61 @@ def _extract_number_from_text(text: str) -> Optional[str]:
     return numbers[0]
 
 
-def _download_pdf(driver: WebDriver, pdf_url: str, timeout: int = 15) -> bytes:
-    cookies = {cookie["name"]: cookie["value"] for cookie in driver.get_cookies()}
+def _download_pdf(
+    driver: Optional[WebDriver], pdf_url: str, timeout: int = 15
+) -> Tuple[bytes, Dict[str, Optional[str]]]:
+    cookies = {}
+    user_agent = "Mozilla/5.0"
+
+    if driver:
+        try:
+            cookies = {cookie["name"]: cookie["value"] for cookie in driver.get_cookies()}
+        except Exception:  # pragma: no cover - defensive around Selenium state
+            LOGGER.debug("Failed to read cookies from driver", exc_info=True)
+        try:
+            user_agent = driver.execute_script("return navigator.userAgent")
+        except Exception:  # pragma: no cover - defensive around Selenium state
+            LOGGER.debug("Failed to read user agent from driver", exc_info=True)
+
     headers = {
-        "User-Agent": driver.execute_script("return navigator.userAgent")
-        if driver
-        else "Mozilla/5.0"
+        "User-Agent": user_agent,
+        "Accept": "application/pdf,application/octet-stream,*/*;q=0.8",
+        "Referer": "https://www.consorcioservopa.com.br/",
     }
+
     response = requests.get(pdf_url, headers=headers, cookies=cookies, timeout=timeout)
     response.raise_for_status()
-    return response.content
+
+    response_info = {
+        "status_code": str(response.status_code),
+        "content_type": response.headers.get("Content-Type"),
+        "content_disposition": response.headers.get("Content-Disposition"),
+        "url": response.url,
+    }
+
+    return response.content, response_info
 
 
-def _extract_protocol_from_pdf(driver: WebDriver, pdf_url: str, progress_callback: ProgressCb) -> Tuple[Optional[str], Dict]:
+def _extract_protocol_from_pdf(
+    driver: Optional[WebDriver], pdf_url: str, progress_callback: ProgressCb
+) -> Tuple[Optional[str], Dict]:
     metadata: Dict = {}
     try:
-        pdf_bytes = _download_pdf(driver, pdf_url)
+        pdf_bytes, response_info = _download_pdf(driver, pdf_url)
+        metadata["download"] = response_info
     except Exception as error:  # pragma: no cover - network dependent
         metadata["pdf_download_error"] = str(error)
         _notify(progress_callback, f"⚠️ Falha ao baixar PDF para protocolo: {error}")
         return None, metadata
+
+    if not pdf_bytes.strip().startswith(b"%PDF"):
+        metadata["pdf_signature_valid"] = False
+        _notify(
+            progress_callback,
+            "⚠️ Conteúdo baixado não parece ser um PDF (assinatura ausente)",
+        )
+    else:
+        metadata["pdf_signature_valid"] = True
 
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp_file:
         tmp_file.write(pdf_bytes)
@@ -150,37 +185,119 @@ def extract_protocol_from_docparser(
             "num_protocolo",
             "numero_protocolo",
         ]
-        
+
         _notify(progress_callback, f"🔍 DEBUG: Procurando protocolo em {len(candidate_keys)} campos...")
-        
+
+        json_protocol: Optional[str] = None
+        json_source: Optional[str] = None
+        previous_protocol: Optional[str] = None
+        previous_source: Optional[str] = None
+
         for key in candidate_keys:
             value = data_block.get(key)
-            if value:
-                protocol = str(value).strip()
-                source = f"json:{key}"
-                _notify(progress_callback, f"✅ DEBUG: Protocolo encontrado no campo '{key}': {protocol}")
-                break
+            if not value:
+                continue
 
-        if not protocol:
-            _notify(progress_callback, f"⚠️ DEBUG: Protocolo não encontrado nos campos esperados")
+            value_str = str(value).strip()
+            if not value_str:
+                continue
+
+            if "ant" in key.lower():
+                if not previous_protocol:
+                    previous_protocol = value_str
+                    previous_source = f"json:{key}"
+                    _notify(
+                        progress_callback,
+                        f"ℹ️ DEBUG: Protocolo anterior encontrado em '{key}': {previous_protocol}",
+                    )
+            elif not json_protocol:
+                json_protocol = value_str
+                json_source = f"json:{key}"
+                _notify(
+                    progress_callback,
+                    f"✅ DEBUG: Protocolo encontrado no campo '{key}': {json_protocol}",
+                )
+
+        if not json_protocol:
+            _notify(progress_callback, "⚠️ DEBUG: Protocolo não encontrado nos campos esperados")
             maybe_text_field = data_block.get("texto")
             if maybe_text_field:
-                protocol = _extract_number_from_text(str(maybe_text_field))
-                if protocol:
-                    source = "json:texto"
-                    _notify(progress_callback, f"✅ DEBUG: Protocolo encontrado no campo 'texto': {protocol}")
+                extracted = _extract_number_from_text(str(maybe_text_field))
+                if extracted:
+                    json_protocol = extracted
+                    json_source = "json:texto"
+                    _notify(progress_callback, f"✅ DEBUG: Protocolo encontrado no campo 'texto': {json_protocol}")
+
+        metadata.setdefault("json_candidates", {})
+        if json_protocol:
+            metadata["json_candidates"]["primary"] = {
+                "value": json_protocol,
+                "source": json_source,
+            }
+        if previous_protocol:
+            metadata["json_candidates"]["previous"] = {
+                "value": previous_protocol,
+                "source": previous_source,
+            }
+
+        protocol = json_protocol
+        source = json_source
 
         pdf_url = payload.get("url") or payload.get("pdf_url")
         if pdf_url:
             _notify(progress_callback, f"🔍 DEBUG: URL do PDF encontrada: {pdf_url[:50]}...")
 
-    if not protocol and pdf_url:
-        _notify(progress_callback, f"🔍 DEBUG: Tentando extrair do PDF...")
-        protocol, pdf_meta = _extract_protocol_from_pdf(driver, pdf_url, progress_callback)
-        metadata["pdf"] = pdf_meta
-        if protocol:
-            source = source or "pdf"
-            _notify(progress_callback, f"✅ DEBUG: Protocolo extraído do PDF: {protocol}")
+    candidate_pdf_urls = []
+    if docparser_url:
+        candidate_pdf_urls.append(docparser_url)
+    if pdf_url:
+        candidate_pdf_urls.append(pdf_url)
+
+    need_pdf_lookup = not protocol or (source and "ant" in source)
+
+    if (need_pdf_lookup or previous_protocol) and candidate_pdf_urls:
+        metadata.setdefault("pdf_attempts", [])
+        _notify(progress_callback, "🔍 DEBUG: Tentando extrair protocolo a partir do PDF...")
+
+        seen = set()
+        for candidate_url in candidate_pdf_urls:
+            if not candidate_url or candidate_url in seen:
+                continue
+            seen.add(candidate_url)
+
+            _notify(progress_callback, f"🔗 DEBUG: Baixando PDF em {candidate_url[:80]}...")
+            pdf_protocol, pdf_meta = _extract_protocol_from_pdf(
+                driver, candidate_url, progress_callback
+            )
+
+            attempt_meta = {
+                "url": candidate_url,
+                "protocol_found": bool(pdf_protocol),
+                "details": pdf_meta,
+            }
+            metadata["pdf_attempts"].append(attempt_meta)
+
+            if pdf_protocol:
+                protocol = pdf_protocol
+                pdf_url = candidate_url
+                source = source or (
+                    "pdf:docparser_view" if candidate_url == docparser_url else "pdf"
+                )
+                _notify(
+                    progress_callback,
+                    f"✅ DEBUG: Protocolo extraído do PDF ({candidate_url[:50]}...): {protocol}",
+                )
+                break
+        else:
+            _notify(progress_callback, "⚠️ DEBUG: Não foi possível extrair protocolo via PDF")
+
+    if not protocol and previous_protocol:
+        protocol = previous_protocol
+        source = previous_source
+        _notify(
+            progress_callback,
+            f"ℹ️ DEBUG: Utilizando protocolo anterior como fallback: {protocol}",
+        )
 
     if protocol:
         _notify(progress_callback, f"📑 Protocolo capturado: {protocol}")
