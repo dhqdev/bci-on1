@@ -231,3 +231,163 @@ class TodoistRestAPI:
             if progress_callback:
                 progress_callback(f"❌ {error_msg}")
             raise Exception(error_msg)
+    
+    def extract_lances_board(self, project_dia8: str = "Lances Servopa Outubro Dia 8",
+                            project_dia16: str = "Lances Servopa Outubro Dia 16",
+                            progress_callback=None) -> Dict:
+        """
+        Extrai dados dos boards de lances do Servopa via API REST.
+        Organiza por grupos (colunas/seções) e cotas (tarefas).
+        
+        Args:
+            project_dia8: Nome do projeto do dia 8
+            project_dia16: Nome do projeto do dia 16
+            progress_callback: Função para reportar progresso
+            
+        Returns:
+            Dict com estrutura: {
+                'dia08': [
+                    {
+                        'grupo': '1550',
+                        'title': '1550 - dia 8',
+                        'tasks': [
+                            {
+                                'cota': '1874',
+                                'nome': 'Gil Zanobia',
+                                'task_id': 'xxx',
+                                'is_completed': False
+                            },
+                            ...
+                        ]
+                    },
+                    ...
+                ],
+                'dia16': [...]
+            }
+        """
+        try:
+            result = {'dia08': [], 'dia16': []}
+            
+            # Processa dia 8
+            if progress_callback:
+                progress_callback(f"🔍 Buscando projeto '{project_dia8}'...")
+            
+            project_8 = self.get_project_by_name(project_dia8)
+            if project_8:
+                if progress_callback:
+                    progress_callback(f"✅ Projeto encontrado: {project_dia8}")
+                    progress_callback("📂 Buscando seções (grupos)...")
+                
+                sections_8 = self.get_sections(project_8['id'])
+                
+                for section in sections_8:
+                    section_title = section['name']
+                    
+                    # Extrai número do grupo (primeiro número do título)
+                    import re
+                    grupo_match = re.match(r'(\d+)', section_title)
+                    grupo_number = grupo_match.group(1) if grupo_match else section_title
+                    
+                    if progress_callback:
+                        progress_callback(f"📂 Processando grupo: {section_title}")
+                    
+                    # Busca tarefas da seção
+                    tasks = self.get_tasks(project_id=project_8['id'], section_id=section['id'])
+                    
+                    tasks_list = []
+                    for task in tasks:
+                        # Extrai cota (content) e nome (description)
+                        cota = task['content']
+                        nome = task.get('description', 'Sem nome')
+                        
+                        tasks_list.append({
+                            'cota': cota,
+                            'nome': nome,
+                            'task_id': task['id'],
+                            'is_completed': task.get('is_completed', False)
+                        })
+                    
+                    result['dia08'].append({
+                        'grupo': grupo_number,
+                        'title': section_title,
+                        'tasks': tasks_list
+                    })
+                    
+                    if progress_callback:
+                        progress_callback(f"   └─ {len(tasks_list)} cotas encontradas")
+            else:
+                if progress_callback:
+                    progress_callback(f"⚠️ Projeto '{project_dia8}' não encontrado")
+            
+            # Processa dia 16
+            if progress_callback:
+                progress_callback(f"🔍 Buscando projeto '{project_dia16}'...")
+            
+            project_16 = self.get_project_by_name(project_dia16)
+            if project_16:
+                if progress_callback:
+                    progress_callback(f"✅ Projeto encontrado: {project_dia16}")
+                    progress_callback("📂 Buscando seções (grupos)...")
+                
+                sections_16 = self.get_sections(project_16['id'])
+                
+                for section in sections_16:
+                    section_title = section['name']
+                    
+                    # Extrai número do grupo
+                    import re
+                    grupo_match = re.match(r'(\d+)', section_title)
+                    grupo_number = grupo_match.group(1) if grupo_match else section_title
+                    
+                    if progress_callback:
+                        progress_callback(f"📂 Processando grupo: {section_title}")
+                    
+                    # Busca tarefas da seção
+                    tasks = self.get_tasks(project_id=project_16['id'], section_id=section['id'])
+                    
+                    tasks_list = []
+                    for task in tasks:
+                        cota = task['content']
+                        nome = task.get('description', 'Sem nome')
+                        
+                        tasks_list.append({
+                            'cota': cota,
+                            'nome': nome,
+                            'task_id': task['id'],
+                            'is_completed': task.get('is_completed', False)
+                        })
+                    
+                    result['dia16'].append({
+                        'grupo': grupo_number,
+                        'title': section_title,
+                        'tasks': tasks_list
+                    })
+                    
+                    if progress_callback:
+                        progress_callback(f"   └─ {len(tasks_list)} cotas encontradas")
+            else:
+                if progress_callback:
+                    progress_callback(f"⚠️ Projeto '{project_dia16}' não encontrado")
+            
+            # Resumo
+            total_grupos_8 = len(result['dia08'])
+            total_cotas_8 = sum(len(g['tasks']) for g in result['dia08'])
+            total_grupos_16 = len(result['dia16'])
+            total_cotas_16 = sum(len(g['tasks']) for g in result['dia16'])
+            
+            if progress_callback:
+                progress_callback(f"✅ Dia 08: {total_grupos_8} grupos, {total_cotas_8} cotas")
+                progress_callback(f"✅ Dia 16: {total_grupos_16} grupos, {total_cotas_16} cotas")
+            
+            return result
+            
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"Erro HTTP na API do Todoist: {e}"
+            if progress_callback:
+                progress_callback(f"❌ {error_msg}")
+            raise Exception(error_msg)
+        except Exception as e:
+            error_msg = f"Erro ao extrair lances: {e}"
+            if progress_callback:
+                progress_callback(f"❌ {error_msg}")
+            raise Exception(error_msg)

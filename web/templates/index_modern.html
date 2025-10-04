@@ -4,26 +4,95 @@
 
 {% block extra_css %}
 <style>
-    .stats-grid {
+    /* Animações suaves */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.8;
+        }
+    }
+    
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+    
+    /* Grid de 2 colunas: Boletos | Lances */
+    .dashboard-sections {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        margin-bottom: 40px;
+    }
+    
+    .section-group {
+        display: flex;
+        flex-direction: column;
         gap: 20px;
-        margin-bottom: 30px;
+    }
+    
+    .section-header-custom {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 3px solid var(--border-color);
+    }
+    
+    .section-header-custom i {
+        font-size: 24px;
+        color: var(--accent);
+    }
+    
+    .section-header-custom h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
     }
     
     .stat-card {
-        background: var(--bg-primary);
-        border-radius: 12px;
-        padding: 24px;
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        border-radius: 16px;
+        padding: 28px;
         border: 1px solid var(--border-color);
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
+        animation: fadeInUp 0.5s ease-out backwards;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
     }
     
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.15s; }
+    .stat-card:nth-child(3) { animation-delay: 0.2s; }
+    .stat-card:nth-child(4) { animation-delay: 0.25s; }
+    .stat-card:nth-child(5) { animation-delay: 0.3s; }
+    .stat-card:nth-child(6) { animation-delay: 0.35s; }
+    .stat-card:nth-child(7) { animation-delay: 0.4s; }
+    
     .stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        border-color: var(--accent);
     }
     
     .stat-card::before {
@@ -32,62 +101,92 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+        height: 5px;
+        background: linear-gradient(90deg, 
+            var(--accent) 0%, 
+            #667eea 25%,
+            #764ba2 50%,
+            #667eea 75%,
+            var(--accent) 100%);
+        background-size: 200% 100%;
+        animation: shimmer 3s linear infinite;
     }
     
     .stat-card.success::before {
-        background: linear-gradient(135deg, var(--success) 0%, #38a169 100%);
+        background: linear-gradient(90deg, 
+            #48bb78 0%, 
+            #38a169 50%,
+            #48bb78 100%);
+        background-size: 200% 100%;
     }
     
     .stat-card.warning::before {
-        background: linear-gradient(135deg, var(--warning) 0%, #dd6b20 100%);
+        background: linear-gradient(90deg, 
+            #ed8936 0%, 
+            #dd6b20 50%,
+            #ed8936 100%);
+        background-size: 200% 100%;
     }
     
     .stat-card.danger::before {
-        background: linear-gradient(135deg, var(--danger) 0%, #e53e3e 100%);
+        background: linear-gradient(90deg, 
+            #fc8181 0%, 
+            #e53e3e 50%,
+            #fc8181 100%);
+        background-size: 200% 100%;
     }
     
     .stat-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
     }
     
     .stat-label {
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 13px;
+        font-weight: 600;
         color: var(--text-secondary);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
     }
     
     .stat-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
-        background: var(--bg-secondary);
+        font-size: 22px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0.2) 100%);
         color: var(--accent);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover .stat-icon {
+        transform: rotate(10deg) scale(1.1);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(102, 126, 234, 0.3) 100%);
     }
     
     .stat-value {
-        font-size: 32px;
-        font-weight: 700;
+        font-size: 36px;
+        font-weight: 800;
         color: var(--text-primary);
-        margin-bottom: 8px;
+        margin-bottom: 12px;
+        background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
     
     .stat-change {
         font-size: 13px;
-        font-weight: 500;
+        font-weight: 600;
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
+        padding: 4px 0;
     }
     
     .stat-change.positive {
@@ -181,50 +280,111 @@
     
     .quick-actions {
         display: grid;
-        gap: 12px;
+        gap: 16px;
     }
     
     .quick-action-btn {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 16px;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
+        gap: 16px;
+        padding: 20px;
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+        border: 2px solid transparent;
+        border-radius: 14px;
         text-decoration: none;
         color: var(--text-primary);
-        transition: all 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .quick-action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(102, 126, 234, 0.1) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .quick-action-btn:hover::before {
+        opacity: 1;
     }
     
     .quick-action-btn:hover {
-        background: var(--accent);
-        color: white;
         border-color: var(--accent);
-        transform: translateX(4px);
+        transform: translateX(8px) scale(1.02);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
     }
     
     .quick-action-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
-        background: var(--bg-primary);
+        font-size: 20px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(102, 126, 234, 0.25) 100%);
+        color: var(--accent);
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .quick-action-btn:hover .quick-action-icon {
+        transform: rotate(10deg) scale(1.1);
+        background: linear-gradient(135deg, #fff 0%, #f7fafc 100%);
     }
     
     .quick-action-text {
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 600;
+        position: relative;
+        z-index: 1;
     }
     
+    /* Cores personalizadas para ícones */
+    .stat-card .stat-icon.boletos {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(102, 126, 234, 0.25) 100%);
+        color: #667eea;
+    }
+    
+    .stat-card.success .stat-icon {
+        background: linear-gradient(135deg, rgba(72, 187, 120, 0.15) 0%, rgba(72, 187, 120, 0.25) 100%);
+        color: var(--success);
+    }
+    
+    .stat-card.warning .stat-icon {
+        background: linear-gradient(135deg, rgba(237, 137, 54, 0.15) 0%, rgba(237, 137, 54, 0.25) 100%);
+        color: var(--warning);
+    }
+    
+    .stat-card.danger .stat-icon {
+        background: linear-gradient(135deg, rgba(252, 129, 129, 0.15) 0%, rgba(252, 129, 129, 0.25) 100%);
+        color: var(--danger);
+    }
+    
+    .stat-card .stat-icon.lances {
+        background: linear-gradient(135deg, rgba(159, 122, 234, 0.15) 0%, rgba(159, 122, 234, 0.25) 100%);
+        color: #9f7aea;
+    }
+    
+    /* Responsividade */
     @media (max-width: 968px) {
+        .dashboard-sections {
+            grid-template-columns: 1fr;
+            gap: 32px;
+        }
+        
         .content-grid {
             grid-template-columns: 1fr;
         }
+    }
     }
 </style>
 {% endblock %}
@@ -239,108 +399,125 @@
         </div>
     </div>
     
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-label">Boletos Totais</span>
-                <div class="stat-icon">
-                    <i class="fas fa-file-invoice"></i>
+    <!-- Dashboard Sections: Boletos | Lances -->
+    <div class="dashboard-sections">
+        <!-- BOLETOS -->
+        <div class="section-group">
+            <div class="section-header-custom">
+                <i class="fas fa-file-invoice"></i>
+                <h2>Boletos</h2>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Boletos Totais</span>
+                    <div class="stat-icon boletos">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="totalBoletos">70</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>12% vs mês anterior</span>
                 </div>
             </div>
-            <div class="stat-value" id="totalBoletos">70</div>
-            <div class="stat-change positive">
-                <i class="fas fa-arrow-up"></i>
-                <span>12% vs mês anterior</span>
+            
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <span class="stat-label">Concluídos</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="boletosCompletos">0</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>0% de conclusão</span>
+                </div>
+            </div>
+            
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <span class="stat-label">Pendentes</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="boletosPendentes">70</div>
+                <div class="stat-change">
+                    <i class="fas fa-minus"></i>
+                    <span>Sem alteração</span>
+                </div>
             </div>
         </div>
         
-        <div class="stat-card success">
-            <div class="stat-header">
-                <span class="stat-label">Concluídos</span>
-                <div class="stat-icon" style="color: var(--success)">
-                    <i class="fas fa-check-circle"></i>
+        <!-- LANCES -->
+        <div class="section-group">
+            <div class="section-header-custom">
+                <i class="fas fa-gavel"></i>
+                <h2>Lances</h2>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Lances Totais</span>
+                    <div class="stat-icon lances">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="totalLances">0</div>
+                <div class="stat-change">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Sincronizado</span>
                 </div>
             </div>
-            <div class="stat-value" id="boletosCompletos">0</div>
-            <div class="stat-change positive">
-                <i class="fas fa-arrow-up"></i>
-                <span>0% de conclusão</span>
+            
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <span class="stat-label">Concluídos</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="lancesCompletos">0</div>
+                <div class="stat-change positive">
+                    <span>Progresso</span>
+                </div>
+            </div>
+            
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <span class="stat-label">Pendentes</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="lancesPendentes">0</div>
+                <div class="stat-change">
+                    <span>Aguardando</span>
+                </div>
             </div>
         </div>
-        
-        <div class="stat-card warning">
-            <div class="stat-header">
-                <span class="stat-label">Pendentes</span>
-                <div class="stat-icon" style="color: var(--warning)">
-                    <i class="fas fa-clock"></i>
-                </div>
-            </div>
-            <div class="stat-value" id="boletosPendentes">70</div>
-            <div class="stat-change">
-                <i class="fas fa-minus"></i>
-                <span>Sem alteração</span>
+    </div>
+    
+    <!-- Automações Ativas (fullwidth) -->
+    <div class="stat-card danger" style="margin-bottom: 32px;">
+        <div class="stat-header">
+            <span class="stat-label">Automações Ativas</span>
+            <div class="stat-icon">
+                <i class="fas fa-robot"></i>
             </div>
         </div>
-        
-        <div class="stat-card danger">
-            <div class="stat-header">
-                <span class="stat-label">Automações Ativas</span>
-                <div class="stat-icon" style="color: var(--danger)">
-                    <i class="fas fa-robot"></i>
-                </div>
-            </div>
-            <div class="stat-value" id="automacoesAtivas">2</div>
-            <div class="stat-change">
-                <span>Dia 8 e Dia 16</span>
-            </div>
+        <div class="stat-value" id="automacoesAtivas">2</div>
+        <div class="stat-change">
+            <span>Dia 8 e Dia 16</span>
         </div>
     </div>
     
     <!-- Content Grid -->
     <div class="content-grid">
-        <!-- Recent Activity -->
-        <div class="card-modern">
-            <div class="section-header" style="margin-bottom: 16px;">
-                <h3 style="font-size: 16px; font-weight: 700; margin: 0;">Atividades Recentes</h3>
-                <a href="/history" style="color: var(--accent); font-size: 13px; text-decoration: none;">Ver todas</a>
-            </div>
-            
-            <div id="recentActivity">
-                <div class="activity-item">
-                    <div class="activity-icon info">
-                        <i class="fas fa-sync-alt"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">Sistema iniciado</div>
-                        <div class="activity-time">Há alguns instantes</div>
-                    </div>
-                </div>
-                
-                <div class="activity-item">
-                    <div class="activity-icon success">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">Credenciais verificadas</div>
-                        <div class="activity-time">Hoje às 10:30</div>
-                    </div>
-                </div>
-                
-                <div class="activity-item">
-                    <div class="activity-icon warning">
-                        <i class="fas fa-file-invoice"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">70 boletos carregados</div>
-                        <div class="activity-time">Hoje às 09:15</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <!-- Quick Actions -->
-        <div class="card-modern">
+        <div class="card-modern" style="grid-column: 1 / -1;">
             <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Ações Rápidas</h3>
             
             <div class="quick-actions">
@@ -349,6 +526,13 @@
                         <i class="fas fa-file-invoice"></i>
                     </div>
                     <div class="quick-action-text">Ver Boletos</div>
+                </a>
+                
+                <a href="/lances" class="quick-action-btn">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                    <div class="quick-action-text">Ver Lances</div>
                 </a>
                 
                 <a href="/automation/dia8" class="quick-action-btn">
@@ -384,29 +568,65 @@
 </div>
 
 <script>
-    // Carregar estatísticas dos boletos
+    // Carregar estatísticas dos boletos e lances
     async function loadStats() {
         try {
             // Busca dados dos boletos
-            const response = await fetch('/api/boletos');
-            const data = await response.json();
+            const boletosResponse = await fetch('/api/boletos');
+            const boletosData = await boletosResponse.json();
             
-            if (data.success && data.data) {
-                const dia08 = data.data.dia08 || [];
-                const dia16 = data.data.dia16 || [];
+            if (boletosData.success && boletosData.data) {
+                const dia08 = boletosData.data.dia08 || [];
+                const dia16 = boletosData.data.dia16 || [];
                 
-                // Calcula totais
+                // Calcula totais de boletos
                 const total = dia08.length + dia16.length;
                 const completos = dia08.filter(b => b.is_completed).length + 
                                  dia16.filter(b => b.is_completed).length;
                 const pendentes = total - completos;
                 
-                // Atualiza cards
+                // Atualiza cards de boletos
                 document.getElementById('totalBoletos').textContent = total;
                 document.getElementById('boletosCompletos').textContent = completos;
                 document.getElementById('boletosPendentes').textContent = pendentes;
                 
-                console.log(`📊 Stats: ${total} total, ${completos} completos, ${pendentes} pendentes`);
+                console.log(`📊 Boletos: ${total} total, ${completos} completos, ${pendentes} pendentes`);
+            }
+            
+            // Busca dados dos lances
+            const lancesResponse = await fetch('/api/lances');
+            const lancesData = await lancesResponse.json();
+            
+            if (lancesData.success && lancesData.data) {
+                const dia08Lances = lancesData.data.dia08 || [];
+                const dia16Lances = lancesData.data.dia16 || [];
+                
+                // Conta todas as tasks dentro dos grupos
+                let totalLances = 0;
+                let completosLances = 0;
+                
+                for (let grupo of dia08Lances) {
+                    if (grupo.tasks) {
+                        totalLances += grupo.tasks.length;
+                        completosLances += grupo.tasks.filter(t => t.is_completed).length;
+                    }
+                }
+                
+                for (let grupo of dia16Lances) {
+                    if (grupo.tasks) {
+                        totalLances += grupo.tasks.length;
+                        completosLances += grupo.tasks.filter(t => t.is_completed).length;
+                    }
+                }
+                
+                const pendentesLances = totalLances - completosLances;
+                
+                // Atualiza cards de lances
+                document.getElementById('totalLances').textContent = totalLances;
+                document.getElementById('lancesCompletos').textContent = completosLances;
+                document.getElementById('lancesPendentes').textContent = pendentesLances;
+                
+                console.log(`🎯 Lances: ${totalLances} total, ${completosLances} completos, ${pendentesLances} pendentes`);
             }
         } catch (error) {
             console.error('Erro ao carregar estatísticas:', error);

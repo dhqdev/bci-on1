@@ -136,24 +136,22 @@ function connectWebSocket() {
     socket.off('automation_status');
     
     socket.on('connect', function() {
+        console.log('🔌 WebSocket conectado');
         addLog('✅ Conectado ao servidor', 'success');
         
-        // Verifica status atual da automação
-        // MAS respeita se usuário está tentando parar OU se acabou de trocar de aba
-        if (!window.isStopping && !window.tabSwitched) {
-            fetch(`/api/automation/status/${dia}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.running) {
-                        updateAutomationStatus(true);
-                    } else {
-                        updateAutomationStatus(false);
-                    }
-                })
-                .catch(err => console.error('Erro ao verificar status:', err));
-        } else {
-            console.log('⏸️ Verificação de status bloqueada (isStopping ou tabSwitched)');
-        }
+        // IMPORTANTE: Sempre verifica status real do servidor
+        // Isso garante que após trocar de aba, o botão reflete o estado correto
+        fetch(`/api/automation/status/${dia}`)
+            .then(res => res.json())
+            .then(data => {
+                console.log('📊 Status atual do servidor:', data);
+                updateAutomationStatus(data.running);
+            })
+            .catch(err => {
+                console.error('❌ Erro ao verificar status:', err);
+                // Em caso de erro, assume parado
+                updateAutomationStatus(false);
+            });
     });
     
     socket.on('log', function(data) {
@@ -233,20 +231,22 @@ function updateAutomationStatus(running) {
     const btnStart = document.getElementById('btn-start');
     const btnStop = document.getElementById('btn-stop');
     
+    console.log('🔄 updateAutomationStatus chamado:', {running, isStopping: window.isStopping});
+    
     if (running) {
         badge.className = 'status-badge running';
         badge.innerHTML = '<i class="fas fa-circle pulse"></i> Executando';
         btnStart.disabled = true;
         btnStop.disabled = false;
+        // Limpa flag de stopping se estava tentando parar
+        window.isStopping = false;
     } else {
         badge.className = 'status-badge stopped';
         badge.innerHTML = '<i class="fas fa-circle"></i> Parado';
         btnStart.disabled = false;
-        // IMPORTANTE: Só desabilita o botão parar se realmente parou
-        // Não desabilita se ainda está tentando parar
-        if (!window.isStopping) {
-            btnStop.disabled = true;
-        }
+        btnStop.disabled = true;
+        // Limpa flag de stopping
+        window.isStopping = false;
     }
 }
 
@@ -278,50 +278,56 @@ async function startAutomation() {
 
 // Para automação
 async function stopAutomation() {
+    console.log('🛑 stopAutomation iniciado');
+    
+    // Desabilita botão imediatamente para evitar cliques duplos
+    const btnStop = document.getElementById('btn-stop');
+    const originalHTML = btnStop.innerHTML;
+    btnStop.disabled = true;
+    btnStop.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Parando...';
+    
     try {
-        // Marca que está tentando parar
         window.isStopping = true;
-        
-        addLog('⏹️ Parando automação...', 'warning');
+        addLog('⏹️ Enviando comando para parar...', 'warning');
         
         const response = await fetch(`/api/automation/stop/${dia}`, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
+        console.log('📥 Resposta do servidor:', data);
         
         if (data.success) {
             addLog('✅ ' + data.message, 'success');
-            // Aguarda 2 segundos para garantir que automação parou
+            
+            // Força atualização do status para parado
+            updateAutomationStatus(false);
+            
+            // Limpa flag após 1 segundo
             setTimeout(() => {
                 window.isStopping = false;
-                updateAutomationStatus(false);
-            }, 2000);
+            }, 1000);
         } else {
             addLog('❌ Erro: ' + data.error, 'error');
             window.isStopping = false;
+            btnStop.disabled = false;
+            btnStop.innerHTML = originalHTML;
         }
     } catch (error) {
-        addLog('❌ Erro ao parar: ' + error, 'error');
+        console.error('❌ Erro ao parar:', error);
+        addLog('❌ Erro ao parar: ' + error.message, 'error');
         window.isStopping = false;
+        btnStop.disabled = false;
+        btnStop.innerHTML = originalHTML;
     }
 }
-
-// Previne paradas ao trocar de aba
-document.addEventListener('visibilitychange', function() {
-    if (document.hidden) {
-        // Usuário trocou de aba - marca para não verificar status ao voltar
-        console.log('🔒 Aba ficou invisível - bloqueando verificações automáticas');
-        window.tabSwitched = true;
-    } else {
-        // Usuário voltou para a aba
-        console.log('👁️ Aba ficou visível - desbloqueando após 3s');
-        // Aguarda 3 segundos antes de permitir verificações novamente
-        setTimeout(() => {
-            window.tabSwitched = false;
-        }, 3000);
-    }
-});
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {

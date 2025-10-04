@@ -155,6 +155,16 @@ history_dia8.json
 history*.json
 *.history
 
+# Data files (user-specific data - keep templates in repo)
+# Note: .template and .example files are tracked
+boletos_data.json
+lances_data.json
+evolution_config.json
+
+# Backup files
+*.backup
+*.bak
+
 # OS files
 .DS_Store
 Thumbs.db

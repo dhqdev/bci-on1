@@ -1,0 +1,7 @@
+{
+  "api": {
+    "base_url": "https://sua-url-evolution-api.com",
+    "instance_name": "nome-da-sua-instancia",
+    "api_key": "SUA-API-KEY-AQUI"
+  }
+}

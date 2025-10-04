@@ -1000,7 +1000,12 @@
                 <a href="/boletos" class="sidebar-menu-item {% if '/boletos' in request.path %}active{% endif %}">
                     <i class="fas fa-file-invoice"></i>
                     <span>Boletos</span>
-                    <span class="sidebar-menu-badge" id="boletos-badge">0</span>
+                    <span class="sidebar-menu-badge" id="boletos-badge"></span>
+                </a>
+                <a href="/lances" class="sidebar-menu-item {% if '/lances' in request.path %}active{% endif %}">
+                    <i class="fas fa-gavel"></i>
+                    <span>Lances</span>
+                    <span class="sidebar-menu-badge" id="lances-badge"></span>
                 </a>
             </div>
             
@@ -1039,11 +1044,6 @@
             <button class="navbar-toggle" id="sidebarToggle">
                 <i class="fas fa-bars"></i>
             </button>
-            
-            <div class="navbar-search">
-                <i class="fas fa-search"></i>
-                <input type="text" id="sidebarSearch" placeholder="Buscar...">
-            </div>
         </div>
         
         <div class="navbar-right">
@@ -1376,6 +1376,7 @@
             fetch('/api/boletos')
                 .then(res => res.json())
                 .then(data => {
+                    console.log('📊 Dados boletos recebidos:', data);
                     if (data.success && data.data) {
                         // Conta apenas boletos NÃO concluídos (pendentes)
                         let pendentes = 0;
@@ -1388,41 +1389,82 @@
                             pendentes += data.data.dia16.filter(b => !b.is_completed).length;
                         }
                         
+                        console.log('🔢 Boletos pendentes:', pendentes);
+                        
                         const badge = document.getElementById('boletos-badge');
                         if (badge) {
                             badge.textContent = pendentes;
-                            
-                            // Muda cor do badge baseado na quantidade
-                            if (pendentes === 0) {
-                                badge.className = 'badge bg-success';
-                            } else if (pendentes <= 5) {
-                                badge.className = 'badge bg-warning';
-                            } else {
-                                badge.className = 'badge bg-danger';
-                            }
+                            badge.className = 'sidebar-menu-badge';
+                            console.log('✅ Badge boletos atualizado:', pendentes);
+                        } else {
+                            console.error('❌ Elemento boletos-badge não encontrado');
                         }
                     }
                 })
-                .catch(err => console.error('Erro ao atualizar badge:', err));
+                .catch(err => console.error('Erro ao atualizar badge de boletos:', err));
         }
         
-        // Atualiza badge ao carregar página
-        updateBoletosBadge();
+        // ========== ATUALIZAR BADGE DE LANCES ==========
+        function updateLancesBadge() {
+            fetch('/api/lances')
+                .then(res => res.json())
+                .then(data => {
+                    console.log('📊 Dados lances recebidos:', data);
+                    if (data.success && data.data) {
+                        // Conta apenas lances NÃO concluídos (pendentes)
+                        let pendentes = 0;
+                        
+                        if (data.data.dia08) {
+                            for (let grupo of data.data.dia08) {
+                                if (grupo.tasks) {
+                                    pendentes += grupo.tasks.filter(t => !t.is_completed).length;
+                                }
+                            }
+                        }
+                        
+                        if (data.data.dia16) {
+                            for (let grupo of data.data.dia16) {
+                                if (grupo.tasks) {
+                                    pendentes += grupo.tasks.filter(t => !t.is_completed).length;
+                                }
+                            }
+                        }
+                        
+                        console.log('🔢 Lances pendentes:', pendentes);
+                        
+                        const badge = document.getElementById('lances-badge');
+                        if (badge) {
+                            badge.textContent = pendentes;
+                            badge.className = 'sidebar-menu-badge';
+                            console.log('✅ Badge lances atualizado:', pendentes);
+                        } else {
+                            console.error('❌ Elemento lances-badge não encontrado');
+                        }
+                    }
+                })
+                .catch(err => console.error('Erro ao atualizar badge de lances:', err));
+        }
         
-        // Atualiza badge a cada 30 segundos
-        setInterval(updateBoletosBadge, 30000);
+        // Atualiza badges ao carregar página
+        updateBoletosBadge();
+        updateLancesBadge();
+        
+        // Atualiza badges a cada 5 segundos (tempo real com a sincronização)
+        setInterval(updateBoletosBadge, 5000);
+        setInterval(updateLancesBadge, 5000);
         
         // Função global para notificar dashboard sobre mudanças
         window.notifyDashboardUpdate = function() {
-            // Atualiza badge
+            // Atualiza badges
             updateBoletosBadge();
+            updateLancesBadge();
             
             // Se estiver na página principal, atualiza stats
             if (typeof loadStats === 'function') {
                 loadStats();
             }
         };
-        // ========== FIM BADGE DE BOLETOS ==========
+        // ========== FIM BADGE DE BOLETOS E LANCES ==========
     </script>
     
     {% block extra_js %}{% endblock %}

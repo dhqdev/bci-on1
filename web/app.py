@@ -159,6 +159,12 @@ def boletos():
     """Página de Kanban de Boletos"""
     return render_template('boletos.html')
 
+@app.route('/lances')
+@login_required
+def lances():
+    """Página de Kanban de Lances Servopa"""
+    return render_template('lances.html')
+
 # ========== API REST ==========
 
 @app.route('/api/stats')
@@ -437,6 +443,278 @@ def api_boletos_sync():
         print(f"Erro na sincronização: {error_details}")
         return jsonify({'success': False, 'error': f'Erro na sincronização: {str(e)}'})
 
+# ========== ROTAS DE LANCES SERVOPA ==========
+
+@app.route('/api/lances', methods=['GET'])
+def api_lances():
+    """Retorna dados dos lances"""
+    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
+    
+    try:
+        if os.path.exists(filepath):
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return jsonify({'success': True, 'data': data})
+        else:
+            return jsonify({'success': True, 'data': {'dia08': [], 'dia16': []}})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/lances/import', methods=['POST'])
+def api_lances_import():
+    """Importa lances do Todoist via API REST"""
+    try:
+        from utils.todoist_rest_api import TodoistRestAPI
+        
+        # Token do Todoist
+        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
+        
+        # Emite progresso via WebSocket
+        def emit_progress(message):
+            socketio.emit('lances_progress', {'message': message})
+        
+        emit_progress('🔄 Conectando à API do Todoist...')
+        
+        # Cria cliente da API
+        api = TodoistRestAPI(TODOIST_TOKEN)
+        
+        # Extrai dados via API REST
+        lances_data = api.extract_lances_board(
+            project_dia8="Lances Servopa Outubro Dia 8",
+            project_dia16="Lances Servopa Outubro Dia 16",
+            progress_callback=emit_progress
+        )
+        
+        # Salva dados
+        clean_data = {
+            'dia08': [],
+            'dia16': [],
+            'last_import': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        # Copia dados do dia 8 (com grupos/seções)
+        for grupo in lances_data['dia08']:
+            clean_grupo = {
+                'grupo': grupo['grupo'],
+                'title': grupo['title'],
+                'tasks': []
+            }
+            for task in grupo['tasks']:
+                clean_grupo['tasks'].append({
+                    'cota': task['cota'],
+                    'nome': task['nome'],
+                    'task_id': task['task_id'],
+                    'is_completed': task.get('is_completed', False)
+                })
+            clean_data['dia08'].append(clean_grupo)
+        
+        # Copia dados do dia 16
+        for grupo in lances_data['dia16']:
+            clean_grupo = {
+                'grupo': grupo['grupo'],
+                'title': grupo['title'],
+                'tasks': []
+            }
+            for task in grupo['tasks']:
+                clean_grupo['tasks'].append({
+                    'cota': task['cota'],
+                    'nome': task['nome'],
+                    'task_id': task['task_id'],
+                    'is_completed': task.get('is_completed', False)
+                })
+            clean_data['dia16'].append(clean_grupo)
+        
+        lances_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
+        
+        with open(lances_filepath, 'w', encoding='utf-8') as f:
+            json.dump(clean_data, f, indent=2, ensure_ascii=False)
+        
+        emit_progress('✅ Importação concluída!')
+        
+        total_grupos_8 = len(clean_data['dia08'])
+        total_cotas_8 = sum(len(g['tasks']) for g in clean_data['dia08'])
+        total_grupos_16 = len(clean_data['dia16'])
+        total_cotas_16 = sum(len(g['tasks']) for g in clean_data['dia16'])
+        
+        return jsonify({
+            'success': True,
+            'message': f'Importado: Dia 08 ({total_grupos_8} grupos, {total_cotas_8} cotas) | Dia 16 ({total_grupos_16} grupos, {total_cotas_16} cotas)',
+            'data': clean_data
+        })
+            
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Erro na importação de lances: {error_details}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/lances/toggle/<task_id>', methods=['POST'])
+def api_lances_toggle(task_id):
+    """Marca/desmarca uma tarefa de lance no Todoist"""
+    try:
+        from utils.todoist_rest_api import TodoistRestAPI
+        
+        # Token do Todoist
+        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
+        
+        data = request.json
+        is_completed = data.get('is_completed', False)
+        
+        # Cria cliente da API
+        api = TodoistRestAPI(TODOIST_TOKEN)
+        
+        if is_completed:
+            # Marca como concluída
+            api.close_task(task_id)
+        else:
+            # Reabre tarefa
+            api.reopen_task(task_id)
+        
+        # Atualiza arquivo local também
+        lances_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
+        if os.path.exists(lances_filepath):
+            with open(lances_filepath, 'r', encoding='utf-8') as f:
+                lances_data = json.load(f)
+            
+            # Atualiza status no cache local (busca em grupos)
+            for dia_key in ['dia08', 'dia16']:
+                if dia_key in lances_data:
+                    for grupo in lances_data[dia_key]:
+                        if 'tasks' in grupo:
+                            for task in grupo['tasks']:
+                                if task.get('task_id') == task_id:
+                                    task['is_completed'] = is_completed
+                                    break
+            
+            with open(lances_filepath, 'w', encoding='utf-8') as f:
+                json.dump(lances_data, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Lance atualizado no Todoist'
+        })
+            
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Erro ao toggle lance: {error_details}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/lances/sync', methods=['POST'])
+def api_lances_sync():
+    """Sincroniza status dos lances do Todoist para o site (bidirecional)"""
+    try:
+        from utils.todoist_rest_api import TodoistRestAPI
+        
+        # Token do Todoist
+        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
+        
+        # Carrega dados locais
+        lances_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
+        if not os.path.exists(lances_filepath):
+            return jsonify({'success': False, 'error': 'Nenhum dado local encontrado'})
+        
+        try:
+            with open(lances_filepath, 'r', encoding='utf-8') as f:
+                local_data = json.load(f)
+        except json.JSONDecodeError as e:
+            return jsonify({'success': False, 'error': f'Erro ao ler dados locais: {str(e)}'})
+        
+        # Busca dados atualizados do Todoist
+        api = TodoistRestAPI(TODOIST_TOKEN)
+        
+        try:
+            updated_data = api.extract_lances_board(
+                project_dia8="Lances Servopa Outubro Dia 8",
+                project_dia16="Lances Servopa Outubro Dia 16"
+            )
+        except Exception as e:
+            return jsonify({'success': False, 'error': f'Erro ao buscar dados do Todoist: {str(e)}'})
+        
+        # Conta mudanças
+        changes = 0
+        for dia_key in ['dia08', 'dia16']:
+            # Cria dicionário de tasks por task_id (local)
+            local_tasks = {}
+            for grupo in local_data.get(dia_key, []):
+                for task in grupo.get('tasks', []):
+                    if task.get('task_id'):
+                        local_tasks[task['task_id']] = task
+            
+            # Cria dicionário de tasks por task_id (updated)
+            updated_tasks = {}
+            for grupo in updated_data.get(dia_key, []):
+                for task in grupo.get('tasks', []):
+                    if task.get('task_id'):
+                        updated_tasks[task['task_id']] = task
+            
+            # Compara mudanças
+            for task_id, updated_task in updated_tasks.items():
+                if task_id in local_tasks:
+                    local_task = local_tasks[task_id]
+                    if local_task.get('is_completed') != updated_task.get('is_completed'):
+                        changes += 1
+        
+        # Salva dados atualizados
+        clean_data = {
+            'dia08': [],
+            'dia16': [],
+            'last_sync': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        # Copia dados do dia 8
+        for grupo in updated_data['dia08']:
+            clean_grupo = {
+                'grupo': grupo['grupo'],
+                'title': grupo['title'],
+                'tasks': []
+            }
+            for task in grupo['tasks']:
+                clean_grupo['tasks'].append({
+                    'cota': task['cota'],
+                    'nome': task['nome'],
+                    'task_id': task['task_id'],
+                    'is_completed': task.get('is_completed', False)
+                })
+            clean_data['dia08'].append(clean_grupo)
+        
+        # Copia dados do dia 16
+        for grupo in updated_data['dia16']:
+            clean_grupo = {
+                'grupo': grupo['grupo'],
+                'title': grupo['title'],
+                'tasks': []
+            }
+            for task in grupo['tasks']:
+                clean_grupo['tasks'].append({
+                    'cota': task['cota'],
+                    'nome': task['nome'],
+                    'task_id': task['task_id'],
+                    'is_completed': task.get('is_completed', False)
+                })
+            clean_data['dia16'].append(clean_grupo)
+        
+        try:
+            with open(lances_filepath, 'w', encoding='utf-8') as f:
+                json.dump(clean_data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            return jsonify({'success': False, 'error': f'Erro ao salvar dados: {str(e)}'})
+        
+        return jsonify({
+            'success': True,
+            'changes': changes,
+            'data': clean_data,
+            'message': f'{changes} alterações sincronizadas do Todoist' if changes > 0 else 'Tudo sincronizado'
+        })
+            
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Erro na sincronização de lances: {error_details}")
+        return jsonify({'success': False, 'error': f'Erro na sincronização: {str(e)}'})
+
+# ========== FIM ROTAS DE LANCES ==========
+
 @app.route('/api/history/clear/<dia>', methods=['POST'])
 def api_clear_history(dia):
     """Limpa histórico de um dia específico"""
@@ -620,16 +898,31 @@ def api_stop_automation(dia):
         socketio.emit('log', {'dia': dia, 'message': '⏹️ Parando automação...'}, namespace='/')
         socketio.emit('progress', {'dia': dia, 'value': 0, 'message': 'Parando...'}, namespace='/')
     
-    # Fecha driver se existir
+    # Fecha driver se existir - COM MÚLTIPLAS TENTATIVAS
     driver_key = f'driver_{dia}'
     if app_state[driver_key]:
         try:
             progress_callback(dia, "🔒 Fechando navegador Chrome...")
-            app_state[driver_key].quit()
+            driver = app_state[driver_key]
+            
+            # Tenta fechar todas as janelas primeiro
+            try:
+                for handle in driver.window_handles:
+                    driver.switch_to.window(handle)
+                    driver.close()
+            except:
+                pass
+            
+            # Depois mata o driver completamente
+            driver.quit()
             app_state[driver_key] = None
             progress_callback(dia, "✅ Chrome fechado com sucesso!")
         except Exception as e:
-            progress_callback(dia, f"⚠️ Navegador já estava fechado ou erro: {e}")
+            # Força None mesmo com erro
+            app_state[driver_key] = None
+            progress_callback(dia, f"⚠️ Navegador fechado (com avisos): {str(e)[:50]}")
+    else:
+        progress_callback(dia, "ℹ️ Navegador já estava fechado")
     
     # Confirma parada
     with app.app_context():
