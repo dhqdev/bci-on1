@@ -14,16 +14,30 @@ Write-Host ""
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin) {
-    Write-Host "⚠️  ATENÇÃO: Execute como Administrador!" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "📝 Clique com botão direito no PowerShell e escolha:" -ForegroundColor White
-    Write-Host "   'Executar como Administrador'" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "Depois execute novamente:" -ForegroundColor White
-    Write-Host "   irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/install-rapido.ps1 | iex" -ForegroundColor Green
-    Write-Host ""
-    pause
-    exit 1
+    Write-Host "⚠️  Este script precisa de privilégios de Administrador..." -ForegroundColor Yellow
+    Write-Host "🔄 Solicitando permissão de Administrador..." -ForegroundColor Cyan
+    
+    # Tenta reexecutar como Admin automaticamente
+    try {
+        $scriptContent = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/dhqdev/bci-on1/main/install-rapido.ps1" -UseBasicParsing
+        $tempScript = "$env:TEMP\bci-install-temp.ps1"
+        $scriptContent.Content | Out-File -FilePath $tempScript -Encoding UTF8
+        
+        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$tempScript`"" -Verb RunAs
+        exit
+    }
+    catch {
+        Write-Host ""
+        Write-Host "❌ Não foi possível elevar permissões automaticamente" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "📝 Por favor, execute manualmente como Administrador:" -ForegroundColor White
+        Write-Host "   1. Clique com botão direito no PowerShell" -ForegroundColor Cyan
+        Write-Host "   2. Escolha 'Executar como Administrador'" -ForegroundColor Cyan
+        Write-Host "   3. Execute: irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/install-rapido.ps1 | iex" -ForegroundColor Green
+        Write-Host ""
+        pause
+        exit 1
+    }
 }
 
 Write-Host "✅ Executando como Administrador" -ForegroundColor Green
@@ -98,24 +112,81 @@ elseif (Test-Path "${env:ProgramFiles(x86)}\Git\cmd\git.exe") {
 }
 
 if (-not $gitFound) {
-    Write-Host "❌ Git não encontrado - tentando instalar..." -ForegroundColor Yellow
+    Write-Host "❌ Git não encontrado - instalando automaticamente..." -ForegroundColor Yellow
     
     # Detecta arquitetura
     $arch = if ([Environment]::Is64BitOperatingSystem) { "64" } else { "32" }
     $gitUrl = "https://github.com/git-for-windows/git/releases/download/v2.42.0.windows.2/Git-2.42.0.2-$arch-bit.exe"
     
-    if (Install-Program "Git" $gitUrl "/VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /COMPONENTS=`"icons,ext\reg\shellhere,assoc,assoc_sh`"") {
-        # Adiciona Git ao PATH da sessão atual
-        $env:Path += ";C:\Program Files\Git\cmd"
-        Write-Host "✅ Git instalado e configurado!" -ForegroundColor Green
-        $gitFound = $true
-    } else {
-        Write-Host "❌ FALHA ao instalar Git automaticamente!" -ForegroundColor Red
+    Write-Host "📥 Baixando Git..." -ForegroundColor Yellow
+    $installer = "$env:TEMP\git-installer.exe"
+    
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri $gitUrl -OutFile $installer -UseBasicParsing
+        
+        Write-Host "🔧 Instalando Git (isso pode levar alguns minutos)..." -ForegroundColor Yellow
+        
+        # Instala Git com PATH automático e componentes essenciais
+        $gitArgs = @(
+            "/VERYSILENT",
+            "/NORESTART", 
+            "/NOCANCEL",
+            "/SP-",
+            "/CLOSEAPPLICATIONS",
+            "/RESTARTAPPLICATIONS",
+            "/COMPONENTS=icons,ext\reg\shellhere,assoc,assoc_sh",
+            "/DIR=C:\Program Files\Git",
+            "/ALLUSERS"
+        )
+        
+        $process = Start-Process -FilePath $installer -ArgumentList $gitArgs -Wait -PassThru -NoNewWindow
+        Remove-Item $installer -Force
+        
+        if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 3010) {
+            Write-Host "✅ Git instalado com sucesso!" -ForegroundColor Green
+            
+            # Adiciona Git ao PATH da sessão atual E permanentemente
+            $gitPath = "C:\Program Files\Git\cmd"
+            
+            # PATH da sessão atual
+            $env:Path += ";$gitPath"
+            
+            # PATH permanente (System)
+            $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+            if ($currentPath -notlike "*$gitPath*") {
+                [Environment]::SetEnvironmentVariable("Path", "$currentPath;$gitPath", "Machine")
+                Write-Host "✅ Git adicionado ao PATH do sistema" -ForegroundColor Green
+            }
+            
+            # Recarrega o PATH
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+            
+            # Aguarda e testa
+            Start-Sleep -Seconds 3
+            
+            try {
+                $testGit = & git --version 2>&1
+                Write-Host "✅ Git verificado: $testGit" -ForegroundColor Green
+                $gitFound = $true
+            }
+            catch {
+                Write-Host "⚠️  Git instalado mas precisa reiniciar o PowerShell" -ForegroundColor Yellow
+                $gitFound = $true
+            }
+        } else {
+            throw "Instalação retornou código: $($process.ExitCode)"
+        }
+    }
+    catch {
+        Write-Host "❌ Erro ao instalar Git: $_" -ForegroundColor Red
         Write-Host ""
-        Write-Host "🔧 SOLUÇÃO MANUAL:" -ForegroundColor Yellow
-        Write-Host "   1. Baixe Git: https://git-scm.com/download/win" -ForegroundColor White
-        Write-Host "   2. Instale normalmente" -ForegroundColor White
-        Write-Host "   3. Execute este instalador novamente" -ForegroundColor White
+        Write-Host "🔧 INSTALAÇÃO MANUAL:" -ForegroundColor Yellow
+        Write-Host "   1. Baixe: https://git-scm.com/download/win" -ForegroundColor Cyan
+        Write-Host "   2. Execute o instalador" -ForegroundColor White
+        Write-Host "   3. Use as opções padrão (importante: marque 'Add to PATH')" -ForegroundColor White
+        Write-Host "   4. Execute este instalador novamente" -ForegroundColor White
         Write-Host ""
         pause
         exit 1
@@ -171,45 +242,92 @@ if (-not $pythonFound) {
 }
 
 if (-not $pythonFound) {
-    Write-Host "❌ Python não encontrado - tentando instalar..." -ForegroundColor Yellow
+    Write-Host "❌ Python não encontrado - instalando automaticamente..." -ForegroundColor Yellow
     
     # Python 3.11.6 (versão estável e compatível)
     $pythonUrl = "https://www.python.org/ftp/python/3.11.6/python-3.11.6-amd64.exe"
     
-    if (Install-Program "Python" $pythonUrl "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0") {
-        # Adiciona Python ao PATH da sessão atual
-        $env:Path += ";C:\Program Files\Python311;C:\Program Files\Python311\Scripts"
+    Write-Host "📥 Baixando Python 3.11.6..." -ForegroundColor Yellow
+    $installer = "$env:TEMP\python-installer.exe"
+    
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri $pythonUrl -OutFile $installer -UseBasicParsing
         
-        # Aguarda 5 segundos para instalação finalizar
-        Write-Host "⏳ Aguardando instalação finalizar..." -ForegroundColor Yellow
-        Start-Sleep -Seconds 10
+        Write-Host "🔧 Instalando Python (isso pode levar alguns minutos)..." -ForegroundColor Yellow
         
-        # Tenta novamente
-        try {
-            $version = python --version 2>&1
-            Write-Host "✅ Python instalado: $version" -ForegroundColor Green
-            $pythonFound = $true
+        # Instala Python com PATH automático para TODOS os usuários
+        $pythonArgs = @(
+            "/quiet",
+            "InstallAllUsers=1",
+            "PrependPath=1",
+            "Include_test=0",
+            "Include_pip=1",
+            "Include_doc=0",
+            "TargetDir=C:\Program Files\Python311"
+        )
+        
+        $process = Start-Process -FilePath $installer -ArgumentList $pythonArgs -Wait -PassThru -NoNewWindow
+        Remove-Item $installer -Force
+        
+        if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 3010) {
+            Write-Host "✅ Python instalado com sucesso!" -ForegroundColor Green
+            
+            # Adiciona Python ao PATH da sessão atual E permanentemente
+            $pythonPath = "C:\Program Files\Python311"
+            $pythonScripts = "C:\Program Files\Python311\Scripts"
+            
+            # PATH da sessão atual
+            $env:Path += ";$pythonPath;$pythonScripts"
+            
+            # PATH permanente (System)
+            $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+            if ($currentPath -notlike "*$pythonPath*") {
+                [Environment]::SetEnvironmentVariable("Path", "$currentPath;$pythonPath;$pythonScripts", "Machine")
+                Write-Host "✅ Python adicionado ao PATH do sistema" -ForegroundColor Green
+            }
+            
+            # Recarrega o PATH
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+            
+            # Aguarda instalação finalizar completamente
+            Write-Host "⏳ Finalizando configuração do Python..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 8
+            
+            # Testa Python
+            try {
+                $testPython = & python --version 2>&1
+                Write-Host "✅ Python verificado: $testPython" -ForegroundColor Green
+                $pythonCmd = "python"
+                $pythonFound = $true
+            }
+            catch {
+                # Tenta com py launcher
+                try {
+                    $testPy = & py --version 2>&1
+                    Write-Host "✅ Python verificado via py launcher: $testPy" -ForegroundColor Green
+                    $pythonCmd = "py"
+                    $pythonFound = $true
+                }
+                catch {
+                    Write-Host "⚠️  Python instalado mas precisa reiniciar o PowerShell" -ForegroundColor Yellow
+                    $pythonFound = $true
+                }
+            }
+        } else {
+            throw "Instalação retornou código: $($process.ExitCode)"
         }
-        catch {
-            Write-Host "❌ FALHA ao instalar Python automaticamente!" -ForegroundColor Red
-            Write-Host ""
-            Write-Host "🔧 SOLUÇÃO MANUAL:" -ForegroundColor Yellow
-            Write-Host "   1. Baixe Python: https://www.python.org/downloads/" -ForegroundColor White
-            Write-Host "   2. Durante instalação, MARQUE: 'Add Python to PATH'" -ForegroundColor White
-            Write-Host "   3. Reinicie o computador" -ForegroundColor White
-            Write-Host "   4. Execute este instalador novamente" -ForegroundColor White
-            Write-Host ""
-            pause
-            exit 1
-        }
-    } else {
-        Write-Host "❌ FALHA ao instalar Python automaticamente!" -ForegroundColor Red
+    }
+    catch {
+        Write-Host "❌ Erro ao instalar Python: $_" -ForegroundColor Red
         Write-Host ""
-        Write-Host "🔧 SOLUÇÃO MANUAL:" -ForegroundColor Yellow
-        Write-Host "   1. Baixe Python: https://www.python.org/downloads/" -ForegroundColor White
-        Write-Host "   2. Durante instalação, MARQUE: 'Add Python to PATH'" -ForegroundColor White
-        Write-Host "   3. Reinicie o computador" -ForegroundColor White
-        Write-Host "   4. Execute este instalador novamente" -ForegroundColor White
+        Write-Host "🔧 INSTALAÇÃO MANUAL:" -ForegroundColor Yellow
+        Write-Host "   1. Baixe: https://www.python.org/downloads/" -ForegroundColor Cyan
+        Write-Host "   2. Execute o instalador" -ForegroundColor White
+        Write-Host "   3. ⚠️  IMPORTANTE: Marque 'Add Python to PATH'" -ForegroundColor Red
+        Write-Host "   4. Reinicie o computador" -ForegroundColor White
+        Write-Host "   5. Execute este instalador novamente" -ForegroundColor White
         Write-Host ""
         pause
         exit 1
@@ -339,14 +457,71 @@ if (Test-Path "install.bat") {
         Write-Host "    ✅ INSTALAÇÃO CONCLUÍDA COM SUCESSO!" -ForegroundColor Green
         Write-Host "============================================================" -ForegroundColor Green
         Write-Host ""
-        Write-Host "🎯 Para iniciar o sistema:" -ForegroundColor Cyan
+        
+        # Cria atalho executável na área de trabalho
+        Write-Host "🔗 Criando atalho na área de trabalho..." -ForegroundColor Cyan
+        
+        $desktopPath = [Environment]::GetFolderPath("Desktop")
+        $shortcutPath = "$desktopPath\BCI-ON1 Web.lnk"
+        $targetPath = "$installDir\INICIAR_BCI.bat"
+        $iconPath = "$installDir\oxcash_icon.ico"
+        
+        # Cria ícone se não existir
+        if (-not (Test-Path $iconPath)) {
+            Write-Host "🎨 Criando ícone..." -ForegroundColor Yellow
+            
+            # Verifica se Pillow está instalado
+            try {
+                & "$installDir\venv\Scripts\python.exe" -c "import PIL" 2>&1 | Out-Null
+            }
+            catch {
+                Write-Host "📦 Instalando Pillow..." -ForegroundColor Yellow
+                & "$installDir\venv\Scripts\pip.exe" install Pillow | Out-Null
+            }
+            
+            # Cria o ícone
+            if (Test-Path "$installDir\create_icon.py") {
+                & "$installDir\venv\Scripts\python.exe" "$installDir\create_icon.py" 2>&1 | Out-Null
+            }
+        }
+        
+        # Cria o atalho usando VBScript
+        $vbsScript = @"
+Set oWS = WScript.CreateObject("WScript.Shell")
+sLinkFile = "$shortcutPath"
+Set oLink = oWS.CreateShortcut(sLinkFile)
+oLink.TargetPath = "$targetPath"
+oLink.WorkingDirectory = "$installDir"
+oLink.Description = "Iniciar BCI-ON1 Interface Web"
+oLink.WindowStyle = 1
+"@
+        
+        if (Test-Path $iconPath) {
+            $vbsScript += "`noLink.IconLocation = `"$iconPath`""
+        }
+        
+        $vbsScript += "`noLink.Save"
+        
+        $vbsFile = "$env:TEMP\create_shortcut.vbs"
+        $vbsScript | Out-File -FilePath $vbsFile -Encoding ASCII
+        
+        Start-Process "wscript.exe" -ArgumentList "`"$vbsFile`"" -Wait -NoNewWindow
+        Remove-Item $vbsFile -Force
+        
+        if (Test-Path $shortcutPath) {
+            Write-Host "✅ Atalho criado na área de trabalho!" -ForegroundColor Green
+        } else {
+            Write-Host "⚠️  Não foi possível criar atalho automaticamente" -ForegroundColor Yellow
+        }
+        
         Write-Host ""
-        Write-Host "   OPÇÃO 1: Clique no atalho do Desktop" -ForegroundColor Yellow
-        Write-Host "   📌 'BCI-ON1 Web' (ícone OXCASH)" -ForegroundColor Yellow
+        Write-Host "🎯 Como iniciar o sistema:" -ForegroundColor Cyan
         Write-Host ""
-        Write-Host "   OPÇÃO 2: Execute manualmente" -ForegroundColor Yellow
-        Write-Host "   cd $installDir" -ForegroundColor White
-        Write-Host "   .\run.bat" -ForegroundColor White
+        Write-Host "   📌 OPÇÃO 1 (RECOMENDADO): Clique duas vezes no atalho" -ForegroundColor Yellow
+        Write-Host "      'BCI-ON1 Web' na sua área de trabalho" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "   📌 OPÇÃO 2: Clique duas vezes em:" -ForegroundColor Yellow
+        Write-Host "      $installDir\INICIAR_BCI.bat" -ForegroundColor White
         Write-Host ""
         Write-Host "Depois acesse no navegador:" -ForegroundColor Cyan
         Write-Host "   http://localhost:5000" -ForegroundColor Green
@@ -359,14 +534,21 @@ if (Test-Path "install.bat") {
         
         # Pergunta se quer iniciar agora
         $resposta = Read-Host "Deseja iniciar o sistema agora? (S/N)"
-        if ($resposta -eq "S" -or $resposta -eq "s") {
+        if ($resposta -eq "S" -or $resposta -eq "s" -or $resposta -eq "") {
             Write-Host ""
             Write-Host "🚀 Iniciando servidor..." -ForegroundColor Cyan
-            Write-Host "Aguarde alguns segundos..." -ForegroundColor Yellow
+            Write-Host "⏳ Aguarde alguns segundos..." -ForegroundColor Yellow
             Write-Host ""
-            Start-Process -FilePath "$installDir\run.bat"
-            Start-Sleep -Seconds 3
+            
+            # Inicia usando o novo script
+            Start-Process -FilePath "$installDir\INICIAR_BCI.bat"
+            Start-Sleep -Seconds 5
+            
+            # Abre o navegador
             Start-Process "http://localhost:5000"
+            
+            Write-Host "✅ Sistema iniciado!" -ForegroundColor Green
+            Write-Host "📱 O navegador deve abrir automaticamente" -ForegroundColor Cyan
         }
     } else {
         Write-Host ""
