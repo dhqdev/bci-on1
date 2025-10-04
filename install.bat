@@ -410,17 +410,35 @@ set "PYTHON_CMD="
 set "PYTHON_VERSION_DISPLAY="
 for %%i in (python python3 py) do (
     for /f "usebackq tokens=*" %%j in (`%%i --version 2^>^&1`) do (
-        set "PYTHON_CMD=%%i"
-        set "PYTHON_VERSION_DISPLAY=%%j"
-        goto detect_python_end
+        echo %%j | findstr /R /C:"Python [0-9][0-9]*\.[0-9]" >nul
+        if not errorlevel 1 (
+            set "PYTHON_CMD=%%i"
+            set "PYTHON_VERSION_DISPLAY=%%j"
+            goto detect_python_end
+        )
     )
 )
 call :ensure_python_path
 for %%i in (python python3 py) do (
     for /f "usebackq tokens=*" %%j in (`%%i --version 2^>^&1`) do (
-        set "PYTHON_CMD=%%i"
-        set "PYTHON_VERSION_DISPLAY=%%j"
-        goto detect_python_end
+        echo %%j | findstr /R /C:"Python [0-9][0-9]*\.[0-9]" >nul
+        if not errorlevel 1 (
+            set "PYTHON_CMD=%%i"
+            set "PYTHON_VERSION_DISPLAY=%%j"
+            goto detect_python_end
+        )
+    )
+)
+for %%p in ("C:\Program Files\Python312\python.exe" "C:\Program Files\Python311\python.exe" "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" "%LOCALAPPDATA%\Programs\Python\Python311\python.exe") do (
+    if exist %%~p (
+        for /f "usebackq tokens=*" %%j in (`"%%~p" --version 2^>^&1`) do (
+            echo %%j | findstr /R /C:"Python [0-9][0-9]*\.[0-9]" >nul
+            if not errorlevel 1 (
+                set "PYTHON_CMD="%%~p""
+                set "PYTHON_VERSION_DISPLAY=%%j"
+                goto detect_python_end
+            )
+        )
     )
 )
 :detect_python_end
