@@ -27,51 +27,27 @@ echo.
 REM 1. Verificar Python
 echo [INFO] Verificando Python...
 
-python --version >nul 2>&1
-if %errorLevel% == 0 (
-    for /f "tokens=2" %%i in ('python --version') do echo [✓] Python encontrado: %%i
-    set PYTHON_CMD=python
+set "PYTHON_CMD="
+set "PYTHON_VERSION_DISPLAY="
+call :detect_python
+
+if defined PYTHON_CMD (
+    echo [✓] Python encontrado: %PYTHON_VERSION_DISPLAY%
     goto :check_pip
 )
 
-python3 --version >nul 2>&1
-if %errorLevel% == 0 (
-    for /f "tokens=2" %%i in ('python3 --version') do echo [✓] Python3 encontrado: %%i
-    set PYTHON_CMD=python3
-    goto :check_pip
+echo [⚠] Python não encontrado. Tentando instalar automaticamente...
+call :install_python
+
+if "%PY_INSTALL_SUCCESS%"=="1" (
+    call :detect_python
 )
 
-py --version >nul 2>&1
-if %errorLevel% == 0 (
-    for /f "tokens=2" %%i in ('py --version') do echo [✓] Python (py) encontrado: %%i
-    set PYTHON_CMD=py
-    goto :check_pip
-)
-
-echo [✗] Python não encontrado!
-echo.
-echo [INFO] Baixando Python...
-
-REM Baixar Python usando PowerShell
-echo [INFO] Baixando Python 3.11 (64-bit)...
-powershell -Command "(New-Object Net.WebClient).DownloadFile('https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe', 'python-installer.exe')"
-
-if exist python-installer.exe (
-    echo [INFO] Instalando Python...
-    echo [INFO] IMPORTANTE: Marque a opção "Add Python to PATH" durante a instalação!
-    echo [INFO] Pressione qualquer tecla para continuar com a instalação...
-    pause >nul
-    
-    start /wait python-installer.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
-    
-    del python-installer.exe
-    
-    echo [INFO] Reinicie o terminal e execute este script novamente.
-    pause
-    exit /b 1
+if defined PYTHON_CMD (
+    echo [✓] Python instalado: %PYTHON_VERSION_DISPLAY%
 ) else (
-    echo [✗] Falha ao baixar Python
-    echo [INFO] Baixe manualmente de: https://www.python.org/downloads/
+    echo [✗] Não foi possível instalar Python automaticamente.
+    echo [INFO] Instale manualmente em: https://www.python.org/downloads/
     pause
     exit /b 1
 )
@@ -427,3 +403,93 @@ if /i "%choice%"=="s" (
 echo.
 echo Pressione qualquer tecla para sair...
 pause >nul
+goto :EOF
+
+:detect_python
+set "PYTHON_CMD="
+set "PYTHON_VERSION_DISPLAY="
+for %%i in (python python3 py) do (
+    for /f "usebackq tokens=*" %%j in (`%%i --version 2^>^&1`) do (
+        set "PYTHON_CMD=%%i"
+        set "PYTHON_VERSION_DISPLAY=%%j"
+        goto detect_python_end
+    )
+)
+call :ensure_python_path
+for %%i in (python python3 py) do (
+    for /f "usebackq tokens=*" %%j in (`%%i --version 2^>^&1`) do (
+        set "PYTHON_CMD=%%i"
+        set "PYTHON_VERSION_DISPLAY=%%j"
+        goto detect_python_end
+    )
+)
+:detect_python_end
+exit /b 0
+
+:ensure_python_path
+for %%p in ("C:\Program Files\Python312" "C:\Program Files\Python311" "%LOCALAPPDATA%\Programs\Python\Python312" "%LOCALAPPDATA%\Programs\Python\Python311") do (
+    if exist %%~p\python.exe (
+        call :append_path "%%~p"
+        call :append_path "%%~p\Scripts"
+    )
+)
+exit /b 0
+
+:append_path
+if "%~1"=="" exit /b 0
+echo %PATH% | find /I "%~1" >nul
+if %errorlevel%==0 exit /b 0
+set "PATH=%~1;%PATH%"
+exit /b 0
+
+:install_python
+set "PY_INSTALL_SUCCESS=0"
+set "PY_VERSION=3.11.7"
+set "PY_URL="
+if /I "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
+    set "PY_URL=https://www.python.org/ftp/python/%PY_VERSION%/python-%PY_VERSION%-amd64.exe"
+) else (
+    set "PY_URL=https://www.python.org/ftp/python/%PY_VERSION%/python-%PY_VERSION%.exe"
+)
+
+where winget >nul 2>&1
+if %errorlevel%==0 (
+    echo [INFO] Instalando Python via winget...
+    winget install --id Python.Python.3.11 --exact --silent --accept-package-agreements --accept-source-agreements
+    if %errorlevel%==0 (
+        set "PY_INSTALL_SUCCESS=1"
+        call :ensure_python_path
+    ) else (
+        echo [⚠] winget retornou código %errorlevel% ao instalar Python.
+    )
+)
+
+if "%PY_INSTALL_SUCCESS%"=="0" (
+    echo [INFO] Baixando instalador oficial do Python...
+    del /q python-installer.exe 2>nul
+    powershell -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%PY_URL%' -OutFile 'python-installer.exe'" >nul 2>&1
+    if exist python-installer.exe (
+        set "PY_ALL_USERS=0"
+        net session >nul 2>&1
+        if %errorlevel%==0 (
+            set "PY_ALL_USERS=1"
+            set "PY_TARGET_DIR=C:\Program Files\Python311"
+        ) else (
+            set "PY_TARGET_DIR=%LOCALAPPDATA%\Programs\Python\Python311"
+        )
+        echo [INFO] Instalando Python em %PY_TARGET_DIR%...
+        start /wait "" python-installer.exe /quiet InstallAllUsers=%PY_ALL_USERS% PrependPath=1 Include_test=0 Include_doc=0 Include_pip=1 TargetDir="%PY_TARGET_DIR%"
+        if %errorlevel%==0 (
+            set "PY_INSTALL_SUCCESS=1"
+            call :append_path "%PY_TARGET_DIR%"
+            call :append_path "%PY_TARGET_DIR%\Scripts"
+        ) else (
+            echo [⚠] O instalador do Python retornou código %errorlevel%.
+        )
+        del /q python-installer.exe 2>nul
+    ) else (
+        echo [⚠] Falha ao baixar o instalador do Python.
+    )
+)
+
+exit /b 0

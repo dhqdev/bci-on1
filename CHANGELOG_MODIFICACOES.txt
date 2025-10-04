@@ -5,6 +5,15 @@
 
 🔄 MUDANÇAS IMPLEMENTADAS:
 
+🗓️ 04/10/2025 - Instalação Automatizada
+   - `install-rapido.ps1` agora tenta usar o winget para instalar Git, Python 3.11 e Google Chrome automaticamente.
+   - Caso o winget não esteja disponível, o script faz download dos instaladores oficiais em modo silencioso, adiciona as pastas corretas ao PATH e valida as instalações.
+   - `install.bat` ganhou detecção/instalação automática de Python (winget + fallback), além de reutilizar o mesmo comando em todo o fluxo.
+   - `INICIAR_BCI.bat` e `web/run_web.bat` agora detectam Python/py dinamicamente antes de subir o servidor, atualizando o PATH quando necessário.
+   - Atalho criado na área de trabalho passou a ser um `.lnk` (`BCI-ON1 Web.lnk`), apontando diretamente para `web\run_web.bat` com ícone e diretório de trabalho corretos.
+   - `setup-linux.sh` ganhou suporte extra para `dnf`, `yum` e `pacman`, garantindo instalação de Git/Chrome em distros sem `apt`.
+   - `README.md` atualizado com as novas instruções e detalhes do instalador automático.
+
 1. ✅ VERSÃO WEB ÚNICA
    - Sistema agora roda APENAS em modo web
    - Versão desktop (Tkinter) foi desativada

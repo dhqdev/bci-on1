@@ -54,6 +54,8 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows.ps1 -OutFile setup.ps1; .\setup.ps1
 ```
 
+🆕 **O instalador rápido agora usa o winget automaticamente (quando disponível)** para instalar Git, Python 3.11 e Google Chrome, configurando o PATH do sistema mesmo em máquinas novas. Se o winget não estiver presente, o script baixa os instaladores oficiais em modo silencioso e finaliza a configuração para você.
+
 **OPÇÃO 3 - Sem PowerShell (Prompt de Comando):**
 ```cmd
 git clone https://github.com/dhqdev/bci-on1.git
@@ -71,7 +73,7 @@ irm https://raw.githubusercontent.com/dhqdev/bci-on1/main/setup-windows-simple.b
 > ⚠️ **Nota:** Use a OPÇÃO 1 (PowerShell) se tiver problemas com as outras.  
 > Se já tem instalado e o instalador travar, delete manualmente a pasta `%USERPROFILE%\bci-on1` antes de reinstalar.
 
-**🎉 Após instalação, um atalho "BCI-ON1-Web.bat" será criado na sua área de trabalho!**
+**🎉 Após instalação, um atalho "BCI-ON1 Web" (.lnk) é criado automaticamente na sua área de trabalho!**
 
 ---
 
@@ -122,7 +124,7 @@ O instalador irá:
 
 #### Opção 1: Usar o Atalho da Área de Trabalho (Windows)
 ```
-Clique duas vezes em: BCI-ON1-Web.bat
+Clique duas vezes em: BCI-ON1 Web
 ```
 
 #### Opção 2: Linha de Comando

@@ -36,7 +36,17 @@ echo -e "${BLUE}[*]${NC} Verificando Git..."
 if ! command -v git &> /dev/null; then
     echo -e "${YELLOW}[!]${NC} Instalando Git..."
     if [[ "$OS" == "Linux" ]]; then
-        sudo apt-get update -qq && sudo apt-get install -y git
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y git
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y git
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y git
+        elif command -v pacman &> /dev/null; then
+            sudo pacman -Sy --noconfirm git
+        else
+            echo -e "${RED}[ERRO]${NC} Não foi possível identificar um gerenciador de pacotes compatível." && exit 1
+        fi
     else
         brew install git
     fi
@@ -65,9 +75,25 @@ echo -e "${BLUE}[*]${NC} Verificando Chrome..."
 if ! command -v google-chrome &> /dev/null && ! command -v chromium-browser &> /dev/null; then
     echo -e "${YELLOW}[!]${NC} Instalando Chrome..."
     if [[ "$OS" == "Linux" ]]; then
-        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 2>/dev/null || true
-        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-        sudo apt-get update -qq && sudo apt-get install -y google-chrome-stable
+        if command -v apt-get &> /dev/null; then
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 2>/dev/null || true
+            echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+            sudo apt-get update -qq && sudo apt-get install -y google-chrome-stable
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y wget
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+            sudo dnf install -y ./google-chrome-stable_current_x86_64.rpm
+            rm -f google-chrome-stable_current_x86_64.rpm
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y wget
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+            sudo yum localinstall -y google-chrome-stable_current_x86_64.rpm
+            rm -f google-chrome-stable_current_x86_64.rpm
+        elif command -v pacman &> /dev/null; then
+            sudo pacman -Sy --noconfirm chromium
+        else
+            echo -e "${YELLOW}[!]${NC} Instale o Google Chrome manualmente: https://www.google.com/chrome/"
+        fi
     else
         brew install --cask google-chrome
     fi

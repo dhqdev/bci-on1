@@ -32,8 +32,34 @@ if not exist "web\app.py" (
 
 REM Verifica Python
 echo 🔍 Verificando Python...
-python --version >nul 2>&1
-if %errorlevel% neq 0 (
+set "PYTHON_CMD="
+set "PYTHON_VERSION="
+
+for %%i in (python python3 py) do (
+    for /f "usebackq tokens=*" %%j in (`%%i --version 2^>^&1`) do (
+        set "PYTHON_CMD=%%i"
+        set "PYTHON_VERSION=%%j"
+        goto :python_check_done
+    )
+)
+
+for %%p in ("%ProgramFiles%\Python312\python.exe" "%ProgramFiles%\Python311\python.exe" "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" "%LOCALAPPDATA%\Programs\Python\Python311\python.exe") do (
+    if exist %%~p (
+        call :add_path_if_needed "%%~dp"
+        call :add_path_if_needed "%%~dpScripts"
+    )
+)
+
+for %%i in (python python3 py) do (
+    for /f "usebackq tokens=*" %%j in (`%%i --version 2^>^&1`) do (
+        set "PYTHON_CMD=%%i"
+        set "PYTHON_VERSION=%%j"
+        goto :python_check_done
+    )
+)
+
+:python_check_done
+if not defined PYTHON_CMD (
     echo ❌ Python nao encontrado!
     echo.
     echo Execute o instalador:
@@ -43,7 +69,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo ✅ Python encontrado
+echo ✅ Python encontrado: %PYTHON_VERSION%
 echo.
 
 REM Ativa ambiente virtual se existir
@@ -54,7 +80,7 @@ if exist "venv\Scripts\activate.bat" (
 ) else (
     echo ⚠️  Ambiente virtual nao encontrado
     echo Criando ambiente virtual...
-    python -m venv venv
+    %PYTHON_CMD% -m venv venv
     if %errorlevel% neq 0 (
         echo ❌ Erro ao criar ambiente virtual
         pause
@@ -68,8 +94,8 @@ echo.
 REM Instala dependências se necessário
 if not exist ".web_deps_installed" (
     echo 📥 Instalando dependencias web...
-    pip install --upgrade pip
-    pip install Flask Flask-SocketIO Flask-CORS python-socketio python-engineio
+    %PYTHON_CMD% -m pip install --upgrade pip
+    %PYTHON_CMD% -m pip install Flask Flask-SocketIO Flask-CORS python-socketio python-engineio
     if %errorlevel% neq 0 (
         echo ❌ Erro ao instalar dependencias
         pause
@@ -100,3 +126,11 @@ echo.
 echo.
 echo Servidor encerrado.
 pause
+goto :EOF
+
+:add_path_if_needed
+if "%~1"=="" exit /b 0
+echo %PATH% | find /I "%~1" >nul
+if %errorlevel%==0 exit /b 0
+set "PATH=%~1;%PATH%"
+exit /b 0
