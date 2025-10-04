@@ -972,7 +972,7 @@
                 transform: translateY(0);
             }
         }
-        
+
         .animate-fade-in {
             animation: fadeIn 0.4s ease;
         }
@@ -1198,32 +1198,24 @@
         
         // ========== BUSCA NO MENU LATERAL ==========
         const sidebarSearch = document.getElementById('sidebarSearch');
-        const sidebarLinks = document.querySelectorAll('.sidebar-link');
-        
-        sidebarSearch.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase().trim();
-            
-            sidebarLinks.forEach(link => {
-                const text = link.textContent.toLowerCase();
-                const section = link.closest('.sidebar-section');
-                
-                if (query === '' || text.includes(query)) {
-                    link.style.display = 'flex';
-                } else {
-                    link.style.display = 'none';
-                }
+        const sidebarLinks = document.querySelectorAll('.sidebar-menu-item');
+
+        if (sidebarSearch && sidebarLinks.length) {
+            sidebarSearch.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+
+                sidebarLinks.forEach(link => {
+                    const text = link.textContent.toLowerCase();
+                    link.style.display = (query === '' || text.includes(query)) ? 'flex' : 'none';
+                });
+
+                document.querySelectorAll('.sidebar-menu-section').forEach(section => {
+                    const hasVisible = Array.from(section.querySelectorAll('.sidebar-menu-item'))
+                        .some(item => item.style.display !== 'none');
+                    section.style.display = (query === '' || hasVisible) ? 'block' : 'none';
+                });
             });
-            
-            // Mostra/esconde seções vazias
-            document.querySelectorAll('.sidebar-section').forEach(section => {
-                const visibleLinks = section.querySelectorAll('.sidebar-link[style="display: flex;"], .sidebar-link:not([style*="display"])');
-                if (query !== '' && visibleLinks.length === 0) {
-                    section.style.display = 'none';
-                } else {
-                    section.style.display = 'block';
-                }
-            });
-        });
+        }
         
         // ========== SISTEMA DE NOTIFICAÇÕES ==========
         const notificationList = document.getElementById('notificationList');
@@ -1358,15 +1350,9 @@
             updateNotificationUI();
         }
         
-        // Som de notificação (opcional)
+        // Som de notificação desativado
         function playNotificationSound() {
-            try {
-                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuFzvLciToIGGS564+RSBELUKXh8bllHgU2jdXy0H4vBSh+zPDckTsJE12v6OunWhEKQ5zd8sFuJAUrhM3y24k5CBdgsO2ao1QQClGl4/K8Zh4FN4/W8tGAMAUngMvv3Y1ACRNdrevxpFsSC0ObXvK9bSUFK4PO8d2KOQgXYLDumqNUEApRpePyv2YeBTeP1vLRgDAFJ4DL792NQAkTXa3r8aRbEgtDm17yvW0lBSuDzvHdijkIF2Cw7pqjVBAKUaXj8r9mHgU3j9by0YAwBSeAy+/djUAJE12t6/GkWxILQ5te8r1tJQUrg87x3Yo5CBdgsO6ao1QQClGl4/K/Zh4FN4/W8tGAMAUngMvv3Y1ACRNdrevxpFsSC0ObXvK9bSUFK4PO8d2KOQgXYLDumqNUEApRpePyv2YeBTeP1vLRgDAFJ4DL792NQAkTXa3r8aRbEgtDm17yvW0lBSuDzvHdijkIF2Cw7pqjVBAKUaXj8r9mHgU3j9by0YAwBSeAy+/djUAJE12t6/GkWxILQ5te8r1tJQUrg87x3Yo5CBdgsO6ao1QQClGl4/K/Zh4FN4/W8tGAMAUngMvv3Y1ACRNdrevxpFsSC0ObXvK9bSUFK4PO8d2KOQgXYLDumqNUEApRpePyv2YeBTeP1vLRgDAFJ4DL792NQAkTXa3r8aRbEgtDm17yvW0lBSuDzvHdijkIF2Cw7pqjVBAKUaXj8r9mHgU3j9by0YAwBSeAy+/djUAJE12t6/GkWxILQ5te8r1tJQUrg87x3Yo5CBdgsO6ao1QQClGl4/K/Zh4FN4/W8tGAMAUngMvv3Y1ACRNdrevxpFsSC0ObXvK9bSUFK4PO8d2KOQgXYLDumqNUEApRpePyv2YeBTeP1vLRgDAFJ4DL792NQAkTXa3r8aRbEgtDm17yvW0lBSuDzvHdijkIF2Cw7pqjVBAKUaXj8r9mHgU3j9by0YAwBSeAy+/djUAJE12t6/GkWxILQ5te8r1tJQUrg87x3Yo5CBdgsO6ao1QQClGl4/K/Zh4FN4/W8tGAMAUngMvv3Y1ACRNdrevxpFsSC0ObXvK9bSUFK4PO8d2KOQgXYLDumqNUEApRpePyv2YeBTeP1vLRgDAFJ4DL792NQAkTXa3r8aRbEgtDm17yvW0lBSuDzvHdijkIF2Cw7pqjVBAKUaXj8r9mHgU3j9by0YAwBSeAy+/djUAJE12t6/GkWxILQ5te8r1tJQUrg87x3Yo5CBdgsO6ao1QQClGl4/K/Zh4FN4/W8tGAMAUngMvv3Y1ACRNdrevxpFsSC0ObXvK9');
-                audio.volume = 0.2;
-                audio.play().catch(() => {});
-            } catch (e) {
-                // Silêncio se não conseguir tocar
-            }
+            // Som desativado intencionalmente para evitar ruídos constantes
         }
         
         // ========== FIM DO SISTEMA DE NOTIFICAÇÕES ==========

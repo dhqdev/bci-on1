@@ -118,6 +118,40 @@
 <script>
 // Usa o socket global do base_modern.html
 const dia = 'dia8';
+let statusSyncInterval = null;
+let lastKnownRunning = null;
+let automationConnectHandler = null;
+let automationLogHandler = null;
+let automationProgressHandler = null;
+let automationStatusHandler = null;
+
+window.isStopping = false;
+
+function fetchCurrentStatus(triggerSource = 'manual') {
+    const url = `/api/automation/status/${dia}?_=${Date.now()}`;
+    return fetch(url, {
+        cache: 'no-store'
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (!data || data.success === false || typeof data.running === 'undefined') {
+                console.warn('❌ Status inválido recebido:', data);
+                updateAutomationStatus(false);
+                return;
+            }
+
+            if (lastKnownRunning !== data.running) {
+                console.log(`📊 Status sincronizado (${triggerSource}):`, data);
+                lastKnownRunning = data.running;
+            }
+
+            updateAutomationStatus(data.running);
+        })
+        .catch(err => {
+            console.error('❌ Erro ao verificar status:', err);
+            updateAutomationStatus(false);
+        });
+}
 
 // Conecta ao WebSocket
 function connectWebSocket() {
@@ -131,42 +165,50 @@ function connectWebSocket() {
     }
     
     // Remove listeners antigos para evitar duplicação
-    socket.off('log');
-    socket.off('progress');
-    socket.off('automation_status');
-    
-    socket.on('connect', function() {
+    if (automationConnectHandler) {
+        socket.off('connect', automationConnectHandler);
+    }
+
+    automationConnectHandler = () => {
         console.log('🔌 WebSocket conectado');
         addLog('✅ Conectado ao servidor', 'success');
-        
-        // IMPORTANTE: Sempre verifica status real do servidor
-        // Isso garante que após trocar de aba, o botão reflete o estado correto
-        fetch(`/api/automation/status/${dia}`)
-            .then(res => res.json())
-            .then(data => {
-                console.log('📊 Status atual do servidor:', data);
-                updateAutomationStatus(data.running);
-            })
-            .catch(err => {
-                console.error('❌ Erro ao verificar status:', err);
-                // Em caso de erro, assume parado
-                updateAutomationStatus(false);
-            });
-    });
+        fetchCurrentStatus('socket-connect');
+    };
+
+    socket.on('connect', automationConnectHandler);
+
+    // Se já estiver conectado (ex: após trocar de aba/atualizar), garante sincronização imediata
+    if (socket.connected) {
+        automationConnectHandler();
+    } else {
+        // Garante que o estado do botão seja restaurado mesmo aguardando conexão
+        fetchCurrentStatus('initial-load');
+    }
     
-    socket.on('log', function(data) {
+    if (automationLogHandler) {
+        socket.off('log', automationLogHandler);
+    }
+    automationLogHandler = function(data) {
         if (data.dia === dia || data.dia === 'general') {
             addLog(data.message, getLogType(data.message));
         }
-    });
+    };
+    socket.on('log', automationLogHandler);
     
-    socket.on('progress', function(data) {
+    if (automationProgressHandler) {
+        socket.off('progress', automationProgressHandler);
+    }
+    automationProgressHandler = function(data) {
         if (data.dia === dia) {
             updateProgress(data.value, data.message);
         }
-    });
+    };
+    socket.on('progress', automationProgressHandler);
     
-    socket.on('automation_status', function(data) {
+    if (automationStatusHandler) {
+        socket.off('automation_status', automationStatusHandler);
+    }
+    automationStatusHandler = function(data) {
         console.log('📡 Status recebido:', data);
         if (data.dia === dia) {
             // Se está tentando parar, não atualiza status ainda
@@ -179,7 +221,8 @@ function connectWebSocket() {
                 updateAutomationStatus(false);
             }
         }
-    });
+    };
+    socket.on('automation_status', automationStatusHandler);
 }
 
 // Adiciona log
@@ -332,6 +375,25 @@ async function stopAutomation() {
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
     connectWebSocket();
+    if (!statusSyncInterval) {
+        statusSyncInterval = setInterval(() => fetchCurrentStatus('interval'), 5000);
+    }
+});
+
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        fetchCurrentStatus('visibility');
+    }
+});
+
+window.addEventListener('focus', function() {
+    fetchCurrentStatus('focus');
+});
+
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        fetchCurrentStatus('pageshow');
+    }
 });
 </script>
 {% endblock %}
