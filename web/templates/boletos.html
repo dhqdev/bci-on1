@@ -4,108 +4,185 @@
 
 {% block content %}
 <style>
-    .page-header {
-        margin-bottom: 32px;
+    .boletos-page {
+        padding-bottom: 48px;
     }
-    
+
+    .page-header {
+        margin-bottom: 28px;
+    }
+
     .page-title {
         font-size: 2rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
-    
+
     .page-subtitle {
         color: var(--text-secondary);
         font-size: 1rem;
+        max-width: 640px;
     }
-    
-    .import-card {
+
+    .status-card {
         background: var(--bg-primary);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.12);
         margin-bottom: 24px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
-    
-    [data-theme="dark"] .import-card {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+    [data-theme="dark"] .status-card {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     }
-    
-    .import-actions {
+
+    .status-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .status-card h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .status-description {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        max-width: 520px;
+    }
+
+    .status-actions {
         display: flex;
         align-items: center;
         gap: 12px;
         flex-wrap: wrap;
     }
-    
-    .btn-import {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 12px 24px;
+
+    .btn-retry {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
         border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
-    
-    .btn-import:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+
+    .btn-retry:hover {
+        background: var(--bg-tertiary);
+        transform: translateY(-1px);
     }
-    
-    .btn-import:disabled {
+
+    .btn-retry:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
     }
-    
-    .btn-refresh {
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-        border: 1px solid var(--border-color);
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-refresh:hover {
-        background: var(--bg-tertiary);
-        transform: translateY(-2px);
-    }
-    
+
     .status-text {
-        color: var(--text-secondary);
         font-size: 0.95rem;
+        color: var(--text-secondary);
         display: flex;
         align-items: center;
         gap: 8px;
     }
-    
+
     .status-text.loading {
         color: #667eea;
     }
-    
+
     .status-text.success {
         color: #48bb78;
     }
-    
+
     .status-text.error {
         color: #f56565;
     }
-    
+
+    .last-sync {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .search-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .search-input-wrapper i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        opacity: 0.6;
+        font-size: 0.9rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 16px 10px 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
+    }
+
+    .search-input::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.6;
+    }
+
+    .search-stats {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
     .tabs-container {
         margin-bottom: 24px;
     }
-    
+
     .nav-tabs {
         border-bottom: 2px solid var(--border-color);
+        display: flex;
+        gap: 8px;
     }
-    
+
     .nav-tabs .nav-link {
         border: none;
         background: transparent;
@@ -115,18 +192,22 @@
         cursor: pointer;
         transition: all 0.3s ease;
         position: relative;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
-    
+
     .nav-tabs .nav-link:hover {
         color: var(--text-primary);
         background: var(--bg-secondary);
     }
-    
+
     .nav-tabs .nav-link.active {
         color: #667eea;
         background: transparent;
     }
-    
+
     .nav-tabs .nav-link.active::after {
         content: '';
         position: absolute;
@@ -136,721 +217,1021 @@
         height: 2px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-    
+
     .tab-badge {
         background: rgba(102, 126, 234, 0.15);
         color: #667eea;
-        padding: 2px 8px;
+        padding: 2px 10px;
         border-radius: 12px;
         font-size: 0.85rem;
-        margin-left: 8px;
         font-weight: 600;
     }
-    
+
     .nav-tabs .nav-link.active .tab-badge {
         background: rgba(102, 126, 234, 0.25);
     }
-    
-    .boletos-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-        margin-bottom: 24px;
+
+    .tab-content {
+        padding-top: 20px;
     }
-    
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    .boleto-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 16px;
+        width: 100%;
+    }
+
     .boleto-card {
-        background: var(--bg-primary);
         border: 1px solid var(--border-color);
         border-radius: 12px;
-        padding: 20px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        position: relative;
-        border-left: 4px solid #667eea;
-    }
-    
-    .boleto-card:hover {
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        transform: translateY(-4px);
-    }
-    
-    [data-theme="dark"] .boleto-card:hover {
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    }
-    
-    .boleto-card.completed {
-        opacity: 0.8;
-        border-left-color: #48bb78;
-    }
-    
-    .boleto-header {
+        padding: 16px;
+        background: var(--bg-secondary);
         display: flex;
+        gap: 14px;
         align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 12px;
+        transition: all 0.2s ease;
+        position: relative;
     }
-    
+
+    [data-theme="dark"] .boleto-card {
+        background: var(--bg-tertiary);
+    }
+
+    .boleto-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.18);
+        border-color: rgba(102, 126, 234, 0.35);
+    }
+
+    .boleto-card.completed {
+        border-color: rgba(72, 187, 120, 0.45);
+        background: rgba(72, 187, 120, 0.08);
+    }
+
+    [data-theme="dark"] .boleto-card.completed {
+        background: rgba(72, 187, 120, 0.18);
+    }
+
     .boleto-checkbox {
         width: 20px;
         height: 20px;
+        margin-top: 3px;
         cursor: pointer;
-        flex-shrink: 0;
-        margin-top: 2px;
+        accent-color: #667eea;
     }
-    
+
     .boleto-info {
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
     }
-    
+
     .boleto-nome {
         font-weight: 600;
-        font-size: 1.05rem;
         color: var(--text-primary);
-        margin-bottom: 8px;
-        line-height: 1.4;
     }
-    
-    .boleto-cotas {
+
+    .boleto-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 0.85rem;
         color: var(--text-secondary);
-        font-size: 0.9rem;
-        margin-bottom: 12px;
     }
-    
+
     .boleto-status {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 6px 12px;
-        border-radius: 999px;
         font-size: 0.85rem;
         font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 999px;
     }
-    
+
     .boleto-status.pendente {
-        background: rgba(237, 137, 54, 0.15);
+        background: rgba(237, 137, 54, 0.18);
         color: #ed8936;
     }
-    
+
     .boleto-status.concluido {
-        background: rgba(72, 187, 120, 0.15);
-        color: #48bb78;
+        background: rgba(72, 187, 120, 0.18);
+        color: #38a169;
     }
-    
-    [data-theme="dark"] .boleto-status.pendente {
-        background: rgba(237, 137, 54, 0.25);
-    }
-    
-    [data-theme="dark"] .boleto-status.concluido {
-        background: rgba(72, 187, 120, 0.25);
-    }
-    
-    /* Campo de Busca - Sutil e Compacto */
-    .search-container {
-        background: transparent;
-        border: none;
-        padding: 0;
-        margin-bottom: 16px;
-    }
-    
-    .search-input-wrapper {
-        position: relative;
-        width: 100%;
-        max-width: 350px;
-    }
-    
-    .search-input-wrapper i {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
+
+    .empty-state {
+        text-align: center;
+        padding: 48px 20px;
         color: var(--text-secondary);
-        font-size: 0.85rem;
-        opacity: 0.5;
+        border: 1px dashed var(--border-color);
+        border-radius: 12px;
+        background: var(--bg-secondary);
+        grid-column: 1 / -1;
     }
-    
-    .search-input {
-        width: 100%;
-        padding: 8px 12px 8px 35px;
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        background: var(--bg-primary);
-        color: var(--text-primary);
-        font-size: 0.875rem;
-        transition: all 0.2s ease;
+
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 12px;
+        opacity: 0.4;
+    }
+
+    .empty-state p {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .empty-state small {
+        font-size: 0.85rem;
         opacity: 0.7;
     }
-    
-    .search-input:hover {
-        opacity: 1;
-        border-color: rgba(102, 126, 234, 0.3);
-    }
-    
-    .search-input:focus {
-        outline: none;
-        opacity: 1;
-        border-color: #667eea;
-        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-    }
-    
-    .search-input::placeholder {
-        color: var(--text-secondary);
-        opacity: 0.5;
-        font-size: 0.85rem;
-    }
-    
-    .search-stats {
-        margin-top: 4px;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        opacity: 0.7;
-        padding-left: 2px;
-    }
-    
+
     .boleto-card.hidden {
         display: none !important;
     }
-    
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: var(--text-tertiary);
+
+    .card-actions {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
     }
-    
-    .empty-state i {
-        font-size: 4rem;
+
+    .boleto-card:hover .card-actions {
+        opacity: 1;
+    }
+
+    .btn-card-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        font-size: 0.85rem;
+    }
+
+    .btn-card-action:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        transform: scale(1.1);
+    }
+
+    .btn-card-action.delete:hover {
+        background: #f56565;
+        border-color: #f56565;
+    }
+
+    .btn-add-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
         margin-bottom: 16px;
-        opacity: 0.3;
     }
-    
-    .empty-state p {
-        font-size: 1.1rem;
+
+    .btn-add-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 1.5rem;
+    }
+
+    .btn-close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-close-modal:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
         margin-bottom: 8px;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 0.95rem;
     }
-    
-    .empty-state small {
-        font-size: 0.9rem;
-        opacity: 0.7;
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.2s ease;
     }
-    
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+    }
+
+    .btn-modal {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .btn-modal.cancel {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-modal.cancel:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .btn-modal.save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-modal.save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
     @media (max-width: 768px) {
-        .boletos-grid {
-            grid-template-columns: 1fr;
+        .status-top {
+            flex-direction: column;
+            align-items: flex-start;
         }
-        
-        .import-actions {
+
+        .search-container {
             flex-direction: column;
             align-items: stretch;
         }
-        
-        .btn-import,
-        .btn-refresh {
-            width: 100%;
+
+        .search-input-wrapper {
+            max-width: 100%;
         }
-        
+
         .nav-tabs .nav-link {
             padding: 10px 16px;
             font-size: 0.95rem;
         }
+
+        .boleto-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
-<div class="container-fluid">
+<div class="container-fluid boletos-page">
     <div class="page-header">
         <h1 class="page-title">
-            <i class="fas fa-file-invoice"></i> Kanban de Boletos Servopa
+            <i class="fas fa-file-invoice-dollar"></i> Boletos Servopa
         </h1>
-        <p class="page-subtitle">
-            Gerenciamento de boletos sincronizados com Todoist - Outubro 2025
-        </p>
+        <p class="page-subtitle">Tudo que está no Todoist aparece aqui automaticamente. Marque como concluído para sincronizar nos dois sistemas.</p>
     </div>
-    
-    <div class="import-card" id="importCard" style="display: none;">
-        <div class="import-actions">
-            <button class="btn-import" id="btnImport" onclick="importBoletos()">
-                <i class="fas fa-download"></i> Importar do Todoist pela Primeira Vez
-            </button>
-            <div class="status-text">
-                <i class="fas fa-info-circle"></i>
-                <span>Importe os dados do Todoist para começar</span>
+
+    <section class="status-card">
+        <div class="status-top">
+            <div>
+                <h2>Sincronização automática</h2>
+                <p class="status-description">Atualizamos os boletos continuamente em segundo plano. Se algo falhar, é só tentar novamente.</p>
+            </div>
+            <div class="status-actions">
+                <button id="btnRetryBoletos" class="btn-retry" onclick="refreshBoletosFromTodoist(true)" style="display: none;">
+                    <i class="fas fa-sync"></i> Tentar novamente
+                </button>
             </div>
         </div>
-    </div>
-    
-    <!-- Botões de Sincronização Manual -->
-    <div class="import-card" id="syncCard" style="display: none;">
-        <div class="import-actions">
-            <button class="btn-import" id="btnSyncFrom" onclick="syncFromTodoist()">
-                <i class="fas fa-cloud-download-alt"></i> Sincronizar do Todoist
-            </button>
-            <button class="btn-import" id="btnSyncTo" onclick="syncToTodoist()" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
-                <i class="fas fa-cloud-upload-alt"></i> Enviar para Todoist
-            </button>
-            <div class="status-text" id="statusMessage">
-                <i class="fas fa-info-circle"></i>
-                <span>Use os botões para sincronizar dados</span>
-            </div>
+        <div id="statusMessage" class="status-text loading">
+            <i class="fas fa-spinner fa-spin"></i> <span>Carregando boletos...</span>
         </div>
-    </div>
-    
-    <!-- Campo de Busca -->
-    <div class="search-container" id="searchContainer" style="display: none;">
+        <div id="lastSyncBoletos" class="last-sync" hidden>
+            <i class="fas fa-history"></i> Última sincronização agora
+        </div>
+    </section>
+
+    <div id="searchContainer" class="search-container" style="display: none;">
         <div class="search-input-wrapper">
             <i class="fas fa-search"></i>
-            <input type="text" 
-                   class="search-input" 
-                   id="searchInput" 
-                   placeholder="Buscar por número do boleto ou título..."
-                   onkeyup="filterBoletos()">
+            <input id="searchInput" class="search-input" type="search" placeholder="Buscar por nome ou número do boleto" oninput="filterBoletos()">
         </div>
-        <div class="search-stats" id="searchStats"></div>
+        <div id="searchStats" class="search-stats"></div>
     </div>
-    
+
     <div class="tabs-container">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dia08-tab" type="button">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dia08-tab" type="button" role="tab">
                     <i class="fas fa-calendar-day"></i> Dia 08
                     <span class="tab-badge" id="badge08">0</span>
                 </button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dia16-tab" type="button">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dia16-tab" type="button" role="tab">
                     <i class="fas fa-calendar-alt"></i> Dia 16
                     <span class="tab-badge" id="badge16">0</span>
                 </button>
             </li>
         </ul>
     </div>
-    
+
+    <button class="btn-add-card" onclick="openBoletoModal()">
+        <i class="fas fa-plus"></i> Adicionar Boleto
+    </button>
+
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="dia08-tab">
-            <div class="boletos-grid" id="gridDia08">
+        <div class="tab-pane fade show active" id="dia08-tab" role="tabpanel">
+            <div class="boleto-grid" id="gridDia08">
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <p>Nenhum boleto para o dia 08</p>
-                    <small>Importe do Todoist para começar</small>
+                    <p>Nenhum boleto encontrado</p>
+                    <small>Assim que importarmos do Todoist, os boletos do dia 08 aparecem aqui automaticamente.</small>
                 </div>
             </div>
         </div>
-        
-        <div class="tab-pane fade" id="dia16-tab">
-            <div class="boletos-grid" id="gridDia16">
+
+        <div class="tab-pane fade" id="dia16-tab" role="tabpanel">
+            <div class="boleto-grid" id="gridDia16">
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <p>Nenhum boleto para o dia 16</p>
-                    <small>Importe do Todoist para começar</small>
+                    <p>Nenhum boleto encontrado</p>
+                    <small>Assim que importarmos do Todoist, os boletos do dia 16 aparecem aqui automaticamente.</small>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal de Criar/Editar Boleto -->
+<div id="boletoModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="boletoModalTitle">Adicionar Boleto</h3>
+            <button class="btn-close-modal" onclick="closeBoletoModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="boletoForm">
+            <input type="hidden" id="boletoTaskId" value="">
+            <div class="form-group">
+                <label for="boletoNome">Nome do Boleto*</label>
+                <input type="text" id="boletoNome" placeholder="Ex: Heber Netzer" required>
+            </div>
+            <div class="form-group">
+                <label for="boletoNumero">Número do Boleto</label>
+                <input type="text" id="boletoNumero" placeholder="Ex: 3110 - 1556">
+            </div>
+            <div class="form-group">
+                <label for="boletoCotas">Cotas</label>
+                <input type="text" id="boletoCotas" placeholder="Ex: 5 cotas">
+            </div>
+            <div class="form-group">
+                <label for="boletoDia">Dia de Vencimento*</label>
+                <select id="boletoDia" required>
+                    <option value="08">Dia 08</option>
+                    <option value="16">Dia 16</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal cancel" onclick="closeBoletoModal()">Cancelar</button>
+                <button type="submit" class="btn-modal save">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-let boletosData = null;
-let syncInterval = null;
-let hasData = false;
+let boletosData = { dia08: [], dia16: [] };
+let boletosAutoSyncTimer = null;
+let isBoletosSyncing = false;
+let lastSuccessfulBoletosSync = null;
+const BOLETOS_SYNC_INTERVAL = 5 * 60 * 1000;
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('📋 Página de boletos carregada');
-    checkAndLoadData();
+    document.addEventListener('change', handleBoletoCheckboxChange, true);
+
+    initBoletosPage().catch(error => {
+        console.error('Erro inicial ao carregar boletos:', error);
+        setSectionStatus('boletos', 'error', 'Erro inesperado ao carregar boletos. Tente novamente.');
+        showRetryButton(true);
+    });
+
+    window.addEventListener('beforeunload', () => {
+        if (boletosAutoSyncTimer) {
+            clearInterval(boletosAutoSyncTimer);
+        }
+    });
 });
 
-async function checkAndLoadData() {
+function handleBoletoCheckboxChange(event) {
+    if (!event.target.classList || !event.target.classList.contains('boleto-checkbox')) {
+        return;
+    }
+
+    const card = event.target.closest('.boleto-card');
+    if (!card) {
+        return;
+    }
+
+    const taskId = card.dataset.taskId;
+    const dia = card.dataset.dia || '08';
+    toggleStatus(taskId, event.target.checked, dia, card, event.target);
+}
+
+async function initBoletosPage() {
+    updateLastSync(null);
+    const hasLocalData = await loadBoletosFromCache();
+    await refreshBoletosFromTodoist(!hasLocalData);
+    scheduleBoletosAutoSync();
+}
+
+async function loadBoletosFromCache() {
     try {
         const response = await fetch('/api/boletos');
         const result = await response.json();
-        
+
         if (result.success && result.data) {
-            const total08 = result.data.dia08?.length || 0;
-            const total16 = result.data.dia16?.length || 0;
-            
-            if (total08 > 0 || total16 > 0) {
-                // Tem dados - mostra interface COM BOTÕES MANUAIS
-                hasData = true;
-                boletosData = result.data;
-                
-                document.getElementById('importCard').style.display = 'none';
-                document.getElementById('syncCard').style.display = 'block';
-                document.getElementById('searchContainer').style.display = 'block';
-                
-                renderBoletos(boletosData);
-                updateBadges(total08, total16);
-                
-                // SEM MAIS SYNC AUTOMÁTICO - usuário controla com botões
-                console.log('✅ Dados carregados - Use os botões para sincronizar');
-            } else {
-                // Sem dados - mostra botão de importar
-                hasData = false;
-                document.getElementById('importCard').style.display = 'block';
-                document.getElementById('syncCard').style.display = 'none';
-                document.getElementById('searchContainer').style.display = 'none';
-                console.log('ℹ️ Nenhum dado encontrado - Clique em Importar');
+            boletosData = normalizeBoletos(result.data);
+            renderBoletos(boletosData);
+            const totals = updateBadgesFromData();
+            const hasContent = totals.total08 + totals.total16 > 0;
+            showSearchContainer(hasContent);
+
+            if (hasContent) {
+                setSectionStatus('boletos', 'info', 'Dados locais carregados. Sincronizando com o Todoist...');
+                return true;
             }
-        } else {
-            // Sem dados - mostra botão de importar
-            hasData = false;
-            document.getElementById('importCard').style.display = 'block';
-            document.getElementById('syncCard').style.display = 'none';
-            document.getElementById('searchContainer').style.display = 'none';
         }
     } catch (error) {
-        console.error('Erro ao verificar dados:', error);
-        document.getElementById('importCard').style.display = 'block';
-        document.getElementById('syncCard').style.display = 'none';
-        document.getElementById('searchContainer').style.display = 'none';
+        console.warn('Erro ao carregar boletos locais:', error);
     }
+
+    boletosData = { dia08: [], dia16: [] };
+    renderBoletos(boletosData);
+    updateBadges(0, 0);
+    showSearchContainer(false);
+    setSectionStatus('boletos', 'loading', 'Nenhum dado local encontrado. Importando do Todoist...');
+    return false;
 }
 
-// REMOVIDA A FUNÇÃO startAutoSync() - NÃO USAMOS MAIS SYNC AUTOMÁTICO
+function normalizeBoletos(data) {
+    return {
+        dia08: Array.isArray(data.dia08) ? data.dia08 : [],
+        dia16: Array.isArray(data.dia16) ? data.dia16 : []
+    };
+}
 
-async function importBoletos() {
-    const btn = document.getElementById('btnImport');
-    const originalHTML = btn.innerHTML;
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
-    
+function scheduleBoletosAutoSync() {
+    if (boletosAutoSyncTimer) {
+        clearInterval(boletosAutoSyncTimer);
+    }
+    boletosAutoSyncTimer = setInterval(() => {
+        refreshBoletosFromTodoist();
+    }, BOLETOS_SYNC_INTERVAL);
+}
+
+async function refreshBoletosFromTodoist(forceImport = false) {
+    if (isBoletosSyncing) {
+        return;
+    }
+
+    isBoletosSyncing = true;
+    const totals = getBoletoTotals();
+    const hasCache = totals.total08 + totals.total16 > 0;
+    const endpoint = forceImport || !hasCache ? '/api/boletos/import' : '/api/boletos/sync';
+
     try {
-        const response = await fetch('/api/boletos/import', {
+        setSectionStatus('boletos', 'loading', endpoint.includes('import') ? 'Importando boletos do Todoist...' : 'Sincronizando boletos com o Todoist...');
+
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
-        
+
         const result = await response.json();
-        
-        if (result.success) {
-            boletosData = result.data;
-            hasData = true;
-            
-            // Esconde botão de importar, mostra status de sync e campo de busca
-            document.getElementById('importCard').style.display = 'none';
-            document.getElementById('syncCard').style.display = 'block';
-            document.getElementById('searchContainer').style.display = 'block';
-            
-            renderBoletos(boletosData);
-            
-            const total08 = result.data.dia08?.length || 0;
-            const total16 = result.data.dia16?.length || 0;
-            
-            updateBadges(total08, total16);
-            
-            // SEM MAIS SYNC AUTOMÁTICO - use os botões
-            
-            // Notifica dashboard sobre mudanças
-            if (typeof window.notifyDashboardUpdate === 'function') {
-                window.notifyDashboardUpdate();
-            }
-            
-            console.log('✅ Importação concluída - Use os botões para sincronizar');
-        } else {
-            alert('Erro ao importar: ' + (result.error || 'Erro desconhecido'));
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Falha ao sincronizar boletos.');
+        }
+
+        boletosData = normalizeBoletos(result.data || {});
+        renderBoletos(boletosData);
+        const totalsAfter = updateBadgesFromData();
+        const hasContent = totalsAfter.total08 + totalsAfter.total16 > 0;
+        showSearchContainer(hasContent);
+
+        setSectionStatus('boletos', 'success', endpoint.includes('import') ? 'Importação concluída.' : 'Sincronização concluída com sucesso.');
+        showRetryButton(false);
+
+        lastSuccessfulBoletosSync = new Date();
+        updateLastSync(lastSuccessfulBoletosSync);
+
+        if (typeof window.notifyDashboardUpdate === 'function') {
+            window.notifyDashboardUpdate();
         }
     } catch (error) {
-        console.error('Erro ao importar:', error);
-        alert('Erro ao importar: ' + error.message);
+        console.error('Erro ao sincronizar boletos:', error);
+        setSectionStatus('boletos', 'error', error.message || 'Erro ao sincronizar boletos.');
+        showRetryButton(true);
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
+        isBoletosSyncing = false;
     }
 }
 
 function renderBoletos(data) {
-    const grid08 = document.getElementById('gridDia08');
-    const grid16 = document.getElementById('gridDia16');
-    
-    if (data.dia08 && data.dia08.length > 0) {
-        grid08.innerHTML = data.dia08.map(function(b) { return createBoletoCard(b, '08'); }).join('');
-    } else {
-        grid08.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum boleto para o dia 08</p><small>Importe do Todoist para adicionar boletos</small></div>';
+    renderBoletoList('gridDia08', data.dia08, '08');
+    renderBoletoList('gridDia16', data.dia16, '16');
+    filterBoletos();
+}
+
+function renderBoletoList(containerId, list, dia) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        return;
     }
-    
-    if (data.dia16 && data.dia16.length > 0) {
-        grid16.innerHTML = data.dia16.map(function(b) { return createBoletoCard(b, '16'); }).join('');
-    } else {
-        grid16.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum boleto para o dia 16</p><small>Importe do Todoist para adicionar boletos</small></div>';
+
+    if (!Array.isArray(list) || list.length === 0) {
+        container.innerHTML = createEmptyState(dia);
+        return;
     }
+
+    container.innerHTML = list.map(boleto => createBoletoCard(boleto, dia)).join('');
+}
+
+function createEmptyState(dia) {
+    return `
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>Nenhum boleto para o dia ${dia}</p>
+            <small>As tarefas desse dia aparecerão automaticamente assim que forem encontradas no Todoist.</small>
+        </div>
+    `;
 }
 
 function createBoletoCard(boleto, dia) {
-    const isCompleted = boleto.is_completed || false;
-    const statusClass = isCompleted ? 'concluido' : 'pendente';
-    const statusText = isCompleted ? '<i class="fas fa-check-circle"></i> Concluído' : '<i class="fas fa-clock"></i> Pendente';
-    const completedClass = isCompleted ? 'completed' : '';
-    const taskId = boleto.task_id || '';
-    const boletoNumber = boleto.numero || '';
-    const boletoName = boleto.nome || 'Sem nome';
-    
-    return '<div class="boleto-card ' + completedClass + '" data-task-id="' + taskId + '" data-number="' + boletoNumber + '" data-title="' + boletoName + '">' +
-        '<div class="boleto-header">' +
-        '<input type="checkbox" class="boleto-checkbox" ' + (isCompleted ? 'checked' : '') + ' onchange="toggleStatus(\'' + taskId + '\', this.checked, \'' + dia + '\')">' +
-        '<div class="boleto-info">' +
-        '<div class="boleto-nome">' + boletoName + '</div>' +
-        (boleto.cotas ? '<div class="boleto-cotas">' + boleto.cotas + '</div>' : '') +
-        '<span class="boleto-status ' + statusClass + '">' + statusText + '</span>' +
-        '</div></div></div>';
+    const rawTaskId = boleto?.task_id ?? '';
+    const rawNumero = boleto?.numero ?? '';
+    const rawNome = boleto?.nome ?? 'Sem nome';
+    const rawCotas = boleto?.cotas ?? '';
+    const isCompleted = Boolean(boleto?.is_completed);
+
+    const taskIdAttr = encodeHtmlAttr(String(rawTaskId));
+    const numeroDisplay = escapeHtml(rawNumero);
+    const nomeDisplay = escapeHtml(rawNome);
+    const cotasDisplay = escapeHtml(rawCotas);
+
+    return `
+        <article class="boleto-card ${isCompleted ? 'completed' : ''}" data-task-id="${taskIdAttr}" data-dia="${dia}" data-number="${encodeHtmlAttr(String(rawNumero).toLowerCase())}" data-title="${encodeHtmlAttr(String(rawNome).toLowerCase())}">
+            <input type="checkbox" class="boleto-checkbox" ${isCompleted ? 'checked' : ''} aria-label="Marcar boleto ${nomeDisplay} como ${isCompleted ? 'pendente' : 'concluído'}">
+            <div class="boleto-info">
+                <div class="boleto-nome">${nomeDisplay}</div>
+                <div class="boleto-meta">
+                    ${rawNumero ? `<span><i class="fas fa-barcode"></i> ${numeroDisplay}</span>` : ''}
+                    ${rawCotas ? `<span><i class="fas fa-layer-group"></i> ${cotasDisplay}</span>` : ''}
+                </div>
+                <span class="boleto-status ${isCompleted ? 'concluido' : 'pendente'}">
+                    ${isCompleted ? '<i class="fas fa-check-circle"></i> Concluído' : '<i class="fas fa-clock"></i> Pendente'}
+                </span>
+            </div>
+            <div class="card-actions">
+                <button class="btn-card-action edit" onclick="editBoleto('${taskIdAttr}', '${dia}')" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-card-action delete" onclick="deleteBoleto('${taskIdAttr}', '${dia}')" title="Excluir">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </article>
+    `;
 }
 
-// ========== ATUALIZAÇÃO LOCAL (SEM API) ==========
-// Checkboxes agora apenas marcam localmente
-// Use o botão "Enviar para Todoist" para sincronizar
-
-function toggleStatus(taskId, isCompleted, dia) {
-    const card = document.querySelector('[data-task-id="' + taskId + '"]');
-    
-    // Atualiza dados locais imediatamente
-    const diaKey = dia === '08' ? 'dia08' : 'dia16';
-    if (boletosData && boletosData[diaKey]) {
-        const boleto = boletosData[diaKey].find(b => b.task_id === taskId);
-        if (boleto) {
-            boleto.is_completed = isCompleted;
-            boleto.pending_sync = true; // Marca como pendente de envio
-        }
+async function toggleStatus(taskId, isCompleted, dia, card, checkbox) {
+    if (!taskId) {
+        return;
     }
-    
-    // Atualiza visual imediatamente
-    if (card) {
-        if (isCompleted) {
-            card.classList.add('completed');
-            const statusEl = card.querySelector('.boleto-status');
-            if (statusEl) {
-                statusEl.className = 'boleto-status concluido';
-                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Concluído';
-            }
-        } else {
-            card.classList.remove('completed');
-            const statusEl = card.querySelector('.boleto-status');
-            if (statusEl) {
-                statusEl.className = 'boleto-status pendente';
-                statusEl.innerHTML = '<i class="fas fa-clock"></i> Pendente';
-            }
-        }
-    }
-    
-    // Salva no cache local
-    saveBoletosLocal();
-    
-    // Notifica que há mudanças pendentes
-    updateSyncStatus();
-    
-    console.log('✅ Atualizado localmente - Clique em "Enviar para Todoist" para sincronizar');
-}
 
-// Salva dados localmente
-function saveBoletosLocal() {
+    const boletoCard = card || document.querySelector(`.boleto-card[data-task-id="${taskId}"]`);
+    const boletoCheckbox = checkbox || boletoCard?.querySelector('.boleto-checkbox');
+
+    if (boletoCheckbox) {
+        boletoCheckbox.disabled = true;
+    }
+
     try {
-        localStorage.setItem('boletos_pending', JSON.stringify(boletosData));
+        const response = await fetch(`/api/boletos/toggle/${taskId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_completed: isCompleted })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Não foi possível atualizar o boleto.');
+        }
+
+        updateLocalBoletoState(taskId, dia, isCompleted);
+        updateCardState(boletoCard, isCompleted);
+        setSectionStatus('boletos', 'success', isCompleted ? 'Boleto marcado como concluído.' : 'Boleto marcado como pendente.');
+        showRetryButton(false);
+
+        lastSuccessfulBoletosSync = new Date();
+        updateLastSync(lastSuccessfulBoletosSync);
     } catch (error) {
-        console.warn('Erro ao salvar no localStorage:', error);
+        console.error('Erro ao atualizar boleto:', error);
+        setSectionStatus('boletos', 'error', error.message || 'Erro ao atualizar boleto.');
+        showRetryButton(true);
+
+        if (boletoCheckbox) {
+            boletoCheckbox.checked = !isCompleted;
+        }
+    } finally {
+        if (boletoCheckbox) {
+            boletoCheckbox.disabled = false;
+        }
     }
 }
 
-// Atualiza mensagem de status
-function updateSyncStatus() {
-    const statusEl = document.getElementById('statusMessage');
+function updateLocalBoletoState(taskId, dia, isCompleted) {
+    const diaKey = dia === '16' ? 'dia16' : 'dia08';
+    const list = boletosData[diaKey] || [];
+    const boleto = list.find(item => String(item.task_id) === String(taskId));
+    if (boleto) {
+        boleto.is_completed = isCompleted;
+    }
+}
+
+function updateCardState(card, isCompleted) {
+    if (!card) {
+        return;
+    }
+
+    card.classList.toggle('completed', isCompleted);
+    const statusEl = card.querySelector('.boleto-status');
     if (statusEl) {
-        statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Há mudanças não sincronizadas - Clique em "Enviar para Todoist"</span>';
-        statusEl.className = 'status-text';
-        statusEl.style.color = '#ed8936';
+        statusEl.className = `boleto-status ${isCompleted ? 'concluido' : 'pendente'}`;
+        statusEl.innerHTML = isCompleted
+            ? '<i class="fas fa-check-circle"></i> Concluído'
+            : '<i class="fas fa-clock"></i> Pendente';
     }
 }
-
-function updateBadges(count08, count16) {
-    document.getElementById('badge08').textContent = count08;
-    document.getElementById('badge16').textContent = count16;
-}
-
-function updateStatus(type, message) {
-    const statusEl = document.getElementById('statusMessage');
-    statusEl.className = 'status-text ' + type;
-}
-
-// ========== BUSCA E FILTRO ==========
 
 function filterBoletos() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-    const allCards = document.querySelectorAll('.boleto-card');
-    
-    let totalCards = 0;
-    let visibleCards = 0;
-    
-    allCards.forEach(card => {
-        totalCards++;
-        const cardTitle = (card.getAttribute('data-title') || '').toLowerCase();
-        const cardNumber = (card.getAttribute('data-number') || '').toLowerCase();
-        
-        // Busca por título ou número
-        const matches = cardTitle.includes(searchTerm) || cardNumber.includes(searchTerm);
-        
-        if (matches || searchTerm === '') {
+    const input = document.getElementById('searchInput');
+    if (!input) {
+        return;
+    }
+
+    const searchTerm = input.value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.boleto-card');
+
+    let total = 0;
+    let visible = 0;
+
+    cards.forEach(card => {
+        total++;
+        const title = (card.dataset.title || '').toLowerCase();
+        const number = (card.dataset.number || '').toLowerCase();
+        const matches = !searchTerm || title.includes(searchTerm) || number.includes(searchTerm);
+
+        if (matches) {
             card.classList.remove('hidden');
-            visibleCards++;
+            visible++;
         } else {
             card.classList.add('hidden');
         }
     });
-    
-    // Atualiza estatísticas da busca
+
     const statsEl = document.getElementById('searchStats');
-    if (searchTerm === '') {
-        statsEl.textContent = '';
-    } else {
-        statsEl.innerHTML = '<i class="fas fa-filter"></i> Mostrando ' + visibleCards + ' de ' + totalCards + ' boletos';
+    if (statsEl) {
+        statsEl.innerHTML = searchTerm ? `<i class="fas fa-filter"></i> Mostrando ${visible} de ${total} boletos` : '';
     }
 }
 
-// ========== SINCRONIZAÇÃO MANUAL COM BOTÕES ==========
+function showSearchContainer(visible) {
+    const container = document.getElementById('searchContainer');
+    if (!container) {
+        return;
+    }
 
-async function syncFromTodoist() {
-    const btn = document.getElementById('btnSyncFrom');
-    const statusEl = document.getElementById('statusMessage');
-    const originalHTML = btn.innerHTML;
+    container.style.display = visible ? 'flex' : 'none';
+}
+
+function setSectionStatus(section, state, message) {
+    const statusId = section === 'boletos' ? 'statusMessage' : 'statusMessageLances';
+    const statusEl = document.getElementById(statusId);
+    if (!statusEl) {
+        return;
+    }
+
+    const iconMap = {
+        loading: 'fas fa-spinner fa-spin',
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        info: 'fas fa-info-circle'
+    };
+
+    const classMap = {
+        loading: 'status-text loading',
+        success: 'status-text success',
+        error: 'status-text error',
+        info: 'status-text'
+    };
+
+    statusEl.className = classMap[state] || 'status-text';
+    statusEl.innerHTML = `<i class="${iconMap[state] || iconMap.info}"></i> <span>${message}</span>`;
+
+    if (section === 'boletos') {
+        showRetryButton(state === 'error');
+    }
+}
+
+function showRetryButton(show) {
+    const btn = document.getElementById('btnRetryBoletos');
+    if (!btn) {
+        return;
+    }
+
+    btn.style.display = show ? 'inline-flex' : 'none';
+    btn.disabled = isBoletosSyncing;
+}
+
+function updateBadgesFromData() {
+    const totals = getBoletoTotals();
+    updateBadges(totals.total08, totals.total16);
+    return totals;
+}
+
+function getBoletoTotals(data = boletosData) {
+    return {
+        total08: Array.isArray(data.dia08) ? data.dia08.length : 0,
+        total16: Array.isArray(data.dia16) ? data.dia16.length : 0
+    };
+}
+
+function updateBadges(count08, count16) {
+    const badge08 = document.getElementById('badge08');
+    const badge16 = document.getElementById('badge16');
+
+    if (badge08) {
+        badge08.textContent = count08;
+    }
+
+    if (badge16) {
+        badge16.textContent = count16;
+    }
+}
+
+function updateLastSync(date) {
+    const el = document.getElementById('lastSyncBoletos');
+    if (!el) {
+        return;
+    }
+
+    if (!date) {
+        el.setAttribute('hidden', 'hidden');
+        el.textContent = '';
+        return;
+    }
+
+    const syncDate = date instanceof Date ? date : new Date(date);
+    el.removeAttribute('hidden');
+    el.innerHTML = `<i class="fas fa-history"></i> Última sincronização: ${syncDate.toLocaleString('pt-BR')}`;
+}
+
+function escapeHtml(value = '') {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function encodeHtmlAttr(value = '') {
+    return escapeHtml(value);
+}
+
+// ========== CRUD DE BOLETOS ==========
+
+function openBoletoModal(taskId = null, dia = '08') {
+    const modal = document.getElementById('boletoModal');
+    const title = document.getElementById('boletoModalTitle');
+    const form = document.getElementById('boletoForm');
     
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
-    statusEl.innerHTML = '<i class="fas fa-sync fa-spin"></i> <span>Buscando dados do Todoist...</span>';
-    statusEl.className = 'status-text loading';
+    form.reset();
+    document.getElementById('boletoDia').value = dia;
+    
+    if (taskId) {
+        // Modo edição
+        title.textContent = 'Editar Boleto';
+        document.getElementById('boletoTaskId').value = taskId;
+        
+        // Busca dados do boleto
+        const diaKey = dia === '16' ? 'dia16' : 'dia08';
+        const boleto = boletosData[diaKey]?.find(b => String(b.task_id) === String(taskId));
+        
+        if (boleto) {
+            document.getElementById('boletoNome').value = boleto.nome || '';
+            document.getElementById('boletoNumero').value = boleto.numero || '';
+            document.getElementById('boletoCotas').value = boleto.cotas || '';
+        }
+    } else {
+        // Modo criação
+        title.textContent = 'Adicionar Boleto';
+        document.getElementById('boletoTaskId').value = '';
+    }
+    
+    modal.classList.add('active');
+}
+
+function closeBoletoModal() {
+    const modal = document.getElementById('boletoModal');
+    modal.classList.remove('active');
+}
+
+document.getElementById('boletoForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const taskId = document.getElementById('boletoTaskId').value;
+    const nome = document.getElementById('boletoNome').value.trim();
+    const numero = document.getElementById('boletoNumero').value.trim();
+    const cotas = document.getElementById('boletoCotas').value.trim();
+    const dia = document.getElementById('boletoDia').value;
+    
+    if (!nome) {
+        alert('Por favor, preencha o nome do boleto');
+        return;
+    }
+    
+    const boletoData = {
+        nome: nome,
+        numero: numero,
+        cotas: cotas,
+        dia: dia,
+        is_completed: false
+    };
     
     try {
-        const response = await fetch('/api/boletos/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
+        setSectionStatus('boletos', 'loading', taskId ? 'Atualizando boleto...' : 'Criando boleto...');
         
-        if (!response.ok) {
-            throw new Error('Erro HTTP: ' + response.status);
-        }
+        const endpoint = taskId ? `/api/boletos/update/${taskId}` : '/api/boletos/create';
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(boletoData)
+        });
         
         const result = await response.json();
         
-        if (result.success) {
-            // Atualiza dados locais
-            boletosData = result.data;
-            renderBoletos(boletosData);
-            
-            const total08 = result.data.dia08?.length || 0;
-            const total16 = result.data.dia16?.length || 0;
-            updateBadges(total08, total16);
-            
-            // Limpa pendências
-            localStorage.removeItem('boletos_pending');
-            
-            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> <span>Sincronizado com sucesso! (' + result.changes + ' mudanças)</span>';
-            statusEl.className = 'status-text success';
-            
-            // Atualiza badge do menu
-            if (typeof window.notifyDashboardUpdate === 'function') {
-                window.notifyDashboardUpdate();
-            }
-            
-            console.log('✅ Sincronizado do Todoist: ' + result.changes + ' mudanças');
-        } else {
-            throw new Error(result.error || 'Erro desconhecido');
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Erro ao salvar boleto');
         }
+        
+        closeBoletoModal();
+        setSectionStatus('boletos', 'success', taskId ? 'Boleto atualizado com sucesso!' : 'Boleto criado com sucesso!');
+        
+        // Recarrega dados
+        await refreshBoletosFromTodoist(true);
+        
     } catch (error) {
-        console.error('❌ Erro ao sincronizar do Todoist:', error);
-        statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Erro: ' + error.message + '</span>';
-        statusEl.className = 'status-text error';
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
+        console.error('Erro ao salvar boleto:', error);
+        setSectionStatus('boletos', 'error', error.message || 'Erro ao salvar boleto');
+        alert('Erro: ' + error.message);
     }
+});
+
+function editBoleto(taskId, dia) {
+    openBoletoModal(taskId, dia);
 }
 
-async function syncToTodoist() {
-    const btn = document.getElementById('btnSyncTo');
-    const statusEl = document.getElementById('statusMessage');
-    const originalHTML = btn.innerHTML;
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-    statusEl.innerHTML = '<i class="fas fa-cloud-upload-alt fa-pulse"></i> <span>Enviando mudanças para o Todoist...</span>';
-    statusEl.className = 'status-text loading';
+async function deleteBoleto(taskId, dia) {
+    if (!confirm('Tem certeza que deseja excluir este boleto?')) {
+        return;
+    }
     
     try {
-        // Coleta todas as tasks com mudanças pendentes
-        const pendingUpdates = [];
+        setSectionStatus('boletos', 'loading', 'Excluindo boleto...');
         
-        ['dia08', 'dia16'].forEach(diaKey => {
-            if (boletosData[diaKey]) {
-                boletosData[diaKey].forEach(boleto => {
-                    if (boleto.pending_sync) {
-                        pendingUpdates.push({
-                            task_id: boleto.task_id,
-                            is_completed: boleto.is_completed
-                        });
-                    }
-                });
-            }
+        const response = await fetch(`/api/boletos/delete/${taskId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
         });
         
-        if (pendingUpdates.length === 0) {
-            statusEl.innerHTML = '<i class="fas fa-info-circle"></i> <span>Nenhuma mudança para enviar</span>';
-            statusEl.className = 'status-text';
-            btn.disabled = false;
-            btn.innerHTML = originalHTML;
-            return;
+        const result = await response.json();
+        
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Erro ao excluir boleto');
         }
         
-        // Envia em batch (com delay para evitar rate limit)
-        let successCount = 0;
-        let errorCount = 0;
+        setSectionStatus('boletos', 'success', 'Boleto excluído com sucesso!');
         
-        for (const update of pendingUpdates) {
-            try {
-                const response = await fetch('/api/boletos/toggle/' + update.task_id, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ is_completed: update.is_completed })
-                });
-                
-                if (response.ok) {
-                    successCount++;
-                    
-                    // Remove flag de pendente
-                    ['dia08', 'dia16'].forEach(diaKey => {
-                        if (boletosData[diaKey]) {
-                            const boleto = boletosData[diaKey].find(b => b.task_id === update.task_id);
-                            if (boleto) {
-                                delete boleto.pending_sync;
-                            }
-                        }
-                    });
-                } else {
-                    errorCount++;
-                }
-                
-                // Delay entre requisições para evitar rate limit
-                await new Promise(resolve => setTimeout(resolve, 600));
-                
-            } catch (error) {
-                console.error('Erro ao enviar task:', update.task_id, error);
-                errorCount++;
-            }
-        }
-        
-        // Limpa pendências
-        localStorage.removeItem('boletos_pending');
-        
-        if (errorCount === 0) {
-            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> <span>Enviado com sucesso! (' + successCount + ' mudanças)</span>';
-            statusEl.className = 'status-text success';
-        } else {
-            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>Parcialmente enviado: ' + successCount + ' OK, ' + errorCount + ' erros</span>';
-            statusEl.className = 'status-text';
-            statusEl.style.color = '#ed8936';
-        }
-        
-        console.log('✅ Enviado para Todoist: ' + successCount + ' OK, ' + errorCount + ' erros');
+        // Recarrega dados
+        await refreshBoletosFromTodoist(true);
         
     } catch (error) {
-        console.error('❌ Erro ao enviar para Todoist:', error);
-        statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Erro: ' + error.message + '</span>';
-        statusEl.className = 'status-text error';
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
+        console.error('Erro ao excluir boleto:', error);
+        setSectionStatus('boletos', 'error', error.message || 'Erro ao excluir boleto');
+        alert('Erro: ' + error.message);
     }
 }
 
+// Fecha modal ao clicar fora
+document.getElementById('boletoModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'boletoModal') {
+        closeBoletoModal();
+    }
+});
 </script>
 {% endblock %}

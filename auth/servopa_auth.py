@@ -3,6 +3,9 @@
 
 import os
 import time
+import tempfile
+import shutil
+import atexit
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -23,6 +26,12 @@ def create_driver(headless=False):
     """Cria e configura o driver do navegador com anti-detecção"""
     options = webdriver.ChromeOptions()
     
+    # Garante diretório de perfil exclusivo por sessão para evitar conflitos
+    temp_profile_root = os.path.join(tempfile.gettempdir(), "bci_on1_chrome_profiles")
+    os.makedirs(temp_profile_root, exist_ok=True)
+    user_data_dir = tempfile.mkdtemp(prefix="session_", dir=temp_profile_root)
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+
     # Argumentos básicos
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -63,6 +72,19 @@ def create_driver(headless=False):
     
     service = ChromeService(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
+
+    # Garantir que o perfil temporário seja limpo ao finalizar
+    original_quit = driver.quit
+
+    def quit_with_cleanup(*args, **kwargs):
+        try:
+            return original_quit(*args, **kwargs)
+        finally:
+            shutil.rmtree(user_data_dir, ignore_errors=True)
+
+    driver.quit = quit_with_cleanup
+    driver._bci_user_data_dir = user_data_dir
+    atexit.register(lambda: shutil.rmtree(user_data_dir, ignore_errors=True))
     
     # ===== STEALTH MODE: Injeta scripts anti-detecção =====
     

@@ -4,108 +4,185 @@
 
 {% block content %}
 <style>
-    .page-header {
-        margin-bottom: 32px;
+    .lances-page {
+        padding-bottom: 48px;
     }
-    
+
+    .page-header {
+        margin-bottom: 28px;
+    }
+
     .page-title {
         font-size: 2rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
-    
+
     .page-subtitle {
         color: var(--text-secondary);
         font-size: 1rem;
+        max-width: 680px;
     }
-    
-    .import-card {
+
+    .status-card {
         background: var(--bg-primary);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.12);
         margin-bottom: 24px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
-    
-    [data-theme="dark"] .import-card {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+    [data-theme="dark"] .status-card {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     }
-    
-    .import-actions {
+
+    .status-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .status-card h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .status-description {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        max-width: 520px;
+    }
+
+    .status-actions {
         display: flex;
         align-items: center;
         gap: 12px;
         flex-wrap: wrap;
     }
-    
-    .btn-import {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 12px 24px;
+
+    .btn-retry {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
         border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
-    
-    .btn-import:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+
+    .btn-retry:hover {
+        background: var(--bg-tertiary);
+        transform: translateY(-1px);
     }
-    
-    .btn-import:disabled {
+
+    .btn-retry:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
     }
-    
-    .btn-refresh {
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-        border: 1px solid var(--border-color);
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-refresh:hover {
-        background: var(--bg-tertiary);
-        transform: translateY(-2px);
-    }
-    
+
     .status-text {
-        color: var(--text-secondary);
         font-size: 0.95rem;
+        color: var(--text-secondary);
         display: flex;
         align-items: center;
         gap: 8px;
     }
-    
+
     .status-text.loading {
         color: #667eea;
     }
-    
+
     .status-text.success {
         color: #48bb78;
     }
-    
+
     .status-text.error {
         color: #f56565;
     }
-    
+
+    .last-sync {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .search-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 380px;
+    }
+
+    .search-input-wrapper i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        opacity: 0.6;
+        font-size: 0.9rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 16px 10px 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
+    }
+
+    .search-input::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.6;
+    }
+
+    .search-stats {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
     .tabs-container {
         margin-bottom: 24px;
     }
-    
+
     .nav-tabs {
         border-bottom: 2px solid var(--border-color);
+        display: flex;
+        gap: 8px;
     }
-    
+
     .nav-tabs .nav-link {
         border: none;
         background: transparent;
@@ -115,18 +192,22 @@
         cursor: pointer;
         transition: all 0.3s ease;
         position: relative;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
-    
+
     .nav-tabs .nav-link:hover {
         color: var(--text-primary);
         background: var(--bg-secondary);
     }
-    
+
     .nav-tabs .nav-link.active {
         color: #667eea;
         background: transparent;
     }
-    
+
     .nav-tabs .nav-link.active::after {
         content: '';
         position: absolute;
@@ -136,961 +217,1189 @@
         height: 2px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-    
+
     .tab-badge {
         background: rgba(102, 126, 234, 0.15);
         color: #667eea;
-        padding: 2px 8px;
+        padding: 2px 10px;
         border-radius: 12px;
         font-size: 0.85rem;
-        margin-left: 8px;
         font-weight: 600;
     }
-    
+
     .nav-tabs .nav-link.active .tab-badge {
         background: rgba(102, 126, 234, 0.25);
     }
-    
-    /* KANBAN LAYOUT - Grid responsivo lado a lado */
-    .kanban-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-        padding-bottom: 24px;
+
+    .tab-content {
+        padding-top: 20px;
     }
-    
-    .kanban-column {
-        background: var(--bg-secondary);
-        border-radius: 12px;
-        padding: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    .lance-groups {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 16px;
         width: 100%;
     }
-    
-    [data-theme="dark"] .kanban-column {
-        background: var(--bg-tertiary);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    
-    .kanban-column-header {
-        margin-bottom: 0;
-        padding: 16px;
-        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+
+    .lance-group {
+        border: 1px solid var(--border-color);
         border-radius: 12px;
-        cursor: pointer;
+        background: var(--bg-secondary);
+        overflow: hidden;
         transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] .lance-group {
+        background: var(--bg-tertiary);
+    }
+
+    .lance-group-summary {
+        list-style: none;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border: 2px solid var(--border-color);
+        gap: 12px;
+        padding: 16px;
+        cursor: pointer;
+        user-select: none;
     }
-    
-    .kanban-column-header:hover {
-        background: linear-gradient(135deg, var(--accent) 0%, #667eea 100%);
-        color: white;
-        transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
+    .lance-group-summary::-webkit-details-marker {
+        display: none;
     }
-    
-    .kanban-column-header:hover .kanban-column-title,
-    .kanban-column-header:hover .kanban-column-count,
-    .kanban-column-header:hover .collapse-icon {
-        color: white;
+
+    .lance-group-summary:hover {
+        background: var(--bg-primary);
     }
-    
-    .kanban-column-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: var(--text-primary);
+
+    .lance-group-title {
         display: flex;
         align-items: center;
-        gap: 12px;
-    }
-    
-    .collapse-icon {
-        font-size: 1.2rem;
-        color: var(--accent);
-        transition: transform 0.3s ease;
-    }
-    
-    .kanban-column-header.collapsed .collapse-icon {
-        transform: rotate(-90deg);
-    }
-    
-    .kanban-column-count {
-        font-size: 0.9rem;
-        color: var(--text-secondary);
+        gap: 10px;
         font-weight: 600;
+        color: var(--text-primary);
     }
-    
-    .kanban-cards {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-top: 16px;
-        max-height: 2000px;
-        overflow: hidden;
-        transition: max-height 0.4s ease, opacity 0.3s ease, margin-top 0.3s ease;
-        opacity: 1;
+
+    .lance-group-icon i {
+        transition: transform 0.2s ease;
+        transform: rotate(0deg);
+        color: #667eea;
+        font-size: 0.85rem;
     }
-    
-    .kanban-cards.collapsed {
-        max-height: 0;
-        opacity: 0;
-        margin-top: 0;
+
+    .lance-group[open] .lance-group-icon i {
+        transform: rotate(90deg);
     }
-    
+
+    .lance-group-code {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        background: rgba(102, 126, 234, 0.15);
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+    .lance-group-count {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .lance-group-tasks {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 10px;
+        padding: 0 16px 16px 16px;
+    }
+
+    .lance-group-empty {
+        padding: 20px;
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        grid-column: 1 / -1;
+    }
+
     .lance-card {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
         background: var(--bg-primary);
-        border: 2px solid var(--border-color);
-        border-radius: 8px;
-        padding: 12px;
-        transition: all 0.3s ease;
-        cursor: pointer;
+        padding: 14px;
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        transition: all 0.2s ease;
+        position: relative;
     }
-    
-    .lance-card:hover {
-        border-color: #667eea;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-        transform: translateY(-2px);
-    }
-    
-    .lance-card.completed {
-        border-color: #48bb78;
-        background: rgba(72, 187, 120, 0.05);
-    }
-    
+
     [data-theme="dark"] .lance-card {
         background: var(--bg-secondary);
     }
-    
+
+    .lance-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(102, 126, 234, 0.2);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .lance-card.completed {
+        border-color: rgba(72, 187, 120, 0.45);
+        background: rgba(72, 187, 120, 0.08);
+    }
+
     [data-theme="dark"] .lance-card.completed {
-        background: rgba(72, 187, 120, 0.1);
+        background: rgba(72, 187, 120, 0.18);
     }
-    
-    .lance-card-header {
+
+    .lance-checkbox-wrapper {
         display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 8px;
+        align-items: center;
     }
-    
+
     .lance-checkbox {
         width: 20px;
         height: 20px;
-        margin-top: 2px;
-        cursor: pointer;
         accent-color: #667eea;
+        cursor: pointer;
     }
-    
+
     .lance-info {
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
     }
-    
+
+    .lance-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
     .lance-cota {
-        font-size: 1.1rem;
         font-weight: 700;
-        color: #667eea;
-        margin-bottom: 4px;
-    }
-    
-    .lance-nome {
-        font-size: 0.95rem;
         color: var(--text-primary);
-        margin-bottom: 8px;
     }
-    
+
+    .lance-nome {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
     .lance-status {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 4px 12px;
-        border-radius: 16px;
         font-size: 0.8rem;
         font-weight: 600;
-    }
-    
-    .lance-status.pendente {
-        background: rgba(237, 137, 54, 0.1);
-        color: #ed8936;
-    }
-    
-    .lance-status.concluido {
-        background: rgba(72, 187, 120, 0.1);
-        color: #48bb78;
-    }
-    
-    /* Campo de Busca - Sutil e Compacto */
-    .search-container {
-        background: transparent;
-        border: none;
-        padding: 0;
-        margin-bottom: 16px;
-    }
-    
-    .search-input-wrapper {
-        position: relative;
-        width: 100%;
-        max-width: 350px;
-    }
-    
-    .search-input-wrapper i {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-        opacity: 0.5;
-    }
-    
-    .search-input {
-        width: 100%;
-        padding: 8px 12px 8px 35px;
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        background: var(--bg-primary);
-        color: var(--text-primary);
-        font-size: 0.875rem;
-        transition: all 0.2s ease;
-        opacity: 0.7;
-    }
-    
-    .search-input:hover {
-        opacity: 1;
-        border-color: rgba(102, 126, 234, 0.3);
-    }
-    
-    .search-input:focus {
-        outline: none;
-        opacity: 1;
-        border-color: #667eea;
-        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-    }
-    
-    .search-input::placeholder {
-        color: var(--text-secondary);
-        opacity: 0.5;
-        font-size: 0.85rem;
-    }
-    
-    .search-stats {
-        margin-top: 4px;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        opacity: 0.7;
-        padding-left: 2px;
-    }
-    
-    .kanban-card.hidden {
-        display: none !important;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: var(--text-secondary);
+        padding: 4px 10px;
+        border-radius: 999px;
     }
 
-    
-    .empty-state i {
-        font-size: 4rem;
-        margin-bottom: 16px;
-        opacity: 0.3;
+    .lance-status.pendente {
+        background: rgba(237, 137, 54, 0.18);
+        color: #ed8936;
     }
-    
-    .empty-state p {
-        font-size: 1.1rem;
+
+    .lance-status.concluido {
+        background: rgba(72, 187, 120, 0.18);
+        color: #38a169;
+    }
+
+    .lance-card.hidden {
+        display: none !important;
+    }
+
+    .card-actions {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        display: flex;
+        gap: 6px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .lance-card:hover .card-actions {
+        opacity: 1;
+    }
+
+    .btn-card-action {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        font-size: 0.75rem;
+    }
+
+    .btn-card-action:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        transform: scale(1.1);
+    }
+
+    .btn-card-action.delete:hover {
+        background: #f56565;
+        border-color: #f56565;
+    }
+
+    .btn-add-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
         font-weight: 600;
-        margin-bottom: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        margin-bottom: 16px;
     }
-    
+
+    .btn-add-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 1.5rem;
+    }
+
+    .btn-close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-close-modal:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+    }
+
+    .btn-modal {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .btn-modal.cancel {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-modal.cancel:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .btn-modal.save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-modal.save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+        color: var(--text-secondary);
+        border: 1px dashed var(--border-color);
+        border-radius: 12px;
+        background: var(--bg-secondary);
+        grid-column: 1 / -1;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 12px;
+        opacity: 0.4;
+    }
+
+    .empty-state p {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
     .empty-state small {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         opacity: 0.7;
     }
-    
-    /* Mobile Responsiveness */
+
     @media (max-width: 768px) {
-        .import-actions {
+        .status-top {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .search-container {
             flex-direction: column;
             align-items: stretch;
         }
-        
-        .btn-import, .btn-refresh {
-            width: 100%;
-            text-align: center;
+
+        .search-input-wrapper {
+            max-width: 100%;
         }
-        
-        .status-text {
-            justify-content: center;
+
+        .nav-tabs .nav-link {
+            padding: 10px 16px;
+            font-size: 0.95rem;
         }
-        
-        .kanban-container {
+
+        .lance-groups {
             grid-template-columns: 1fr;
         }
-        
-        .page-title {
-            font-size: 1.5rem;
-        }
-        
-        .nav-tabs .nav-link {
-            padding: 8px 16px;
-            font-size: 0.9rem;
+
+        .lance-group-tasks {
+            grid-template-columns: 1fr;
         }
     }
 </style>
 
-<div class="container-fluid">
+<div class="container-fluid lances-page">
     <div class="page-header">
         <h1 class="page-title">
             <i class="fas fa-gavel"></i> Lances Servopa
         </h1>
-        <p class="page-subtitle">Gestão completa de lances para os dias 8 e 16</p>
+        <p class="page-subtitle">Os lances aprovados e pendentes do Todoist aparecem aqui automaticamente. Marque uma cota como concluída para sincronizar nos dois sistemas.</p>
     </div>
-    
-    <div class="import-card" id="importCard" style="display: none;">
-        <div class="import-actions">
-            <button class="btn-import" id="btnImport" onclick="importLances()">
-                <i class="fas fa-download"></i> Importar do Todoist pela Primeira Vez
-            </button>
-            <div class="status-text">
-                <i class="fas fa-info-circle"></i>
-                <span>Importe os dados do Todoist para começar</span>
+
+    <section class="status-card">
+        <div class="status-top">
+            <div>
+                <h2>Sincronização automática</h2>
+                <p class="status-description">Importamos os lances do Todoist e mantemos tudo alinhado automaticamente. Se detectar alguma falha, use o botão de tentativa novamente.</p>
+            </div>
+            <div class="status-actions">
+                <button id="btnRetryLances" class="btn-retry" onclick="refreshLancesFromTodoist(true)" style="display: none;">
+                    <i class="fas fa-sync"></i> Tentar novamente
+                </button>
             </div>
         </div>
-    </div>
-    
-    <!-- Botões de Sincronização Manual -->
-    <div class="import-card" id="syncCard" style="display: none;">
-        <div class="import-actions">
-            <button class="btn-import" id="btnSyncFrom" onclick="syncFromTodoist()">
-                <i class="fas fa-cloud-download-alt"></i> Sincronizar do Todoist
-            </button>
-            <button class="btn-import" id="btnSyncTo" onclick="syncToTodoist()" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
-                <i class="fas fa-cloud-upload-alt"></i> Enviar para Todoist
-            </button>
-            <div class="status-text" id="statusMessage">
-                <i class="fas fa-info-circle"></i>
-                <span>Use os botões para sincronizar dados</span>
-            </div>
+        <div id="statusMessageLances" class="status-text loading">
+            <i class="fas fa-spinner fa-spin"></i> <span>Carregando lances...</span>
         </div>
-    </div>
-    
-    <!-- Campo de Busca -->
-    <div class="search-container" id="searchContainer" style="display: none;">
+        <div id="lastSyncLances" class="last-sync" hidden>
+            <i class="fas fa-history"></i> Última sincronização agora
+        </div>
+    </section>
+
+    <div id="searchContainerLances" class="search-container" style="display: none;">
         <div class="search-input-wrapper">
             <i class="fas fa-search"></i>
-            <input type="text" 
-                   class="search-input" 
-                   id="searchInput" 
-                   placeholder="Buscar por número da cota ou título..."
-                   onkeyup="filterLances()">
+            <input id="searchInputLances" class="search-input" type="search" placeholder="Buscar por cota ou nome" oninput="filterLances()">
         </div>
-        <div class="search-stats" id="searchStats"></div>
+        <div id="searchStatsLances" class="search-stats"></div>
     </div>
-    
+
     <div class="tabs-container">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dia08-tab" type="button">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dia08-tab" type="button" role="tab">
                     <i class="fas fa-calendar-day"></i> Dia 08
-                    <span class="tab-badge" id="badge08">0</span>
+                    <span class="tab-badge" id="badge08Lances">0</span>
                 </button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dia16-tab" type="button">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dia16-tab" type="button" role="tab">
                     <i class="fas fa-calendar-alt"></i> Dia 16
-                    <span class="tab-badge" id="badge16">0</span>
+                    <span class="tab-badge" id="badge16Lances">0</span>
                 </button>
             </li>
         </ul>
     </div>
-    
+
+    <button class="btn-add-card" onclick="openLanceModal()">
+        <i class="fas fa-plus"></i> Adicionar Lance
+    </button>
+
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="dia08-tab">
-            <div class="kanban-container" id="kanbanDia08">
+        <div class="tab-pane fade show active" id="dia08-tab" role="tabpanel">
+            <div class="lance-groups" id="kanbanDia08">
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <p>Nenhum lance para o dia 08</p>
-                    <small>Importe do Todoist para começar</small>
+                    <p>Nenhum lance encontrado</p>
+                    <small>Assim que importarmos do Todoist, os grupos do dia 08 aparecem aqui automaticamente.</small>
                 </div>
             </div>
         </div>
-        
-        <div class="tab-pane fade" id="dia16-tab">
-            <div class="kanban-container" id="kanbanDia16">
+
+        <div class="tab-pane fade" id="dia16-tab" role="tabpanel">
+            <div class="lance-groups" id="kanbanDia16">
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <p>Nenhum lance para o dia 16</p>
-                    <small>Importe do Todoist para começar</small>
+                    <p>Nenhum lance encontrado</p>
+                    <small>Assim que importarmos do Todoist, os grupos do dia 16 aparecem aqui automaticamente.</small>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal de Criar/Editar Lance -->
+<div id="lanceModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="lanceModalTitle">Adicionar Lance</h3>
+            <button class="btn-close-modal" onclick="closeLanceModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="lanceForm">
+            <input type="hidden" id="lanceTaskId" value="">
+            <input type="hidden" id="lanceGroupKey" value="">
+            <div class="form-group">
+                <label for="lanceCota">Número da Cota*</label>
+                <input type="text" id="lanceCota" placeholder="Ex: 575" required>
+            </div>
+            <div class="form-group">
+                <label for="lanceNome">Nome do Cliente*</label>
+                <input type="text" id="lanceNome" placeholder="Ex: Antonio Jund" required>
+            </div>
+            <div class="form-group">
+                <label for="lanceGrupo">Grupo/Título</label>
+                <input type="text" id="lanceGrupo" placeholder="Ex: 1545 - dia 16">
+            </div>
+            <div class="form-group">
+                <label for="lanceDia">Dia*</label>
+                <select id="lanceDia" required>
+                    <option value="08">Dia 08</option>
+                    <option value="16">Dia 16</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal cancel" onclick="closeLanceModal()">Cancelar</button>
+                <button type="submit" class="btn-modal save">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-let lancesData = null;
-let syncInterval = null;
-let hasData = false;
+let lancesData = { dia08: [], dia16: [] };
+let lancesAutoSyncTimer = null;
+let isLancesSyncing = false;
+let lastSuccessfulLancesSync = null;
+const LANCES_SYNC_INTERVAL = 5 * 60 * 1000;
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🎯 Página de lances carregada');
-    checkAndLoadData();
+    document.addEventListener('change', handleLanceCheckboxChange, true);
+
+    initLancesPage().catch(error => {
+        console.error('Erro inicial ao carregar lances:', error);
+        setLancesStatus('error', 'Erro inesperado ao carregar lances. Tente novamente.');
+        showLancesRetryButton(true);
+    });
+
+    window.addEventListener('beforeunload', () => {
+        if (lancesAutoSyncTimer) {
+            clearInterval(lancesAutoSyncTimer);
+        }
+    });
 });
 
-async function checkAndLoadData() {
+function handleLanceCheckboxChange(event) {
+    if (!event.target.classList || !event.target.classList.contains('lance-checkbox')) {
+        return;
+    }
+
+    const card = event.target.closest('.lance-card');
+    if (!card) {
+        return;
+    }
+
+    const taskId = card.dataset.taskId;
+    const dia = card.dataset.dia || '08';
+    const groupKey = card.dataset.groupKey || '';
+    toggleLanceStatus(taskId, event.target.checked, dia, groupKey, card, event.target);
+}
+
+async function initLancesPage() {
+    updateLancesLastSync(null);
+    const hasLocalData = await loadLancesFromCache();
+    await refreshLancesFromTodoist(!hasLocalData);
+    scheduleLancesAutoSync();
+}
+
+async function loadLancesFromCache() {
     try {
         const response = await fetch('/api/lances');
         const result = await response.json();
-        
+
         if (result.success && result.data) {
-            const total08Cotas = result.data.dia08?.reduce((sum, g) => sum + (g.tasks?.length || 0), 0) || 0;
-            const total16Cotas = result.data.dia16?.reduce((sum, g) => sum + (g.tasks?.length || 0), 0) || 0;
-            
-            if (total08Cotas > 0 || total16Cotas > 0) {
-                // Tem dados - mostra interface COM BOTÕES MANUAIS
-                hasData = true;
-                lancesData = result.data;
-                
-                document.getElementById('importCard').style.display = 'none';
-                document.getElementById('syncCard').style.display = 'block';
-                document.getElementById('searchContainer').style.display = 'block';
-                
-                renderLances(lancesData);
-                updateBadges(total08Cotas, total16Cotas);
-                
-                // SEM MAIS SYNC AUTOMÁTICO - usuário controla com botões
-                console.log('✅ Dados carregados - Use os botões para sincronizar');
-            } else {
-                // Sem dados - mostra botão de importar
-                hasData = false;
-                document.getElementById('importCard').style.display = 'block';
-                document.getElementById('syncCard').style.display = 'none';
-                document.getElementById('searchContainer').style.display = 'none';
-                console.log('ℹ️ Nenhum dado encontrado - Clique em Importar');
+            lancesData = normalizeLances(result.data);
+            renderLances(lancesData);
+            const totals = updateLancesBadgesFromData();
+            const hasContent = totals.total08 + totals.total16 > 0;
+            showLancesSearchContainer(hasContent);
+
+            if (hasContent) {
+                setLancesStatus('info', 'Dados locais carregados. Sincronizando com o Todoist...');
+                return true;
             }
-        } else {
-            // Sem dados - mostra botão de importar
-            hasData = false;
-            document.getElementById('importCard').style.display = 'block';
-            document.getElementById('syncCard').style.display = 'none';
-            document.getElementById('searchContainer').style.display = 'none';
         }
     } catch (error) {
-        console.error('Erro ao verificar dados:', error);
-        document.getElementById('importCard').style.display = 'block';
-        document.getElementById('syncCard').style.display = 'none';
-        document.getElementById('searchContainer').style.display = 'none';
+        console.warn('Erro ao carregar lances locais:', error);
     }
+
+    lancesData = { dia08: [], dia16: [] };
+    renderLances(lancesData);
+    updateLancesBadges(0, 0);
+    showLancesSearchContainer(false);
+    setLancesStatus('loading', 'Nenhum dado local encontrado. Importando do Todoist...');
+    return false;
 }
 
-// REMOVIDA A FUNÇÃO startAutoSync() - NÃO USAMOS MAIS SYNC AUTOMÁTICO
+function normalizeLances(data) {
+    const normalizeGrupo = (grupo) => ({
+        grupo: grupo?.grupo ?? null,
+        title: grupo?.title ?? '',
+        tasks: Array.isArray(grupo?.tasks) ? grupo.tasks : []
+    });
 
-async function importLances() {
-    const btn = document.getElementById('btnImport');
-    const originalHTML = btn.innerHTML;
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
-    
+    return {
+        dia08: Array.isArray(data?.dia08) ? data.dia08.map(normalizeGrupo) : [],
+        dia16: Array.isArray(data?.dia16) ? data.dia16.map(normalizeGrupo) : []
+    };
+}
+
+function scheduleLancesAutoSync() {
+    if (lancesAutoSyncTimer) {
+        clearInterval(lancesAutoSyncTimer);
+    }
+    lancesAutoSyncTimer = setInterval(() => {
+        refreshLancesFromTodoist();
+    }, LANCES_SYNC_INTERVAL);
+}
+
+async function refreshLancesFromTodoist(forceImport = false) {
+    if (isLancesSyncing) {
+        return;
+    }
+
+    isLancesSyncing = true;
+    const totals = getLancesTotals();
+    const hasCache = totals.total08 + totals.total16 > 0;
+    const endpoint = forceImport || !hasCache ? '/api/lances/import' : '/api/lances/sync';
+
     try {
-        const response = await fetch('/api/lances/import', {
+        setLancesStatus('loading', endpoint.includes('import') ? 'Importando lances do Todoist...' : 'Sincronizando lances com o Todoist...');
+
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
-        
+
         const result = await response.json();
-        
-        if (result.success) {
-            lancesData = result.data;
-            hasData = true;
-            
-            // Esconde botão de importar, mostra status de sync e campo de busca
-            document.getElementById('importCard').style.display = 'none';
-            document.getElementById('syncCard').style.display = 'block';
-            document.getElementById('searchContainer').style.display = 'block';
-            
-            renderLances(lancesData);
-            
-            const total08Cotas = result.data.dia08?.reduce((sum, g) => sum + (g.tasks?.length || 0), 0) || 0;
-            const total16Cotas = result.data.dia16?.reduce((sum, g) => sum + (g.tasks?.length || 0), 0) || 0;
-            
-            updateBadges(total08Cotas, total16Cotas);
-            
-            // Inicia sincronização automática
-            startAutoSync();
-            
-            // Notifica dashboard sobre mudanças
-            if (typeof window.notifyDashboardUpdate === 'function') {
-                window.notifyDashboardUpdate();
-            }
-            
-            console.log('✅ Importação concluída - Sincronização automática iniciada');
-        } else {
-            alert('Erro ao importar: ' + (result.error || 'Erro desconhecido'));
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Falha ao sincronizar lances.');
+        }
+
+        lancesData = normalizeLances(result.data || {});
+        renderLances(lancesData);
+        const totalsAfter = updateLancesBadgesFromData();
+        showLancesSearchContainer(totalsAfter.total08 + totalsAfter.total16 > 0);
+
+        setLancesStatus('success', endpoint.includes('import') ? 'Importação concluída.' : 'Sincronização concluída com sucesso.');
+        showLancesRetryButton(false);
+
+        lastSuccessfulLancesSync = new Date();
+        updateLancesLastSync(lastSuccessfulLancesSync);
+
+        if (typeof window.notifyDashboardUpdate === 'function') {
+            window.notifyDashboardUpdate();
         }
     } catch (error) {
-        console.error('Erro ao importar:', error);
-        updateStatus('error', 'Erro ao importar: ' + error.message);
+        console.error('Erro ao sincronizar lances:', error);
+        setLancesStatus('error', error.message || 'Erro ao sincronizar lances.');
+        showLancesRetryButton(true);
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
+        isLancesSyncing = false;
     }
 }
 
 function renderLances(data) {
-    const kanban08 = document.getElementById('kanbanDia08');
-    const kanban16 = document.getElementById('kanbanDia16');
-    
-    // Renderiza Dia 08
-    if (data.dia08 && data.dia08.length > 0) {
-        kanban08.innerHTML = data.dia08.map(function(grupo) {
-            return createKanbanColumn(grupo, '08');
-        }).join('');
-    } else {
-        kanban08.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum lance para o dia 08</p><small>Importe do Todoist para adicionar lances</small></div>';
-    }
-    
-    // Renderiza Dia 16
-    if (data.dia16 && data.dia16.length > 0) {
-        kanban16.innerHTML = data.dia16.map(function(grupo) {
-            return createKanbanColumn(grupo, '16');
-        }).join('');
-    } else {
-        kanban16.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum lance para o dia 16</p><small>Importe do Todoist para adicionar lances</small></div>';
-    }
+    renderLancesColumn('kanbanDia08', data.dia08, '08');
+    renderLancesColumn('kanbanDia16', data.dia16, '16');
+    filterLances();
 }
 
-// ========== FUNÇÃO TOGGLE GRUPO (COLAPSAR/EXPANDIR) ==========
-function toggleGrupo(grupoId) {
-    const cardsContainer = document.getElementById(grupoId);
-    const icon = document.getElementById('icon-' + grupoId);
-    const header = icon.closest('.kanban-column-header');
-    
-    if (cardsContainer && icon) {
-        const isCollapsed = cardsContainer.classList.contains('collapsed');
-        
-        if (isCollapsed) {
-            // Expandir
-            cardsContainer.classList.remove('collapsed');
-            header.classList.remove('collapsed');
-            icon.className = 'fas fa-folder-open collapse-icon';
-        } else {
-            // Colapsar
-            cardsContainer.classList.add('collapsed');
-            header.classList.add('collapsed');
-            icon.className = 'fas fa-folder collapse-icon';
-        }
+function renderLancesColumn(containerId, grupos, dia) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        return;
     }
-}
 
-function createKanbanColumn(grupo, dia) {
-    const tasks = grupo.tasks || [];
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.is_completed).length;
-    const pendingTasks = totalTasks - completedTasks;
-    
-    const cardsHTML = tasks.map(function(task) {
-        return createLanceCard(task, dia);
-    }).join('');
-    
-    const grupoId = 'grupo-' + dia + '-' + (grupo.grupo || Math.random().toString(36).substr(2, 9));
-    
-    // Determina se grupo deve iniciar colapsado
-    // Inicia colapsado se: pendingTasks === 0 (zerado) OU sempre (para começar limpo)
-    const startCollapsed = true; // Sempre inicia colapsado
-    const collapsedClass = startCollapsed ? 'collapsed' : '';
-    const iconClass = startCollapsed ? 'fa-folder' : 'fa-folder-open';
-    const headerCollapsedClass = startCollapsed ? 'collapsed' : '';
-    
-    return '<div class="kanban-column">' +
-        '<div class="kanban-column-header ' + headerCollapsedClass + '" onclick="toggleGrupo(\'' + grupoId + '\')">' +
-        '<div class="kanban-column-title">' +
-        '<i class="fas ' + iconClass + ' collapse-icon" id="icon-' + grupoId + '"></i>' +
-        (grupo.title || 'Grupo ' + grupo.grupo) +
-        '</div>' +
-        '<div class="kanban-column-count">' +
-        '<i class="fas fa-tasks"></i> ' + completedTasks + '/' + totalTasks + ' concluídos' +
-        (pendingTasks === 0 ? ' <span style="color: var(--success); font-weight: 700;">✓ Zerado</span>' : '') +
-        '</div>' +
-        '</div>' +
-        '<div class="kanban-cards ' + collapsedClass + '" id="' + grupoId + '">' + cardsHTML + '</div>' +
-        '</div>';
-}
-
-function createLanceCard(task, dia) {
-    const isCompleted = task.is_completed || false;
-    const statusClass = isCompleted ? 'concluido' : 'pendente';
-    const statusText = isCompleted ? '<i class="fas fa-check-circle"></i> Concluído' : '<i class="fas fa-clock"></i> Pendente';
-    const completedClass = isCompleted ? 'completed' : '';
-    const taskId = task.task_id || '';
-    const cotaNumber = task.cota || 'N/A';
-    const cotaName = task.nome || 'Sem nome';
-    
-    return '<div class="kanban-card ' + completedClass + '" data-task-id="' + taskId + '" data-number="' + cotaNumber + '" data-title="' + cotaName + '">' +
-        '<div class="lance-card-header">' +
-        '<input type="checkbox" class="lance-checkbox" ' + (isCompleted ? 'checked' : '') + ' onchange="toggleStatus(\'' + taskId + '\', this.checked, \'' + dia + '\')">' +
-        '<div class="lance-info">' +
-        '<div class="lance-cota">📋 Cota ' + cotaNumber + '</div>' +
-        '<div class="lance-nome">' + cotaName + '</div>' +
-        '<span class="lance-status ' + statusClass + '">' + statusText + '</span>' +
-        '</div></div></div>';
-}
-
-// ========== ATUALIZAÇÃO LOCAL (SEM API) ==========
-// Checkboxes agora apenas marcam localmente
-// Use o botão "Enviar para Todoist" para sincronizar
-
-function toggleStatus(taskId, isCompleted, dia) {
-    const card = document.querySelector('[data-task-id="' + taskId + '"]');
-    
-    // Atualiza dados locais imediatamente
-    const diaKey = dia === '08' ? 'dia08' : 'dia16';
-    if (lancesData && lancesData[diaKey]) {
-        for (let grupo of lancesData[diaKey]) {
-            if (grupo.tasks) {
-                const task = grupo.tasks.find(t => t.task_id === taskId);
-                if (task) {
-                    task.is_completed = isCompleted;
-                    
-                    // Marca como pendente de envio
-                    task.pending_sync = true;
-                    break;
-                }
-            }
-        }
+    if (!Array.isArray(grupos) || grupos.length === 0) {
+        container.innerHTML = createDiaEmptyState(dia);
+        return;
     }
-    
-    // Atualiza visual imediatamente
-    if (card) {
-        if (isCompleted) {
-            card.classList.add('completed');
-            const statusEl = card.querySelector('.lance-status');
-            if (statusEl) {
-                statusEl.className = 'lance-status concluido';
-                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Concluído';
-            }
-        } else {
-            card.classList.remove('completed');
-            const statusEl = card.querySelector('.lance-status');
-            if (statusEl) {
-                statusEl.className = 'lance-status pendente';
-                statusEl.innerHTML = '<i class="fas fa-clock"></i> Pendente';
-            }
-        }
-    }
-    
-    // Salva no cache local
-    saveLancesLocal();
-    
-    // Notifica que há mudanças pendentes
-    updateSyncStatus();
-    
-    console.log('✅ Atualizado localmente - Clique em "Enviar para Todoist" para sincronizar');
+
+    container.innerHTML = grupos.map(grupo => createLanceGroup(grupo, dia)).join('');
 }
 
-// Salva dados localmente
-function saveLancesLocal() {
+function createDiaEmptyState(dia) {
+    return `
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>Nenhum lance para o dia ${dia}</p>
+            <small>As cotas desse dia aparecerão automaticamente assim que forem encontradas no Todoist.</small>
+        </div>
+    `;
+}
+
+function createLanceGroup(grupo, dia) {
+    const groupKey = getGroupKey(dia, grupo);
+    const groupTitle = grupo?.title || `Grupo ${grupo?.grupo || ''}`.trim();
+    const tasks = Array.isArray(grupo?.tasks) ? grupo.tasks : [];
+    const completed = tasks.filter(task => task?.is_completed).length;
+    const total = tasks.length;
+
+    return `
+        <details class="lance-group" data-dia="${dia}" data-group-key="${encodeHtmlAttr(groupKey)}" open>
+            <summary class="lance-group-summary">
+                <span class="lance-group-title">
+                    <span class="lance-group-icon"><i class="fas fa-chevron-right"></i></span>
+                    ${escapeHtml(groupTitle || 'Grupo sem título')}
+                    ${grupo?.grupo ? `<span class="lance-group-code">#${escapeHtml(grupo.grupo)}</span>` : ''}
+                </span>
+                <span class="lance-group-count" data-count-for="${encodeHtmlAttr(groupKey)}">${completed}/${total} concluídos</span>
+            </summary>
+            <div class="lance-group-tasks">
+                ${tasks.length ? tasks.map(task => createLanceCard(task, dia, groupKey)).join('') : '<div class="lance-group-empty">Nenhuma cota neste grupo.</div>'}
+            </div>
+        </details>
+    `;
+}
+
+function createLanceCard(task, dia, groupKey) {
+    const taskIdAttr = encodeHtmlAttr(String(task?.task_id ?? ''));
+    const rawCota = task?.cota ?? 'N/A';
+    const rawNome = task?.nome ?? 'Sem nome';
+    const isCompleted = Boolean(task?.is_completed);
+
+    return `
+        <article class="lance-card ${isCompleted ? 'completed' : ''}" data-task-id="${taskIdAttr}" data-dia="${dia}" data-group-key="${encodeHtmlAttr(groupKey)}" data-search="${encodeHtmlAttr(`${String(rawCota).toLowerCase()}|${String(rawNome).toLowerCase()}`)}">
+            <span class="lance-checkbox-wrapper">
+                <input type="checkbox" class="lance-checkbox" ${isCompleted ? 'checked' : ''} aria-label="Marcar cota ${escapeHtml(rawCota)} como ${isCompleted ? 'pendente' : 'concluída'}">
+            </span>
+            <div class="lance-info">
+                <div class="lance-top-row">
+                    <span class="lance-cota">Cota ${escapeHtml(rawCota)}</span>
+                    <span class="lance-status ${isCompleted ? 'concluido' : 'pendente'}">
+                        ${isCompleted ? '<i class="fas fa-check-circle"></i> Concluído' : '<i class="fas fa-clock"></i> Pendente'}
+                    </span>
+                </div>
+                <div class="lance-nome">${escapeHtml(rawNome)}</div>
+            </div>
+            <div class="card-actions">
+                <button class="btn-card-action edit" onclick="editLance('${taskIdAttr}', '${dia}', '${encodeHtmlAttr(groupKey)}')" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-card-action delete" onclick="deleteLance('${taskIdAttr}', '${dia}', '${encodeHtmlAttr(groupKey)}')" title="Excluir">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </article>
+    `;
+}
+
+async function toggleLanceStatus(taskId, isCompleted, dia, groupKey, card, checkbox) {
+    if (!taskId) {
+        return;
+    }
+
+    const lanceCard = card || document.querySelector(`.lance-card[data-task-id="${taskId}"]`);
+    const lanceCheckbox = checkbox || lanceCard?.querySelector('.lance-checkbox');
+
+    if (lanceCheckbox) {
+        lanceCheckbox.disabled = true;
+    }
+
     try {
-        localStorage.setItem('lances_pending', JSON.stringify(lancesData));
+        setLancesStatus('loading', 'Atualizando lance no Todoist...');
+
+        const response = await fetch(`/api/lances/toggle/${taskId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_completed: isCompleted })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Não foi possível atualizar o lance.');
+        }
+
+        updateLocalLanceState(taskId, dia, groupKey, isCompleted);
+        updateLanceCardState(lanceCard, isCompleted);
+        updateGroupCountDisplay(groupKey);
+        setLancesStatus('success', isCompleted ? 'Lance marcado como concluído.' : 'Lance marcado como pendente.');
+        showLancesRetryButton(false);
+
+        lastSuccessfulLancesSync = new Date();
+        updateLancesLastSync(lastSuccessfulLancesSync);
     } catch (error) {
-        console.warn('Erro ao salvar no localStorage:', error);
+        console.error('Erro ao atualizar lance:', error);
+        setLancesStatus('error', error.message || 'Erro ao atualizar lance.');
+        showLancesRetryButton(true);
+
+        if (lanceCheckbox) {
+            lanceCheckbox.checked = !isCompleted;
+        }
+    } finally {
+        if (lanceCheckbox) {
+            lanceCheckbox.disabled = false;
+        }
     }
 }
 
-// Atualiza mensagem de status
-function updateSyncStatus() {
-    const statusEl = document.getElementById('statusMessage');
+function updateLocalLanceState(taskId, dia, groupKey, isCompleted) {
+    const diaKey = dia === '16' ? 'dia16' : 'dia08';
+    const grupos = lancesData[diaKey] || [];
+    const grupo = grupos.find(item => getGroupKey(dia, item) === groupKey);
+    if (!grupo || !Array.isArray(grupo.tasks)) {
+        return;
+    }
+
+    const task = grupo.tasks.find(item => String(item.task_id) === String(taskId));
+    if (task) {
+        task.is_completed = isCompleted;
+    }
+}
+
+function updateLanceCardState(card, isCompleted) {
+    if (!card) {
+        return;
+    }
+
+    card.classList.toggle('completed', isCompleted);
+    const statusEl = card.querySelector('.lance-status');
     if (statusEl) {
-        statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Há mudanças não sincronizadas - Clique em "Enviar para Todoist"</span>';
-        statusEl.className = 'status-text';
-        statusEl.style.color = '#ed8936';
+        statusEl.className = `lance-status ${isCompleted ? 'concluido' : 'pendente'}`;
+        statusEl.innerHTML = isCompleted
+            ? '<i class="fas fa-check-circle"></i> Concluído'
+            : '<i class="fas fa-clock"></i> Pendente';
     }
 }
-
-function updateBadges(count08, count16) {
-                    }
-                    
-                    // Atualiza visualmente o card
-                    if (card) {
-                        if (isCompleted) {
-                            card.classList.add('completed');
-                            const statusEl = card.querySelector('.lance-status');
-                            if (statusEl) {
-                                statusEl.className = 'lance-status concluido';
-                                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Concluído';
-                            }
-                        } else {
-                            card.classList.remove('completed');
-                            const statusEl = card.querySelector('.lance-status');
-                            if (statusEl) {
-                                statusEl.className = 'lance-status pendente';
-                                statusEl.innerHTML = '<i class="fas fa-clock"></i> Pendente';
-                            }
-                        }
-                        card.style.opacity = '1';
-                        card.style.pointerEvents = 'auto';
-                    }
-                    
-                    if (checkbox) {
-                        checkbox.disabled = false;
-                    }
-                    
-                    // Notifica dashboard
-function updateBadges(count08, count16) {
-    document.getElementById('badge08').textContent = count08;
-    document.getElementById('badge16').textContent = count16;
-}
-
-// ========== BUSCA E FILTRO ==========
 
 function filterLances() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-    const allCards = document.querySelectorAll('.kanban-card');
-    
-    let totalCards = 0;
-    let visibleCards = 0;
-    
-    allCards.forEach(card => {
-        totalCards++;
-        const cardTitle = (card.getAttribute('data-title') || '').toLowerCase();
-        const cardNumber = (card.getAttribute('data-number') || '').toLowerCase();
-        
-        // Busca por título ou número
-        const matches = cardTitle.includes(searchTerm) || cardNumber.includes(searchTerm);
-        
-        if (matches || searchTerm === '') {
+    const input = document.getElementById('searchInputLances');
+    if (!input) {
+        return;
+    }
+
+    const term = input.value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.lance-card');
+
+    let total = 0;
+    let visible = 0;
+
+    cards.forEach(card => {
+        total++;
+        const searchable = (card.dataset.search || '');
+        const matches = !term || searchable.includes(term);
+
+        if (matches) {
             card.classList.remove('hidden');
-            visibleCards++;
+            visible++;
         } else {
             card.classList.add('hidden');
         }
     });
+
+    document.querySelectorAll('.lance-group').forEach(group => {
+        const visibleCards = group.querySelectorAll('.lance-card:not(.hidden)').length;
+        group.style.display = term && visibleCards === 0 ? 'none' : '';
+    });
+
+    const statsEl = document.getElementById('searchStatsLances');
+    if (statsEl) {
+        statsEl.innerHTML = term ? `<i class="fas fa-filter"></i> Mostrando ${visible} de ${total} lances` : '';
+    }
+}
+
+function showLancesSearchContainer(visible) {
+    const container = document.getElementById('searchContainerLances');
+    if (!container) {
+        return;
+    }
+
+    container.style.display = visible ? 'flex' : 'none';
+}
+
+function setLancesStatus(state, message) {
+    const statusEl = document.getElementById('statusMessageLances');
+    if (!statusEl) {
+        return;
+    }
+
+    const iconMap = {
+        loading: 'fas fa-spinner fa-spin',
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        info: 'fas fa-info-circle'
+    };
+
+    const classMap = {
+        loading: 'status-text loading',
+        success: 'status-text success',
+        error: 'status-text error',
+        info: 'status-text'
+    };
+
+    statusEl.className = classMap[state] || 'status-text';
+    statusEl.innerHTML = `<i class="${iconMap[state] || iconMap.info}"></i> <span>${message}</span>`;
+
+    showLancesRetryButton(state === 'error');
+}
+
+function showLancesRetryButton(show) {
+    const btn = document.getElementById('btnRetryLances');
+    if (!btn) {
+        return;
+    }
+
+    btn.style.display = show ? 'inline-flex' : 'none';
+    btn.disabled = isLancesSyncing;
+}
+
+function updateLancesBadgesFromData() {
+    const totals = getLancesTotals();
+    updateLancesBadges(totals.total08, totals.total16);
+    return totals;
+}
+
+function getLancesTotals(data = lancesData) {
+    const totalDia = (diaList) => (Array.isArray(diaList) ? diaList.reduce((sum, grupo) => sum + (Array.isArray(grupo.tasks) ? grupo.tasks.length : 0), 0) : 0);
+
+    return {
+        total08: totalDia(data.dia08),
+        total16: totalDia(data.dia16)
+    };
+}
+
+function updateLancesBadges(count08, count16) {
+    const badge08 = document.getElementById('badge08Lances');
+    const badge16 = document.getElementById('badge16Lances');
+
+    if (badge08) {
+        badge08.textContent = count08;
+    }
+
+    if (badge16) {
+        badge16.textContent = count16;
+    }
+}
+
+function updateLancesLastSync(date) {
+    const el = document.getElementById('lastSyncLances');
+    if (!el) {
+        return;
+    }
+
+    if (!date) {
+        el.setAttribute('hidden', 'hidden');
+        el.textContent = '';
+        return;
+    }
+
+    const syncDate = date instanceof Date ? date : new Date(date);
+    el.removeAttribute('hidden');
+    el.innerHTML = `<i class="fas fa-history"></i> Última sincronização: ${syncDate.toLocaleString('pt-BR')}`;
+}
+
+function getGroupKey(dia, grupo) {
+    const ref = grupo?.grupo ?? grupo?.title ?? 'grupo';
+    return `${dia}|${slugify(ref)}`;
+}
+
+function slugify(value) {
+    return String(value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .toLowerCase() || 'grupo';
+}
+
+function updateGroupCountDisplay(groupKey) {
+    if (!groupKey) {
+        return;
+    }
+
+    const [diaPart] = groupKey.split('|');
+    const diaKey = diaPart === '16' ? 'dia16' : 'dia08';
+    const grupos = lancesData[diaKey] || [];
+    const grupo = grupos.find(item => getGroupKey(diaPart, item) === groupKey);
+    if (!grupo || !Array.isArray(grupo.tasks)) {
+        return;
+    }
+
+    const tasks = grupo.tasks;
+    const completed = tasks.filter(task => task?.is_completed).length;
+    const total = tasks.length;
+
+    document.querySelectorAll(`.lance-group-count[data-count-for="${groupKey}"]`).forEach(el => {
+        el.textContent = `${completed}/${total} concluídos`;
+    });
+}
+
+function escapeHtml(value = '') {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function encodeHtmlAttr(value = '') {
+    return escapeHtml(value);
+}
+
+// ========== CRUD DE LANCES ==========
+
+function openLanceModal(taskId = null, dia = '08', groupKey = '') {
+    const modal = document.getElementById('lanceModal');
+    const title = document.getElementById('lanceModalTitle');
+    const form = document.getElementById('lanceForm');
     
-    // Atualiza estatísticas da busca
-    const statsEl = document.getElementById('searchStats');
-    if (searchTerm === '') {
-        statsEl.textContent = '';
+    form.reset();
+    document.getElementById('lanceDia').value = dia;
+    document.getElementById('lanceGroupKey').value = groupKey;
+    
+    if (taskId) {
+        // Modo edição
+        title.textContent = 'Editar Lance';
+        document.getElementById('lanceTaskId').value = taskId;
+        
+        // Busca dados do lance
+        const diaKey = dia === '16' ? 'dia16' : 'dia08';
+        const grupos = lancesData[diaKey] || [];
+        
+        for (const grupo of grupos) {
+            const task = (grupo.tasks || []).find(t => String(t.task_id) === String(taskId));
+            if (task) {
+                document.getElementById('lanceCota').value = task.cota || '';
+                document.getElementById('lanceNome').value = task.nome || '';
+                document.getElementById('lanceGrupo').value = grupo.title || grupo.grupo || '';
+                break;
+            }
+        }
     } else {
-        statsEl.innerHTML = '<i class="fas fa-filter"></i> Mostrando ' + visibleCards + ' de ' + totalCards + ' lances';
+        // Modo criação
+        title.textContent = 'Adicionar Lance';
+        document.getElementById('lanceTaskId').value = '';
     }
+    
+    modal.classList.add('active');
 }
 
-// ========== SINCRONIZAÇÃO MANUAL COM BOTÕES ==========
+function closeLanceModal() {
+    const modal = document.getElementById('lanceModal');
+    modal.classList.remove('active');
+}
 
-async function syncFromTodoist() {
-    const btn = document.getElementById('btnSyncFrom');
-    const statusEl = document.getElementById('statusMessage');
-    const originalHTML = btn.innerHTML;
+document.getElementById('lanceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
     
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
-    statusEl.innerHTML = '<i class="fas fa-sync fa-spin"></i> <span>Buscando dados do Todoist...</span>';
-    statusEl.className = 'status-text loading';
+    const taskId = document.getElementById('lanceTaskId').value;
+    const cota = document.getElementById('lanceCota').value.trim();
+    const nome = document.getElementById('lanceNome').value.trim();
+    const grupo = document.getElementById('lanceGrupo').value.trim();
+    const dia = document.getElementById('lanceDia').value;
+    
+    if (!cota || !nome) {
+        alert('Por favor, preencha cota e nome');
+        return;
+    }
+    
+    const lanceData = {
+        cota: cota,
+        nome: nome,
+        grupo: grupo,
+        dia: dia,
+        is_completed: false
+    };
     
     try {
-        const response = await fetch('/api/lances/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
+        setLancesStatus('loading', taskId ? 'Atualizando lance...' : 'Criando lance...');
         
-        if (!response.ok) {
-            throw new Error('Erro HTTP: ' + response.status);
-        }
+        const endpoint = taskId ? `/api/lances/update/${taskId}` : '/api/lances/create';
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(lanceData)
+        });
         
         const result = await response.json();
         
-        if (result.success) {
-            // Atualiza dados locais
-            lancesData = result.data;
-            renderLances(lancesData);
-            
-            const total08Cotas = result.data.dia08?.reduce((sum, g) => sum + (g.tasks?.length || 0), 0) || 0;
-            const total16Cotas = result.data.dia16?.reduce((sum, g) => sum + (g.tasks?.length || 0), 0) || 0;
-            updateBadges(total08Cotas, total16Cotas);
-            
-            // Limpa pendências
-            localStorage.removeItem('lances_pending');
-            
-            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> <span>Sincronizado com sucesso! (' + result.changes + ' mudanças)</span>';
-            statusEl.className = 'status-text success';
-            
-            // Atualiza badge do menu
-            if (typeof window.notifyDashboardUpdate === 'function') {
-                window.notifyDashboardUpdate();
-            }
-            
-            console.log('✅ Sincronizado do Todoist: ' + result.changes + ' mudanças');
-        } else {
-            throw new Error(result.error || 'Erro desconhecido');
-        }
-    } catch (error) {
-        console.error('❌ Erro ao sincronizar do Todoist:', error);
-        statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Erro: ' + error.message + '</span>';
-        statusEl.className = 'status-text error';
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
-    }
-}
-
-async function syncToTodoist() {
-    const btn = document.getElementById('btnSyncTo');
-    const statusEl = document.getElementById('statusMessage');
-    const originalHTML = btn.innerHTML;
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-    statusEl.innerHTML = '<i class="fas fa-cloud-upload-alt fa-pulse"></i> <span>Enviando mudanças para o Todoist...</span>';
-    statusEl.className = 'status-text loading';
-    
-    try {
-        // Coleta todas as tasks com mudanças pendentes
-        const pendingUpdates = [];
-        
-        ['dia08', 'dia16'].forEach(diaKey => {
-            if (lancesData[diaKey]) {
-                lancesData[diaKey].forEach(grupo => {
-                    if (grupo.tasks) {
-                        grupo.tasks.forEach(task => {
-                            if (task.pending_sync) {
-                                pendingUpdates.push({
-                                    task_id: task.task_id,
-                                    is_completed: task.is_completed
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        });
-        
-        if (pendingUpdates.length === 0) {
-            statusEl.innerHTML = '<i class="fas fa-info-circle"></i> <span>Nenhuma mudança para enviar</span>';
-            statusEl.className = 'status-text';
-            btn.disabled = false;
-            btn.innerHTML = originalHTML;
-            return;
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Erro ao salvar lance');
         }
         
-        // Envia em batch (com delay para evitar rate limit)
-        let successCount = 0;
-        let errorCount = 0;
+        closeLanceModal();
+        setLancesStatus('success', taskId ? 'Lance atualizado com sucesso!' : 'Lance criado com sucesso!');
         
-        for (const update of pendingUpdates) {
-            try {
-                const response = await fetch('/api/lances/toggle/' + update.task_id, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ is_completed: update.is_completed })
-                });
-                
-                if (response.ok) {
-                    successCount++;
-                    
-                    // Remove flag de pendente
-                    ['dia08', 'dia16'].forEach(diaKey => {
-                        if (lancesData[diaKey]) {
-                            lancesData[diaKey].forEach(grupo => {
-                                if (grupo.tasks) {
-                                    const task = grupo.tasks.find(t => t.task_id === update.task_id);
-                                    if (task) {
-                                        delete task.pending_sync;
-                                    }
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    errorCount++;
-                }
-                
-                // Delay entre requisições para evitar rate limit
-                await new Promise(resolve => setTimeout(resolve, 600));
-                
-            } catch (error) {
-                console.error('Erro ao enviar task:', update.task_id, error);
-                errorCount++;
-            }
-        }
-        
-        // Limpa pendências
-        localStorage.removeItem('lances_pending');
-        
-        if (errorCount === 0) {
-            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> <span>Enviado com sucesso! (' + successCount + ' mudanças)</span>';
-            statusEl.className = 'status-text success';
-        } else {
-            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span>Parcialmente enviado: ' + successCount + ' OK, ' + errorCount + ' erros</span>';
-            statusEl.className = 'status-text';
-            statusEl.style.color = '#ed8936';
-        }
-        
-        console.log('✅ Enviado para Todoist: ' + successCount + ' OK, ' + errorCount + ' erros');
+        // Recarrega dados
+        await refreshLancesFromTodoist(true);
         
     } catch (error) {
-        console.error('❌ Erro ao enviar para Todoist:', error);
-        statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Erro: ' + error.message + '</span>';
-        statusEl.className = 'status-text error';
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
+        console.error('Erro ao salvar lance:', error);
+        setLancesStatus('error', error.message || 'Erro ao salvar lance');
+        alert('Erro: ' + error.message);
     }
+});
+
+function editLance(taskId, dia, groupKey) {
+    openLanceModal(taskId, dia, groupKey);
 }
 
-// Para compatibilidade com código antigo
-async function syncFromTodoist_old(silent = true) {
-    // Função antiga - não usada mais
+async function deleteLance(taskId, dia, groupKey) {
+    if (!confirm('Tem certeza que deseja excluir este lance?')) {
+        return;
+    }
+    
     try {
-        const response = await fetch('/api/lances/sync', {
-            method: 'POST',
+        setLancesStatus('loading', 'Excluindo lance...');
+        
+        const response = await fetch(`/api/lances/delete/${taskId}`, {
+            method: 'DELETE',
             headers: { 'Content-Type': 'application/json' }
         });
         
-        if (!response.ok) {
-            console.warn('Erro HTTP na sincronização:', response.status);
-            return;
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.warn('Resposta não é JSON');
-            return;
-        }
-        
         const result = await response.json();
         
-        if (result.success) {
-            if (result.changes > 0) {
-                console.log('🔄 Sincronizado: ' + result.changes + ' alterações do Todoist');
-                
-                // Atualiza a interface automaticamente
-                lancesData = result.data;
-                renderLances(lancesData);
-                
-                const total08Cotas = result.data.dia08?.reduce((sum, g) => sum + (g.tasks?.length || 0), 0) || 0;
-                const total16Cotas = result.data.dia16?.reduce((sum, g) => sum + (g.tasks?.length || 0), 0) || 0;
-                updateBadges(total08Cotas, total16Cotas);
-                
-                // Atualiza badge do menu
-                if (typeof window.notifyDashboardUpdate === 'function') {
-                    window.notifyDashboardUpdate();
-                }
-            }
-        } else {
-            console.warn('Erro na sincronização:', result.error);
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Erro ao excluir lance');
         }
+        
+        setLancesStatus('success', 'Lance excluído com sucesso!');
+        
+        // Recarrega dados
+        await refreshLancesFromTodoist(true);
+        
     } catch (error) {
-        console.warn('Erro ao sincronizar:', error.message);
+        console.error('Erro ao excluir lance:', error);
+        setLancesStatus('error', error.message || 'Erro ao excluir lance');
+        alert('Erro: ' + error.message);
     }
 }
 
-// Para sincronização quando sair da página
-window.addEventListener('beforeunload', () => {
-    if (syncInterval) {
-        clearInterval(syncInterval);
+// Fecha modal ao clicar fora
+document.getElementById('lanceModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'lanceModal') {
+        closeLanceModal();
     }
 });
 </script>

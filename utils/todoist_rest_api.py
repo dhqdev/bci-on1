@@ -391,3 +391,82 @@ class TodoistRestAPI:
             if progress_callback:
                 progress_callback(f"❌ {error_msg}")
             raise Exception(error_msg)
+    
+    def create_task(self, content: str, project_id: Optional[str] = None, 
+                   section_id: Optional[str] = None, description: Optional[str] = None,
+                   labels: Optional[List[str]] = None) -> Dict:
+        """
+        Cria uma nova tarefa no Todoist
+        
+        Args:
+            content: Conteúdo/título da tarefa
+            project_id: ID do projeto (opcional)
+            section_id: ID da seção (opcional)
+            description: Descrição da tarefa (opcional)
+            labels: Lista de labels (opcional)
+            
+        Returns:
+            Dados da tarefa criada
+        """
+        url = f"{self.BASE_URL}/tasks"
+        
+        payload = {
+            "content": content
+        }
+        
+        if project_id:
+            payload["project_id"] = project_id
+        if section_id:
+            payload["section_id"] = section_id
+        if description:
+            payload["description"] = description
+        if labels:
+            payload["labels"] = labels
+        
+        response = requests.post(url, headers=self.headers, json=payload)
+        response.raise_for_status()
+        return response.json()
+    
+    def update_task(self, task_id: str, content: Optional[str] = None,
+                   description: Optional[str] = None, labels: Optional[List[str]] = None) -> Dict:
+        """
+        Atualiza uma tarefa existente
+        
+        Args:
+            task_id: ID da tarefa
+            content: Novo conteúdo/título (opcional)
+            description: Nova descrição (opcional)
+            labels: Novas labels (opcional)
+            
+        Returns:
+            Dados da tarefa atualizada
+        """
+        url = f"{self.BASE_URL}/tasks/{task_id}"
+        
+        payload = {}
+        if content is not None:
+            payload["content"] = content
+        if description is not None:
+            payload["description"] = description
+        if labels is not None:
+            payload["labels"] = labels
+        
+        response = requests.post(url, headers=self.headers, json=payload)
+        response.raise_for_status()
+        return response.json()
+    
+    def delete_task(self, task_id: str) -> bool:
+        """
+        Deleta uma tarefa
+        
+        Args:
+            task_id: ID da tarefa
+            
+        Returns:
+            True se sucesso
+        """
+        url = f"{self.BASE_URL}/tasks/{task_id}"
+        response = requests.delete(url, headers=self.headers)
+        response.raise_for_status()
+        # delete retorna 204 No Content em sucesso
+        return response.status_code == 204
