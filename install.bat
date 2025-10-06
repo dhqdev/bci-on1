@@ -200,7 +200,8 @@ echo.
 REM 5. Testar instalação
 echo [INFO] Testando instalação...
 
-python -c "import selenium; from webdriver_manager.chrome import ChromeDriverManager; import tkinter as tk; import requests; from bs4 import BeautifulSoup; import schedule; import pdfplumber; import flask; from flask_socketio import SocketIO; from flask_cors import CORS; print('✓ Todas as dependências OK!')" 2>nul
+echo [INFO] Testando módulos Python...
+python -c "import selenium; from webdriver_manager.chrome import ChromeDriverManager; import tkinter as tk; import requests; from bs4 import BeautifulSoup; import schedule; import pdfplumber; import flask; from flask_socketio import SocketIO; from flask_cors import CORS; import google.generativeai as genai; print('✓ Todas as dependências OK (incluindo Google Gemini AI)!')" 2>nul
 
 if %errorLevel% == 0 (
     echo [✓] Teste de dependências passou!
