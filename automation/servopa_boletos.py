@@ -70,13 +70,14 @@ def _notify(callback: ProgressCallback, message: str) -> None:
 
 
 def _remove_ip_from_servopa_url(url: str) -> str:
-    """Remove o IP do payload base64 da URL do Servopa para torná-la universal.
+    """[FUNÇÃO DEPRECADA - NÃO USAR]
     
-    URLs Servopa têm formato:
-    https://www.consorcioservopa.com.br/docparser/view/{base64_payload}
+    Originalmente tentava remover o IP do payload base64 para tornar URLs universais,
+    mas o servidor Servopa REQUER o parâmetro IP para validação.
     
-    O payload contém JSON com campo "ip" que restringe acesso.
-    Esta função remove esse campo para permitir acesso de qualquer rede.
+    Remover o IP causa erro: "ENDERECO IP DEVE SER INFORMADO"
+    
+    Mantida apenas para referência histórica. Use a URL original do servidor.
     """
     if not url or 'consorcioservopa.com.br' not in url:
         return url
@@ -219,8 +220,10 @@ def _capture_pdf_view(
         time.sleep(2)  # garante renderização
         current_url = driver.current_url
         
-        # Remove IP do payload para tornar link universal
-        universal_url = _remove_ip_from_servopa_url(current_url)
+        # IMPORTANTE: Mantém o IP no URL - o servidor Servopa REQUER este parâmetro
+        # Anteriormente removíamos o IP tentando tornar universal, mas isso causava erro:
+        # "ENDERECO IP DEVE SER INFORMADO"
+        boleto_url = current_url
         
         png_bytes = driver.get_screenshot_as_png()
         png_base64 = "data:image/png;base64," + base64.b64encode(png_bytes).decode("utf-8")
@@ -229,14 +232,14 @@ def _capture_pdf_view(
             {
                 "window_handle": new_handle,
                 "url": current_url,
-                "universal_url": universal_url,
+                "boleto_url": boleto_url,
                 "screenshot_size": str(len(png_bytes)),
             }
         )
 
         return BoletoAutomationResult(
             tipo="unknown",
-            boleto_url=universal_url,  # Usa URL sem IP
+            boleto_url=boleto_url,  # Mantém URL com IP original do servidor
             png_base64=png_base64,
             grupo=None,
             cota=None,
