@@ -429,6 +429,7 @@ def api_boletos_update(task_id):
         celular = data.get('celular', '')
         cotas = data.get('cotas', '')
         dia = data.get('dia', '08')
+        png_base64 = data.get('png_base64', '')  # ✅ Recebe PNG em base64
         
         # Atualiza no Todoist
         from utils.todoist_rest_api import TodoistRestAPI
@@ -463,6 +464,9 @@ def api_boletos_update(task_id):
                         boleto['nome'] = nome
                         boleto['celular'] = celular
                         boleto['cotas'] = cotas
+                        # ✅ Salva PNG em base64
+                        if png_base64:
+                            boleto['png_base64'] = png_base64
                         break
             
             with open(boletos_filepath, 'w', encoding='utf-8') as f:
@@ -482,6 +486,7 @@ def api_boletos_create():
         celular = data.get('celular', '')
         cotas = data.get('cotas', '')
         dia = data.get('dia', '08')
+        png_base64 = data.get('png_base64', '')  # ✅ Recebe PNG em base64
         
         if not nome:
             return jsonify({'success': False, 'error': 'Nome é obrigatório'})
@@ -526,6 +531,10 @@ def api_boletos_create():
             'cotas': cotas,
             'is_completed': False
         }
+        
+        # ✅ Adiciona PNG se fornecido
+        if png_base64:
+            new_boleto['png_base64'] = png_base64
         
         boletos_data[dia_key].append(new_boleto)
         
@@ -605,29 +614,50 @@ def api_boletos_sync():
         except Exception as e:
             return jsonify({'success': False, 'error': f'Erro ao buscar dados do Todoist: {str(e)}'})
         
-        # Conta mudanças
+        # Conta mudanças e mescla dados (preserva celular local)
         changes = 0
+        merged_data = {'dia08': [], 'dia16': []}
+        
         for dia_key in ['dia08', 'dia16']:
             local_tasks = {t.get('task_id'): t for t in local_data.get(dia_key, []) if t.get('task_id')}
             updated_tasks = {t.get('task_id'): t for t in updated_data.get(dia_key, []) if t.get('task_id')}
             
             for task_id, updated_task in updated_tasks.items():
+                # Começa com dados do Todoist
+                merged_task = updated_task.copy()
+                
+                # Se já existia localmente, preserva o celular local
                 if task_id in local_tasks:
                     local_task = local_tasks[task_id]
+                    
+                    # Preserva celular local se existir
+                    if local_task.get('celular'):
+                        merged_task['celular'] = local_task['celular']
+                    
+                    # ✅ Preserva PNG local se existir
+                    if local_task.get('png_base64'):
+                        merged_task['png_base64'] = local_task['png_base64']
+                    
+                    # Conta mudança de status
                     if local_task.get('is_completed') != updated_task.get('is_completed'):
                         changes += 1
+                
+                merged_data[dia_key].append(merged_task)
+        
+        # Adiciona timestamp
+        merged_data['last_sync'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
         # Salva dados atualizados
         try:
             with open(boletos_filepath, 'w', encoding='utf-8') as f:
-                json.dump(updated_data, f, indent=2, ensure_ascii=False)
+                json.dump(merged_data, f, indent=2, ensure_ascii=False)
         except Exception as e:
             return jsonify({'success': False, 'error': f'Erro ao salvar dados: {str(e)}'})
         
         return jsonify({
             'success': True,
             'changes': changes,
-            'data': updated_data,
+            'data': merged_data,
             'message': f'{changes} alterações sincronizadas do Todoist' if changes > 0 else 'Tudo sincronizado'
         })
             
@@ -672,10 +702,26 @@ def api_boletos_whatsapp(task_id):
         if not boleto:
             return jsonify({'success': False, 'error': 'Boleto não encontrado'})
         
-        # Verifica se tem celular
+        # Extrai e limpa o celular
+        import re
         celular = boleto.get('celular', '').strip()
+        
+        # Se o celular está vazio, tenta extrair do campo cotas (dados legados)
         if not celular:
-            return jsonify({'success': False, 'error': 'Boleto não possui número de celular cadastrado'})
+            raw_cotas = boleto.get('cotas', '')
+            celular_match = re.search(r'(?:📱\s*)?[Cc]elular:\s*(\d+)', raw_cotas)
+            if celular_match:
+                celular = celular_match.group(1)
+        
+        # Remove todos os caracteres não numéricos
+        celular = re.sub(r'\D', '', celular)
+        
+        # Valida celular (deve ter pelo menos 10 dígitos)
+        if not celular or len(celular) < 10:
+            return jsonify({
+                'success': False, 
+                'error': 'Boleto não possui número de celular válido. Por favor, edite o boleto e adicione um celular com pelo menos 10 dígitos.'
+            })
         
         # Carrega configuração da Evolution API
         evolution_config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'evolution_config.json')
@@ -701,52 +747,82 @@ def api_boletos_whatsapp(task_id):
         nome = boleto.get('nome', 'Cliente')
         cotas = boleto.get('cotas', 'N/A')
         
-        mensagem = f"""Olá {nome}! 👋
+        # Mensagem de texto
+        mensagem = f"""Olá *{nome}*! 👋
 
-📋 *Lembrete de Boleto*
+📋 *Lembrete de Boleto - Sistema OXCASH*
 
 Segue as informações do seu boleto:
 
 🎯 *Cotas:* {cotas}
 📅 *Vencimento:* Dia {dia}
 
+📄 *Boleto anexado na imagem abaixo*
+
 Qualquer dúvida, estamos à disposição!
 
 _Mensagem automática - Sistema OXCASH_"""
         
-        # Envia mensagem via WhatsApp
-        success, response = evolution_api.send_text_message(celular, mensagem)
-        
-        if success:
-            # Atualiza o boleto no Todoist adicionando uma nota sobre o envio
-            try:
-                from utils.todoist_rest_api import TodoistRestAPI
-                TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-                todoist_api = TodoistRestAPI(TODOIST_TOKEN)
-                
-                # Adiciona comentário na task do Todoist
-                comment_text = f"📱 WhatsApp enviado em {datetime.now().strftime('%d/%m/%Y %H:%M')} para {celular}"
-                todoist_api.add_comment(task_id, comment_text)
-            except Exception as e:
-                print(f"Aviso: Não foi possível adicionar comentário no Todoist: {e}")
-            
-            return jsonify({
-                'success': True,
-                'message': f'WhatsApp enviado com sucesso para {nome}!',
-                'details': {
-                    'nome': nome,
-                    'celular': celular,
-                    'dia': dia,
-                    'response': response
-                }
-            })
+        # ✅ Usa PNG salvo no boleto, ou imagem padrão como fallback
+        png_base64 = boleto.get('png_base64', '')
+        if png_base64:
+            # Se tem PNG salvo, usa ele diretamente (base64)
+            image_url = png_base64
         else:
-            error_msg = response.get('error', 'Erro desconhecido ao enviar')
+            # Fallback: imagem de teste pública
+            image_url = "https://raw.githubusercontent.com/EvolutionAPI/evolution-api/main/.github/logo.png"
+        
+        # Envia mensagem de texto primeiro
+        success_text, response_text = evolution_api.send_text_message(celular, mensagem)
+        
+        if not success_text:
             return jsonify({
                 'success': False,
-                'error': f'Falha ao enviar WhatsApp: {error_msg}',
-                'details': response
+                'error': f'Falha ao enviar mensagem: {response_text.get("error", "Erro desconhecido")}',
+                'details': response_text
             })
+        
+        # Aguarda um pouco antes de enviar a imagem
+        import time
+        time.sleep(2)
+        
+        # Envia imagem com legenda
+        success_media, response_media = evolution_api.send_media_message(
+            celular, 
+            image_url,
+            f"📄 Boleto - {nome}"
+        )
+        
+        # Atualiza o boleto no Todoist adicionando uma nota sobre o envio
+        try:
+            from utils.todoist_rest_api import TodoistRestAPI
+            TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
+            todoist_api = TodoistRestAPI(TODOIST_TOKEN)
+            
+            # Adiciona comentário na task do Todoist
+            comment_text = f"📱 WhatsApp enviado em {datetime.now().strftime('%d/%m/%Y %H:%M')} para {celular}"
+            if success_media:
+                comment_text += "\n✅ Texto + Imagem enviados"
+            else:
+                comment_text += "\n⚠️ Texto enviado, mas imagem falhou"
+            
+            todoist_api.add_comment(task_id, comment_text)
+        except Exception as e:
+            print(f"Aviso: Não foi possível adicionar comentário no Todoist: {e}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'WhatsApp enviado com sucesso para {nome}!',
+            'details': {
+                'nome': nome,
+                'celular': celular,
+                'dia': dia,
+                'text_sent': success_text,
+                'media_sent': success_media,
+                'text_response': response_text,
+                'media_response': response_media
+            }
+        })
     
     except Exception as e:
         import traceback

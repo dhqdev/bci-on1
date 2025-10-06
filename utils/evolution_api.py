@@ -137,6 +137,77 @@ class EvolutionAPI:
         except Exception as e:
             return False, {'error': str(e)}
     
+    def send_media_message(self, phone: str, media_url: str, caption: str = "") -> Tuple[bool, Dict]:
+        """
+        Envia mensagem com mídia (imagem, vídeo, documento) para um número
+        
+        Args:
+            phone: Número de telefone (será formatado automaticamente)
+            media_url: URL da mídia ou base64
+            caption: Legenda da mídia (opcional)
+            
+        Returns:
+            Tuple[bool, Dict]: (sucesso, resposta_da_api)
+        """
+        try:
+            url = f"{self.base_url}/message/sendMedia/{self.instance_name}"
+            
+            # Formata número (sem @c.us para sendMedia - formato: 5519999999999)
+            formatted_phone = self.format_phone_number(phone).replace('@c.us', '')
+            
+            # SOLUÇÃO: A API está pedindo formato MISTO!
+            # Documentação oficial pede mediaMessage.mediaType
+            # Mas a instância está pedindo mediatype no nível raiz
+            # Vamos enviar AMBOS para garantir compatibilidade
+            payload = {
+                "number": formatted_phone,
+                "mediatype": "image",     # ✅ Formato que a instância está pedindo
+                "media": media_url,       # ✅ No nível raiz
+                "mediaMessage": {         # ✅ Formato da documentação (backup)
+                    "mediaType": "image",
+                    "media": media_url
+                }
+            }
+            
+            # Adiciona caption em ambos os lugares
+            if caption:
+                payload["caption"] = caption
+                payload["mediaMessage"]["caption"] = caption
+            
+            # Debug
+            print(f"DEBUG - URL: {url}")
+            print(f"DEBUG - Payload: {payload}")
+            
+            # Envia requisição
+            response = requests.post(
+                url,
+                headers=self.headers,
+                json=payload,
+                timeout=30
+            )
+            
+            print(f"DEBUG - Status Code: {response.status_code}")
+            print(f"DEBUG - Response: {response.text}")
+            
+            # Verifica resposta
+            if response.status_code in [200, 201]:
+                try:
+                    return True, response.json()
+                except:
+                    return True, {'message': 'Mídia enviada com sucesso'}
+            else:
+                return False, {
+                    'error': f'Status {response.status_code}',
+                    'message': response.text
+                }
+                
+        except requests.exceptions.Timeout:
+            return False, {'error': 'Timeout ao enviar mídia'}
+        except requests.exceptions.ConnectionError:
+            return False, {'error': f'Erro de conexão com {self.base_url}'}
+        except Exception as e:
+            return False, {'error': str(e)}
+    
     def send_bulk_messages(
         self,
         contacts: List[Dict[str, str]],

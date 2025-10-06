@@ -683,6 +683,19 @@
                 <input type="text" id="boletoCotas" placeholder="Ex: 5 cotas">
             </div>
             <div class="form-group">
+                <label for="boletoPng">Arquivo PNG do Boleto</label>
+                <input type="file" id="boletoPng" accept=".png,image/png">
+                <small style="color: var(--text-secondary); font-size: 0.85rem; display: block; margin-top: 4px;">
+                    📎 Arquivo PNG que será enviado via WhatsApp
+                </small>
+                <div id="pngPreview" style="margin-top: 8px; display: none;">
+                    <img id="pngPreviewImg" style="max-width: 200px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <button type="button" onclick="removePngPreview()" style="display: block; margin-top: 8px; color: #f56565; background: none; border: none; cursor: pointer; font-size: 0.9rem;">
+                        <i class="fas fa-trash"></i> Remover arquivo
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
                 <label for="boletoDia">Dia de Vencimento*</label>
                 <select id="boletoDia" required>
                     <option value="08">Dia 08</option>
@@ -1161,6 +1174,14 @@ function openBoletoModal(taskId = null, dia = '08') {
             document.getElementById('boletoNome').value = boleto.nome || '';
             document.getElementById('boletoCelular').value = celular;
             document.getElementById('boletoCotas').value = cotas;
+            
+            // Carrega PNG salvo se existir
+            if (boleto.png_base64) {
+                const preview = document.getElementById('pngPreview');
+                const img = document.getElementById('pngPreviewImg');
+                img.src = boleto.png_base64;
+                preview.style.display = 'block';
+            }
         }
     } else {
         // Modo criação
@@ -1174,6 +1195,38 @@ function openBoletoModal(taskId = null, dia = '08') {
 function closeBoletoModal() {
     const modal = document.getElementById('boletoModal');
     modal.classList.remove('active');
+    removePngPreview();
+}
+
+// Preview da imagem PNG
+document.getElementById('boletoPng')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        if (!file.type.match('image/png')) {
+            alert('Por favor, selecione apenas arquivos PNG');
+            e.target.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const preview = document.getElementById('pngPreview');
+            const img = document.getElementById('pngPreviewImg');
+            img.src = event.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function removePngPreview() {
+    const preview = document.getElementById('pngPreview');
+    const input = document.getElementById('boletoPng');
+    const img = document.getElementById('pngPreviewImg');
+    
+    preview.style.display = 'none';
+    img.src = '';
+    if (input) input.value = '';
 }
 
 document.getElementById('boletoForm').addEventListener('submit', async (e) => {
@@ -1184,6 +1237,7 @@ document.getElementById('boletoForm').addEventListener('submit', async (e) => {
     const celular = document.getElementById('boletoCelular').value.trim();
     const cotas = document.getElementById('boletoCotas').value.trim();
     const dia = document.getElementById('boletoDia').value;
+    const pngFile = document.getElementById('boletoPng').files[0];
     
     if (!nome) {
         alert('Por favor, preencha o nome do boleto');
@@ -1198,6 +1252,20 @@ document.getElementById('boletoForm').addEventListener('submit', async (e) => {
         is_completed: false
     };
     
+    // Se tem arquivo PNG, converte para base64
+    if (pngFile) {
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+            boletoData.png_base64 = event.target.result;
+            await saveBoleto(taskId, boletoData);
+        };
+        reader.readAsDataURL(pngFile);
+    } else {
+        await saveBoleto(taskId, boletoData);
+    }
+});
+
+async function saveBoleto(taskId, boletoData) {
     try {
         setSectionStatus('boletos', 'loading', taskId ? 'Atualizando boleto...' : 'Criando boleto...');
         
@@ -1225,7 +1293,7 @@ document.getElementById('boletoForm').addEventListener('submit', async (e) => {
         setSectionStatus('boletos', 'error', error.message || 'Erro ao salvar boleto');
         alert('Erro: ' + error.message);
     }
-});
+}
 
 function editBoleto(taskId, dia) {
     openBoletoModal(taskId, dia);
@@ -1240,16 +1308,30 @@ async function enviarWhatsAppBoleto(taskId, dia) {
         return;
     }
     
-    if (!boleto.celular) {
-        alert('Este boleto não possui número de celular cadastrado!\n\nPor favor, edite o boleto e adicione um número de celular.');
+    // Extrai e limpa o celular
+    let celular = boleto.celular || '';
+    
+    // Se o celular está misturado no campo cotas, extrai de lá
+    if (!celular && boleto.cotas) {
+        const celularMatch = boleto.cotas.match(/(?:📱\s*)?[Cc]elular:\s*(\d+)/);
+        if (celularMatch) {
+            celular = celularMatch[1];
+        }
+    }
+    
+    // Remove todos os caracteres não numéricos
+    celular = celular.replace(/\D/g, '');
+    
+    if (!celular || celular.length < 10) {
+        alert('Este boleto não possui número de celular válido cadastrado!\n\nPor favor, edite o boleto e adicione um número de celular válido.\n\nFormato: (19) 99999-9999 ou 19999999999');
         return;
     }
     
     // Confirma envio
     const nome = boleto.nome || 'Cliente';
-    const celular = boleto.celular;
+    const celularFormatado = celular.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
     
-    if (!confirm(`Enviar boleto via WhatsApp para:\n\n👤 ${nome}\n📱 ${celular}\n\nConfirmar envio?`)) {
+    if (!confirm(`Enviar boleto via WhatsApp para:\n\n👤 ${nome}\n📱 ${celularFormatado}\n\nConfirmar envio?`)) {
         return;
     }
     
@@ -1270,12 +1352,16 @@ async function enviarWhatsAppBoleto(taskId, dia) {
         setSectionStatus('boletos', 'success', `✅ WhatsApp enviado com sucesso para ${nome}!`);
         
         // Mostra detalhes do envio
-        alert(`✅ WhatsApp Enviado com Sucesso!\n\n👤 Nome: ${nome}\n📱 Celular: ${celular}\n📅 Dia: ${dia}\n\nO boleto foi enviado e um comentário foi adicionado no Todoist.`);
+        const details = result.details || {};
+        const statusTexto = details.text_sent ? '✅ Texto enviado' : '❌ Texto falhou';
+        const statusImagem = details.media_sent ? '✅ Imagem enviada' : '⚠️ Imagem não enviada';
+        
+        alert(`✅ WhatsApp Enviado!\n\n👤 Nome: ${nome}\n📱 Celular: ${celularFormatado}\n📅 Dia: ${dia}\n\n${statusTexto}\n${statusImagem}\n\nUm comentário foi adicionado no Todoist.`);
         
     } catch (error) {
         console.error('Erro ao enviar WhatsApp:', error);
         setSectionStatus('boletos', 'error', `Erro ao enviar WhatsApp: ${error.message}`);
-        alert(`❌ Erro ao Enviar WhatsApp\n\n${error.message}\n\nVerifique:\n• Configuração da Evolution API\n• Conexão com a internet\n• Número de celular válido`);
+        alert(`❌ Erro ao Enviar WhatsApp\n\n${error.message}\n\nVerifique:\n• Configuração da Evolution API\n• Conexão com a internet\n• Número de celular válido (deve ter pelo menos 10 dígitos)`);
     }
 }
 
