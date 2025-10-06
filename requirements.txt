@@ -35,5 +35,8 @@ python-engineio>=4.8.0
 # Tkinter já vem incluído no Python padrão
 # Para Linux/Ubuntu pode ser necessário: sudo apt-get install python3-tk
 
+# Google Gemini - Agente de IA inteligente (GRATUITO!)
+google-generativeai>=0.3.0
+
 # Testes
 pytest>=8.0.0

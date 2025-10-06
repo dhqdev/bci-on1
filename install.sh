@@ -478,6 +478,9 @@ try:
     print('✓ Flask-SocketIO: OK')
     print('✓ Flask-CORS: OK')
     
+    import google.generativeai as genai
+    print('✓ Google Gemini AI: OK')
+    
     print('\\n✅ Todas as dependências estão funcionando!')
     
 except ImportError as e:
@@ -520,6 +523,7 @@ echo "   ✓ Ambiente virtual criado em ./venv"
 echo "   ✓ Todas as dependências instaladas"
 echo "   ✓ Selenium, WebDriver, Requests, BeautifulSoup"
 echo "   ✓ Flask, Flask-SocketIO, Flask-CORS (Interface Web)"
+echo "   ✓ Google Gemini AI (Agente Inteligente GRATUITO)"
 echo ""
 echo "=========================================="
 echo "🚀 COMO EXECUTAR O SISTEMA"
