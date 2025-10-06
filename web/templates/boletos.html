@@ -309,6 +309,40 @@
         color: var(--text-secondary);
     }
 
+    .boleto-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .boleto-link:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+
+    .boleto-link.placeholder {
+        color: var(--text-secondary);
+        font-weight: 500;
+        cursor: default;
+    }
+
+    .boleto-link.placeholder:hover {
+        color: var(--text-secondary);
+        text-decoration: none;
+    }
+
+    .boleto-generated {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
     .boleto-status {
         display: inline-flex;
         align-items: center;
@@ -622,13 +656,13 @@
     <div class="tabs-container">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dia08-tab" type="button" role="tab">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dia08-tab" type="button" role="tab" onclick="filterBoletos()">
                     <i class="fas fa-calendar-day"></i> Dia 08
                     <span class="tab-badge" id="badge08">0</span>
                 </button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dia16-tab" type="button" role="tab">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dia16-tab" type="button" role="tab" onclick="filterBoletos()">
                     <i class="fas fa-calendar-alt"></i> Dia 16
                     <span class="tab-badge" id="badge16">0</span>
                 </button>
@@ -683,15 +717,17 @@
                 <input type="text" id="boletoCotas" placeholder="Ex: 5 cotas">
             </div>
             <div class="form-group">
-                <label for="boletoPng">Arquivo PNG do Boleto</label>
-                <input type="file" id="boletoPng" accept=".png,image/png">
+                <label for="boletoLink">Link do Boleto</label>
+                <input type="url" id="boletoLink" placeholder="https://www.consorcioservopa.com.br/..." inputmode="url">
                 <small style="color: var(--text-secondary); font-size: 0.85rem; display: block; margin-top: 4px;">
-                    📎 Arquivo PNG que será enviado via WhatsApp
+                    � Cole aqui o link gerado automaticamente ou informe manualmente o link que será enviado ao cliente.
                 </small>
-                <div id="pngPreview" style="margin-top: 8px; display: none;">
-                    <img id="pngPreviewImg" style="max-width: 200px; border-radius: 8px; border: 1px solid var(--border-color);">
-                    <button type="button" onclick="removePngPreview()" style="display: block; margin-top: 8px; color: #f56565; background: none; border: none; cursor: pointer; font-size: 0.9rem;">
-                        <i class="fas fa-trash"></i> Remover arquivo
+                <div id="linkPreview" style="margin-top: 8px; display: none; align-items: center; gap: 12px;">
+                    <a id="linkPreviewAnchor" class="boleto-link" href="#" target="_blank" rel="noopener">
+                        <i class="fas fa-external-link-alt"></i> Abrir link do boleto
+                    </a>
+                    <button type="button" onclick="clearBoletoLink()" style="color: #f56565; background: none; border: none; cursor: pointer; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-trash"></i> Remover link
                     </button>
                 </div>
             </div>
@@ -785,9 +821,22 @@ async function loadBoletosFromCache() {
 }
 
 function normalizeBoletos(data) {
+    const normalizeList = (list) => {
+        if (!Array.isArray(list)) {
+            return [];
+        }
+        return list.map(item => ({
+            ...item,
+            short_link: typeof item?.short_link === 'string' ? item.short_link : '',
+            boleto_url: typeof item?.boleto_url === 'string' ? item.boleto_url : '',
+            png_base64: typeof item?.png_base64 === 'string' ? item.png_base64 : '',
+            last_generated: item?.last_generated || '',
+        }));
+    };
+
     return {
-        dia08: Array.isArray(data.dia08) ? data.dia08 : [],
-        dia16: Array.isArray(data.dia16) ? data.dia16 : []
+        dia08: normalizeList(data.dia08),
+        dia16: normalizeList(data.dia16)
     };
 }
 
@@ -884,6 +933,10 @@ function createBoletoCard(boleto, dia) {
     const rawNome = boleto?.nome ?? 'Sem nome';
     let rawCotas = boleto?.cotas ?? '';
     const isCompleted = Boolean(boleto?.is_completed);
+    const lastGenerated = boleto?.last_generated ? escapeHtml(String(boleto.last_generated)) : '';
+    const lastGeneratedHtml = lastGenerated
+        ? `<span class="boleto-generated"><i class="fas fa-sync-alt"></i> ${lastGenerated}</span>`
+        : '';
 
     // Limpa o campo cotas caso contenha celular misturado
     if (rawCotas.includes('Celular:') || rawCotas.includes('📱')) {
@@ -906,6 +959,7 @@ function createBoletoCard(boleto, dia) {
                 <span class="boleto-status ${isCompleted ? 'concluido' : 'pendente'}">
                     ${rawCotas ? `<i class="fas fa-layer-group"></i> ${cotasDisplay}` : '<i class="fas fa-layer-group"></i> Sem cotas'}
                 </span>
+                ${lastGeneratedHtml ? `<div class="boleto-meta">${lastGeneratedHtml}</div>` : ''}
             </div>
             <div class="card-actions">
                 <button class="btn-card-action whatsapp" onclick="enviarWhatsAppBoleto('${taskIdAttr}', '${dia}')" title="Enviar WhatsApp">
@@ -1010,8 +1064,15 @@ function filterBoletos() {
 
     cards.forEach(card => {
         total++;
-        const title = (card.dataset.title || '').toLowerCase();
+        let title = (card.dataset.title || '').toLowerCase();
         const celular = (card.dataset.celular || '').toLowerCase();
+        
+        // Remove tudo após o hífen (inclusive o hífen) no nome para busca
+        const hyphenIndex = title.indexOf('-');
+        if (hyphenIndex !== -1) {
+            title = title.substring(0, hyphenIndex).trim();
+        }
+        
         const matches = !searchTerm || title.includes(searchTerm) || celular.includes(searchTerm);
 
         if (matches) {
@@ -1132,6 +1193,46 @@ function encodeHtmlAttr(value = '') {
     return escapeHtml(value);
 }
 
+function isValidHttpUrl(value) {
+    if (typeof value !== 'string') {
+        return false;
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+        return false;
+    }
+    return /^https?:\/\//i.test(trimmed);
+}
+
+function getBestBoletoLink(boleto = {}) {
+    const candidates = [
+        boleto?.short_link,
+        boleto?.png_base64,
+        boleto?.boleto_url,
+    ];
+    for (const candidate of candidates) {
+        if (isValidHttpUrl(candidate)) {
+            return candidate.trim();
+        }
+    }
+    return '';
+}
+
+function formatLinkLabel(url) {
+    try {
+        const parsed = new URL(url);
+        const hostname = parsed.hostname.replace(/^www\./, '');
+        let path = parsed.pathname.replace(/\/$/, '');
+        if (path && path.length > 32) {
+            path = `${path.slice(0, 29)}…`;
+        }
+        const display = path && path !== '/' ? `${hostname}${path}` : hostname;
+        return display || hostname;
+    } catch (error) {
+        return url.length > 40 ? `${url.slice(0, 37)}…` : url;
+    }
+}
+
 // ========== CRUD DE BOLETOS ==========
 
 function openBoletoModal(taskId = null, dia = '08') {
@@ -1175,18 +1276,22 @@ function openBoletoModal(taskId = null, dia = '08') {
             document.getElementById('boletoCelular').value = celular;
             document.getElementById('boletoCotas').value = cotas;
             
-            // Carrega PNG salvo se existir
-            if (boleto.png_base64) {
-                const preview = document.getElementById('pngPreview');
-                const img = document.getElementById('pngPreviewImg');
-                img.src = boleto.png_base64;
-                preview.style.display = 'block';
+            const linkInput = document.getElementById('boletoLink');
+            if (linkInput) {
+                const bestLink = getBestBoletoLink(boleto);
+                linkInput.value = bestLink;
+                updateLinkPreview(bestLink);
             }
         }
     } else {
         // Modo criação
         title.textContent = 'Adicionar Boleto';
         document.getElementById('boletoTaskId').value = '';
+        const linkInput = document.getElementById('boletoLink');
+        if (linkInput) {
+            linkInput.value = '';
+        }
+        updateLinkPreview('');
     }
     
     modal.classList.add('active');
@@ -1195,39 +1300,39 @@ function openBoletoModal(taskId = null, dia = '08') {
 function closeBoletoModal() {
     const modal = document.getElementById('boletoModal');
     modal.classList.remove('active');
-    removePngPreview();
+    const linkInput = document.getElementById('boletoLink');
+    updateLinkPreview(linkInput ? linkInput.value : '');
 }
-
-// Preview da imagem PNG
-document.getElementById('boletoPng')?.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        if (!file.type.match('image/png')) {
-            alert('Por favor, selecione apenas arquivos PNG');
-            e.target.value = '';
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const preview = document.getElementById('pngPreview');
-            const img = document.getElementById('pngPreviewImg');
-            img.src = event.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
+function updateLinkPreview(rawUrl = '') {
+    const preview = document.getElementById('linkPreview');
+    const anchor = document.getElementById('linkPreviewAnchor');
+    if (!preview || !anchor) {
+        return;
     }
-});
 
-function removePngPreview() {
-    const preview = document.getElementById('pngPreview');
-    const input = document.getElementById('boletoPng');
-    const img = document.getElementById('pngPreviewImg');
-    
-    preview.style.display = 'none';
-    img.src = '';
-    if (input) input.value = '';
+    const url = rawUrl.trim();
+    if (url) {
+        anchor.href = url;
+        anchor.textContent = `${formatLinkLabel(url)}`;
+        preview.style.display = 'flex';
+    } else {
+        anchor.href = '#';
+        anchor.textContent = 'Abrir link do boleto';
+        preview.style.display = 'none';
+    }
 }
+
+function clearBoletoLink() {
+    const input = document.getElementById('boletoLink');
+    if (input) {
+        input.value = '';
+    }
+    updateLinkPreview('');
+}
+
+document.getElementById('boletoLink')?.addEventListener('input', (event) => {
+    updateLinkPreview(event.target.value || '');
+});
 
 document.getElementById('boletoForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1237,7 +1342,7 @@ document.getElementById('boletoForm').addEventListener('submit', async (e) => {
     const celular = document.getElementById('boletoCelular').value.trim();
     const cotas = document.getElementById('boletoCotas').value.trim();
     const dia = document.getElementById('boletoDia').value;
-    const pngFile = document.getElementById('boletoPng').files[0];
+    const boletoLink = document.getElementById('boletoLink').value.trim();
     
     if (!nome) {
         alert('Por favor, preencha o nome do boleto');
@@ -1252,17 +1357,12 @@ document.getElementById('boletoForm').addEventListener('submit', async (e) => {
         is_completed: false
     };
     
-    // Se tem arquivo PNG, converte para base64
-    if (pngFile) {
-        const reader = new FileReader();
-        reader.onload = async function(event) {
-            boletoData.png_base64 = event.target.result;
-            await saveBoleto(taskId, boletoData);
-        };
-        reader.readAsDataURL(pngFile);
-    } else {
-        await saveBoleto(taskId, boletoData);
+    if (boletoLink) {
+        boletoData.png_base64 = boletoLink;
+        boletoData.short_link = boletoLink;
     }
+
+    await saveBoleto(taskId, boletoData);
 });
 
 async function saveBoleto(taskId, boletoData) {
@@ -1351,13 +1451,6 @@ async function enviarWhatsAppBoleto(taskId, dia) {
         
         setSectionStatus('boletos', 'success', `✅ WhatsApp enviado com sucesso para ${nome}!`);
         
-        // Mostra detalhes do envio
-        const details = result.details || {};
-        const statusTexto = details.text_sent ? '✅ Texto enviado' : '❌ Texto falhou';
-        const statusImagem = details.media_sent ? '✅ Imagem enviada' : '⚠️ Imagem não enviada';
-        
-        alert(`✅ WhatsApp Enviado!\n\n👤 Nome: ${nome}\n📱 Celular: ${celularFormatado}\n📅 Dia: ${dia}\n\n${statusTexto}\n${statusImagem}\n\nUm comentário foi adicionado no Todoist.`);
-        
     } catch (error) {
         console.error('Erro ao enviar WhatsApp:', error);
         setSectionStatus('boletos', 'error', `Erro ao enviar WhatsApp: ${error.message}`);
@@ -1375,33 +1468,44 @@ async function extrairBoleto(taskId, dia) {
     }
     
     try {
-        setSectionStatus('boletos', 'loading', `Extraindo boleto de ${boleto.nome}...`);
-        
-        // Aqui você pode fazer uma chamada para o backend para extrair o boleto
-        // Por enquanto, vou simular a ação
+        setSectionStatus('boletos', 'loading', `Gerando boleto de ${boleto.nome}...`);
+
         const response = await fetch(`/api/boletos/extrair/${taskId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
-        
-        if (response.ok) {
-            const result = await response.json();
-            setSectionStatus('boletos', 'success', `Boleto de ${boleto.nome} extraído com sucesso!`);
-            
-            // Se retornar um link do boleto, abre em nova aba
-            if (result.url) {
-                window.open(result.url, '_blank');
-            }
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result?.error || 'Erro ao gerar boleto');
+        }
+
+        const payload = result.data || {};
+
+        // Atualiza cache local com os novos dados retornados pelo backend
+        const extractedLink = payload.short_link || payload.boleto_url || '';
+        boleto.boleto_url = payload.boleto_url || boleto.boleto_url || '';
+        boleto.short_link = extractedLink || boleto.short_link || '';
+        if (extractedLink) {
+            boleto.png_base64 = extractedLink;
         } else {
-            throw new Error('Erro ao extrair boleto');
+            boleto.png_base64 = payload.png_base64 || boleto.png_base64 || '';
+        }
+        boleto.last_generated = payload.last_generated || boleto.last_generated || '';
+        boleto.tipo = payload.tipo || boleto.tipo || '';
+
+        renderBoletos(boletosData);
+        setSectionStatus('boletos', 'success', `Boleto de ${boleto.nome} gerado com sucesso!`);
+
+        if (payload.boleto_url) {
+            window.open(payload.boleto_url, '_blank', 'noopener');
         }
         
     } catch (error) {
         console.error('Erro ao extrair boleto:', error);
         setSectionStatus('boletos', 'error', `Erro ao extrair boleto: ${error.message}`);
-        
-        // Fallback: mostra informações do boleto
-        alert(`Funcionalidade de extração em desenvolvimento.\n\nDados do boleto:\nNome: ${boleto.nome}\nCotas: ${boleto.cotas || 'N/A'}\nCelular: ${boleto.celular || 'N/A'}\nDia: ${dia}`);
+        alert(`❌ Erro ao gerar boleto de ${boleto.nome}.\n\nDetalhes: ${error.message}`);
     }
 }
 

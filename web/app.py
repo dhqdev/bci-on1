@@ -4,7 +4,7 @@
 Interface web moderna para o sistema de automação
 """
 
-from flask import Flask, render_template, jsonify, request, redirect, url_for, session
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session, abort
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from functools import wraps
@@ -15,13 +15,28 @@ import threading
 from datetime import datetime
 
 # Adiciona path para importar módulos do projeto
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from auth.servopa_auth import create_driver, login_servopa
+from automation.servopa_boletos import (
+    BoletoAutomationError,
+    run_boleto_flow,
+)
+from utils.link_shortener import (
+    build_public_short_url,
+    create_short_link,
+    get_short_code_for_task,
+    resolve_short_link,
+)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'oxcash-automation-2024-secure-key'
 app.config['SESSION_COOKIE_SECURE'] = False  # True em produção com HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PUBLIC_BASE_URL'] = os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -164,6 +179,85 @@ def boletos():
 def lances():
     """Página de Kanban de Lances Servopa"""
     return render_template('lances.html')
+
+
+def _best_boleto_link(boleto: dict) -> str:
+    for key in ('short_link', 'png_base64', 'boleto_url'):
+        value = boleto.get(key)
+        if isinstance(value, str):
+            trimmed = value.strip()
+            if trimmed.lower().startswith(('http://', 'https://')):
+                return trimmed
+    return ''
+
+
+@app.route('/boleto/<code>')
+def proxy_boleto(code):
+    """Proxy para servir boletos do Servopa sem restrição de IP.
+    
+    Como o Servopa valida o IP no link, fazemos o download usando o IP
+    do servidor e servimos o PDF diretamente para o cliente.
+    """
+    import requests
+    from io import BytesIO
+    
+    original_url = resolve_short_link(code)
+    if not original_url:
+        abort(404)
+    
+    # Se não for link do Servopa, redireciona normalmente
+    if 'consorcioservopa.com.br' not in original_url.lower():
+        return redirect(original_url, code=302)
+    
+    try:
+        # Cache directory
+        cache_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'boletos_cache')
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        # Cache file path
+        cache_file = os.path.join(cache_dir, f'{code}.pdf')
+        
+        # Se já está em cache, retorna direto
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as f:
+                pdf_data = f.read()
+            
+            response = app.make_response(pdf_data)
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = f'inline; filename=boleto_{code}.pdf'
+            return response
+        
+        # Faz download do Servopa usando o IP do servidor
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        }
+        
+        resp = requests.get(original_url, headers=headers, timeout=30, allow_redirects=True)
+        
+        if resp.status_code != 200:
+            abort(502, description=f'Erro ao buscar boleto do Servopa: HTTP {resp.status_code}')
+        
+        # Verifica se é PDF
+        content_type = resp.headers.get('Content-Type', '').lower()
+        if 'pdf' not in content_type and not resp.content.startswith(b'%PDF'):
+            abort(502, description='Resposta do Servopa não é um PDF válido')
+        
+        # Salva em cache
+        with open(cache_file, 'wb') as f:
+            f.write(resp.content)
+        
+        # Retorna PDF
+        response = app.make_response(resp.content)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'inline; filename=boleto_{code}.pdf'
+        return response
+        
+    except requests.RequestException as e:
+        abort(502, description=f'Erro ao acessar Servopa: {str(e)}')
+    except Exception as e:
+        abort(500, description=f'Erro interno: {str(e)}')
 
 # ========== API REST ==========
 
@@ -355,6 +449,35 @@ def api_boletos_import():
             })
         
         boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+
+        # Preserva campos locais adicionais (png_base64, boleto_url, etc.)
+        existing_data = {}
+        if os.path.exists(boletos_filepath):
+            try:
+                with open(boletos_filepath, 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+            except Exception:
+                existing_data = {}
+
+        def merge_preserved_fields(new_list, old_list):
+            if not isinstance(old_list, list):
+                return
+            old_map = {str(item.get('task_id')): item for item in old_list if item.get('task_id')}
+            for entry in new_list:
+                existing = old_map.get(str(entry.get('task_id')))
+                if not existing:
+                    continue
+
+                # Preferir celular existente se o novo vier vazio
+                if not entry.get('celular') and existing.get('celular'):
+                    entry['celular'] = existing['celular']
+
+                for field in ('png_base64', 'boleto_url', 'short_link', 'last_generated', 'tipo', 'grupo', 'cota', 'metadata'):
+                    if existing.get(field) and not entry.get(field):
+                        entry[field] = existing[field]
+
+        merge_preserved_fields(clean_data['dia08'], existing_data.get('dia08', []))
+        merge_preserved_fields(clean_data['dia16'], existing_data.get('dia16', []))
         
         with open(boletos_filepath, 'w', encoding='utf-8') as f:
             json.dump(clean_data, f, indent=2, ensure_ascii=False)
@@ -429,7 +552,8 @@ def api_boletos_update(task_id):
         celular = data.get('celular', '')
         cotas = data.get('cotas', '')
         dia = data.get('dia', '08')
-        png_base64 = data.get('png_base64', '')  # ✅ Recebe PNG em base64
+        png_base64 = data.get('png_base64', '')  # Pode ser imagem ou link
+        short_link = data.get('short_link', '')
         
         # Atualiza no Todoist
         from utils.todoist_rest_api import TodoistRestAPI
@@ -467,6 +591,8 @@ def api_boletos_update(task_id):
                         # ✅ Salva PNG em base64
                         if png_base64:
                             boleto['png_base64'] = png_base64
+                        if short_link:
+                            boleto['short_link'] = short_link
                         break
             
             with open(boletos_filepath, 'w', encoding='utf-8') as f:
@@ -486,7 +612,8 @@ def api_boletos_create():
         celular = data.get('celular', '')
         cotas = data.get('cotas', '')
         dia = data.get('dia', '08')
-        png_base64 = data.get('png_base64', '')  # ✅ Recebe PNG em base64
+        png_base64 = data.get('png_base64', '')  # Pode ser imagem ou link
+        short_link = data.get('short_link', '')
         
         if not nome:
             return jsonify({'success': False, 'error': 'Nome é obrigatório'})
@@ -535,6 +662,8 @@ def api_boletos_create():
         # ✅ Adiciona PNG se fornecido
         if png_base64:
             new_boleto['png_base64'] = png_base64
+        if short_link:
+            new_boleto['short_link'] = short_link
         
         boletos_data[dia_key].append(new_boleto)
         
@@ -637,6 +766,20 @@ def api_boletos_sync():
                     # ✅ Preserva PNG local se existir
                     if local_task.get('png_base64'):
                         merged_task['png_base64'] = local_task['png_base64']
+
+                    # Preserva demais metadados do boleto gerado
+                    if local_task.get('boleto_url'):
+                        merged_task['boleto_url'] = local_task['boleto_url']
+                    if local_task.get('last_generated'):
+                        merged_task['last_generated'] = local_task['last_generated']
+                    if local_task.get('tipo'):
+                        merged_task['tipo'] = local_task['tipo']
+                    if local_task.get('metadata'):
+                        merged_task['metadata'] = local_task['metadata']
+                    if local_task.get('grupo'):
+                        merged_task['grupo'] = local_task['grupo']
+                    if local_task.get('cota'):
+                        merged_task['cota'] = local_task['cota']
                     
                     # Conta mudança de status
                     if local_task.get('is_completed') != updated_task.get('is_completed'):
@@ -666,6 +809,106 @@ def api_boletos_sync():
         error_details = traceback.format_exc()
         print(f"Erro na sincronização: {error_details}")
         return jsonify({'success': False, 'error': f'Erro na sincronização: {str(e)}'})
+
+
+@app.route('/api/boletos/extrair/<task_id>', methods=['POST'])
+def api_boletos_extrair(task_id):
+    """Gera automaticamente o boleto no portal da Servopa para a tarefa informada."""
+    try:
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        if not os.path.exists(boletos_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo local de boletos não encontrado'}), 400
+
+        with open(boletos_filepath, 'r', encoding='utf-8') as f:
+            boletos_data = json.load(f)
+
+        boleto_entry = None
+        dia = None
+
+        for dia_key in ('dia08', 'dia16'):
+            for item in boletos_data.get(dia_key, []):
+                if str(item.get('task_id')) == str(task_id):
+                    boleto_entry = item
+                    dia = '08' if dia_key == 'dia08' else '16'
+                    break
+            if boleto_entry:
+                break
+
+        if not boleto_entry:
+            return jsonify({'success': False, 'error': 'Boleto não encontrado na base local'}), 404
+
+        creds_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'credentials.json')
+        if not os.path.exists(creds_path):
+            return jsonify({'success': False, 'error': 'Arquivo de credenciais não encontrado'}), 400
+
+        with open(creds_path, 'r', encoding='utf-8') as f:
+            credentials = json.load(f)
+
+        servopa_creds = credentials.get('servopa')
+        if not servopa_creds:
+            return jsonify({'success': False, 'error': 'Credenciais do Servopa não configuradas'}), 400
+
+        progress = lambda msg: progress_callback('boletos', msg)
+        driver = create_driver(headless=True)
+
+        try:
+            progress('🔐 Efetuando login no portal Servopa...')
+            if not login_servopa(driver, progress, servopa_creds):
+                raise BoletoAutomationError('Falha ao autenticar no portal Servopa')
+
+            progress('📄 Iniciando geração automática do boleto...')
+            result = run_boleto_flow(driver, boleto_entry, dia, progress)
+
+        finally:
+            try:
+                driver.quit()
+            except Exception:
+                pass
+
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        if result.png_base64:
+            boleto_entry['png_base64'] = result.png_base64
+        
+        # Usa o link direto do Servopa (já modificado sem IP)
+        if result.boleto_url:
+            boleto_entry['boleto_url'] = result.boleto_url
+            boleto_entry['short_link'] = result.boleto_url  # Link direto, sem proxy
+        
+        boleto_entry['last_generated'] = timestamp
+        boleto_entry['tipo'] = result.tipo
+        if result.grupo:
+            boleto_entry['grupo'] = result.grupo
+        if result.cota:
+            boleto_entry['cota'] = result.cota
+        if result.metadata:
+            boleto_entry['metadata'] = result.metadata
+
+        with open(boletos_filepath, 'w', encoding='utf-8') as f:
+            json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+
+        progress('✅ Boleto gerado e salvo com sucesso!')
+
+        return jsonify({
+            'success': True,
+            'message': 'Boleto gerado com sucesso',
+            'data': {
+                'task_id': task_id,
+                'dia': dia,
+                'boleto_url': result.boleto_url,
+                'short_link': result.boleto_url,  # Link direto do Servopa
+                'png_base64': result.png_base64,
+                'last_generated': timestamp,
+                'tipo': result.tipo,
+            }
+        })
+
+    except BoletoAutomationError as e:
+        progress_callback('boletos', f'❌ Erro ao gerar boleto: {e}')
+        return jsonify({'success': False, 'error': str(e)}), 500
+    except Exception as e:
+        progress_callback('boletos', f'❌ Erro inesperado ao gerar boleto: {e}')
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @app.route('/api/boletos/whatsapp/<task_id>', methods=['POST'])
 def api_boletos_whatsapp(task_id):
@@ -746,8 +989,10 @@ def api_boletos_whatsapp(task_id):
         # Monta a mensagem personalizada
         nome = boleto.get('nome', 'Cliente')
         cotas = boleto.get('cotas', 'N/A')
-        
-        # Mensagem de texto
+        link_boleto = _best_boleto_link(boleto)
+
+        link_bloco = f"🔗 *Link do boleto:* {link_boleto}\n\n" if link_boleto else "📄 *Acesse o portal Servopa para visualizar o boleto.*\n\n"
+
         mensagem = f"""Olá *{nome}*! 👋
 
 📋 *Lembrete de Boleto - Sistema OXCASH*
@@ -757,41 +1002,41 @@ Segue as informações do seu boleto:
 🎯 *Cotas:* {cotas}
 📅 *Vencimento:* Dia {dia}
 
-📄 *Boleto anexado na imagem abaixo*
-
-Qualquer dúvida, estamos à disposição!
+{link_bloco}Qualquer dúvida, estamos à disposição!
 
 _Mensagem automática - Sistema OXCASH_"""
-        
-        # ✅ Usa PNG salvo no boleto, ou imagem padrão como fallback
-        png_base64 = boleto.get('png_base64', '')
-        if png_base64:
-            # Se tem PNG salvo, usa ele diretamente (base64)
-            image_url = png_base64
-        else:
-            # Fallback: imagem de teste pública
-            image_url = "https://raw.githubusercontent.com/EvolutionAPI/evolution-api/main/.github/logo.png"
-        
-        # Envia mensagem de texto primeiro
+
         success_text, response_text = evolution_api.send_text_message(celular, mensagem)
-        
+
         if not success_text:
             return jsonify({
                 'success': False,
-                'error': f'Falha ao enviar mensagem: {response_text.get("error", "Erro desconhecido")}',
+                'error': f"Falha ao enviar mensagem: {response_text.get('error', 'Erro desconhecido')}",
                 'details': response_text
             })
-        
-        # Aguarda um pouco antes de enviar a imagem
-        import time
-        time.sleep(2)
-        
-        # Envia imagem com legenda
-        success_media, response_media = evolution_api.send_media_message(
-            celular, 
-            image_url,
-            f"📄 Boleto - {nome}"
-        )
+
+        details = {
+            'nome': nome,
+            'celular': celular,
+            'dia': dia,
+            'text_sent': True,
+            'link': link_boleto,
+            'media_sent': False,
+        }
+
+        # Se não há link, tenta enviar imagem remota como fallback
+        if not link_boleto:
+            import time
+            fallback_image = boleto.get('png_base64', '')
+            if isinstance(fallback_image, str) and fallback_image.lower().startswith(('http://', 'https://')):
+                time.sleep(2)
+                success_media, response_media = evolution_api.send_media_message(
+                    celular,
+                    fallback_image,
+                    f"📄 Boleto - {nome}"
+                )
+                details['media_sent'] = success_media
+                details['media_response'] = response_media
         
         # Atualiza o boleto no Todoist adicionando uma nota sobre o envio
         try:
@@ -801,10 +1046,12 @@ _Mensagem automática - Sistema OXCASH_"""
             
             # Adiciona comentário na task do Todoist
             comment_text = f"📱 WhatsApp enviado em {datetime.now().strftime('%d/%m/%Y %H:%M')} para {celular}"
-            if success_media:
+            if link_boleto:
+                comment_text += "\n✅ Texto com link enviado"
+            elif details.get('media_sent'):
                 comment_text += "\n✅ Texto + Imagem enviados"
             else:
-                comment_text += "\n⚠️ Texto enviado, mas imagem falhou"
+                comment_text += "\n⚠️ Texto enviado, mas link/imagem indisponível"
             
             todoist_api.add_comment(task_id, comment_text)
         except Exception as e:
@@ -817,10 +1064,11 @@ _Mensagem automática - Sistema OXCASH_"""
                 'nome': nome,
                 'celular': celular,
                 'dia': dia,
-                'text_sent': success_text,
-                'media_sent': success_media,
+                'text_sent': True,
+                'media_sent': details.get('media_sent', False),
+                'link': link_boleto,
                 'text_response': response_text,
-                'media_response': response_media
+                'media_response': details.get('media_response')
             }
         })
     

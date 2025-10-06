@@ -161,6 +161,10 @@ boletos_data.json
 lances_data.json
 evolution_config.json
 
+# Cache directories (PDFs e dados temporários)
+data/boletos_cache/
+data/short_links.json
+
 # Backup files
 *.backup
 *.bak
