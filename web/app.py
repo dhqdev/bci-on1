@@ -277,6 +277,37 @@ def api_boletos_import():
         def emit_progress(message):
             socketio.emit('boletos_progress', {'message': message})
         
+        # Função para parsear descrição e extrair cotas e celular
+        def parse_boleto_description(description_text):
+            """Extrai cotas e celular da descrição do Todoist"""
+            cotas = ''
+            celular = ''
+            
+            if not description_text:
+                return cotas, celular
+            
+            # Remove quebras de linha e limpa o texto
+            text = description_text.replace('\n', ' ').strip()
+            
+            # Extrai celular (formato: 📱 Celular: XXXXX ou apenas Celular: XXXXX)
+            import re
+            celular_match = re.search(r'(?:📱\s*)?[Cc]elular:\s*(\d+)', text)
+            if celular_match:
+                celular = celular_match.group(1)
+                # Remove a parte do celular do texto
+                text = re.sub(r'(?:📱\s*)?[Cc]elular:\s*\d+', '', text)
+            
+            # Limpa repetições de "Cotas:" e extrai o valor
+            # Remove todos os "Cotas:" extras e pega só o número/valor
+            text = re.sub(r'[Cc]otas:\s*', '', text, flags=re.IGNORECASE)
+            text = text.strip()
+            
+            # Se sobrou algo, é a cota
+            if text:
+                cotas = text
+            
+            return cotas, celular
+        
         emit_progress('🔄 Conectando à API do Todoist...')
         
         # Cria cliente da API
@@ -298,17 +329,27 @@ def api_boletos_import():
         }
         
         for boleto in boletos_data['dia08']:
+            # Parseia descrição para separar cotas e celular
+            raw_cotas = boleto.get('cotas', '')
+            cotas, celular = parse_boleto_description(raw_cotas)
+            
             clean_data['dia08'].append({
                 'nome': boleto['nome'],
-                'cotas': boleto.get('cotas', ''),
+                'cotas': cotas,
+                'celular': celular,
                 'task_id': boleto.get('task_id', ''),
                 'is_completed': boleto.get('is_completed', False)
             })
         
         for boleto in boletos_data['dia16']:
+            # Parseia descrição para separar cotas e celular
+            raw_cotas = boleto.get('cotas', '')
+            cotas, celular = parse_boleto_description(raw_cotas)
+            
             clean_data['dia16'].append({
                 'nome': boleto['nome'],
-                'cotas': boleto.get('cotas', ''),
+                'cotas': cotas,
+                'celular': celular,
                 'task_id': boleto.get('task_id', ''),
                 'is_completed': boleto.get('is_completed', False)
             })
@@ -385,7 +426,7 @@ def api_boletos_update(task_id):
     try:
         data = request.json
         nome = data.get('nome', '')
-        numero = data.get('numero', '')
+        celular = data.get('celular', '')
         cotas = data.get('cotas', '')
         dia = data.get('dia', '08')
         
@@ -396,10 +437,18 @@ def api_boletos_update(task_id):
         
         # Monta novo conteúdo da tarefa
         new_content = nome
-        if numero:
-            new_content += f" - {numero}"
         
-        api.update_task(task_id, content=new_content)
+        # Monta descrição com dados estruturados
+        description_parts = []
+        if cotas:
+            description_parts.append(f"Cotas: {cotas}")
+        if celular:
+            description_parts.append(f"📱 Celular: {celular}")
+        
+        new_description = "\n".join(description_parts) if description_parts else ""
+        
+        # Atualiza task no Todoist
+        api.update_task(task_id, content=new_content, description=new_description)
         
         # Atualiza arquivo local
         boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
@@ -412,7 +461,7 @@ def api_boletos_update(task_id):
                 for boleto in boletos_data[dia_key]:
                     if boleto.get('task_id') == task_id:
                         boleto['nome'] = nome
-                        boleto['numero'] = numero
+                        boleto['celular'] = celular
                         boleto['cotas'] = cotas
                         break
             
@@ -430,7 +479,7 @@ def api_boletos_create():
     try:
         data = request.json
         nome = data.get('nome', '')
-        numero = data.get('numero', '')
+        celular = data.get('celular', '')
         cotas = data.get('cotas', '')
         dia = data.get('dia', '08')
         
@@ -444,11 +493,18 @@ def api_boletos_create():
         
         # Monta conteúdo da tarefa
         content = nome
-        if numero:
-            content += f" - {numero}"
+        
+        # Monta descrição com dados estruturados
+        description_parts = []
+        if cotas:
+            description_parts.append(f"Cotas: {cotas}")
+        if celular:
+            description_parts.append(f"📱 Celular: {celular}")
+        
+        description = "\n".join(description_parts) if description_parts else ""
         
         # Cria a tarefa
-        task = api.create_task(content=content)
+        task = api.create_task(content=content, description=description)
         task_id = task.get('id')
         
         # Adiciona ao arquivo local
@@ -466,7 +522,7 @@ def api_boletos_create():
         new_boleto = {
             'task_id': task_id,
             'nome': nome,
-            'numero': numero,
+            'celular': celular,
             'cotas': cotas,
             'is_completed': False
         }
@@ -580,6 +636,123 @@ def api_boletos_sync():
         error_details = traceback.format_exc()
         print(f"Erro na sincronização: {error_details}")
         return jsonify({'success': False, 'error': f'Erro na sincronização: {str(e)}'})
+
+@app.route('/api/boletos/whatsapp/<task_id>', methods=['POST'])
+def api_boletos_whatsapp(task_id):
+    """Envia boleto via WhatsApp usando Evolution API"""
+    try:
+        from utils.evolution_api import EvolutionAPI
+        
+        # Carrega dados do boleto
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        
+        if not os.path.exists(boletos_filepath):
+            return jsonify({'success': False, 'error': 'Dados de boletos não encontrados'})
+        
+        with open(boletos_filepath, 'r', encoding='utf-8') as f:
+            boletos_data = json.load(f)
+        
+        # Busca o boleto específico
+        boleto = None
+        dia = None
+        
+        for boleto_item in boletos_data.get('dia08', []):
+            if str(boleto_item.get('task_id')) == str(task_id):
+                boleto = boleto_item
+                dia = '08'
+                break
+        
+        if not boleto:
+            for boleto_item in boletos_data.get('dia16', []):
+                if str(boleto_item.get('task_id')) == str(task_id):
+                    boleto = boleto_item
+                    dia = '16'
+                    break
+        
+        if not boleto:
+            return jsonify({'success': False, 'error': 'Boleto não encontrado'})
+        
+        # Verifica se tem celular
+        celular = boleto.get('celular', '').strip()
+        if not celular:
+            return jsonify({'success': False, 'error': 'Boleto não possui número de celular cadastrado'})
+        
+        # Carrega configuração da Evolution API
+        evolution_config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'evolution_config.json')
+        
+        if not os.path.exists(evolution_config_path):
+            return jsonify({'success': False, 'error': 'Configuração da Evolution API não encontrada'})
+        
+        with open(evolution_config_path, 'r', encoding='utf-8') as f:
+            evolution_config = json.load(f)
+        
+        # Cria cliente da Evolution API
+        api_config = evolution_config.get('api', {})
+        base_url = api_config.get('base_url')
+        instance_name = api_config.get('instance_name')
+        api_key = api_config.get('api_key')
+        
+        if not all([base_url, instance_name, api_key]):
+            return jsonify({'success': False, 'error': 'Configuração da Evolution API incompleta'})
+        
+        evolution_api = EvolutionAPI(base_url, instance_name, api_key)
+        
+        # Monta a mensagem personalizada
+        nome = boleto.get('nome', 'Cliente')
+        cotas = boleto.get('cotas', 'N/A')
+        
+        mensagem = f"""Olá {nome}! 👋
+
+📋 *Lembrete de Boleto*
+
+Segue as informações do seu boleto:
+
+🎯 *Cotas:* {cotas}
+📅 *Vencimento:* Dia {dia}
+
+Qualquer dúvida, estamos à disposição!
+
+_Mensagem automática - Sistema OXCASH_"""
+        
+        # Envia mensagem via WhatsApp
+        success, response = evolution_api.send_text_message(celular, mensagem)
+        
+        if success:
+            # Atualiza o boleto no Todoist adicionando uma nota sobre o envio
+            try:
+                from utils.todoist_rest_api import TodoistRestAPI
+                TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
+                todoist_api = TodoistRestAPI(TODOIST_TOKEN)
+                
+                # Adiciona comentário na task do Todoist
+                comment_text = f"📱 WhatsApp enviado em {datetime.now().strftime('%d/%m/%Y %H:%M')} para {celular}"
+                todoist_api.add_comment(task_id, comment_text)
+            except Exception as e:
+                print(f"Aviso: Não foi possível adicionar comentário no Todoist: {e}")
+            
+            return jsonify({
+                'success': True,
+                'message': f'WhatsApp enviado com sucesso para {nome}!',
+                'details': {
+                    'nome': nome,
+                    'celular': celular,
+                    'dia': dia,
+                    'response': response
+                }
+            })
+        else:
+            error_msg = response.get('error', 'Erro desconhecido ao enviar')
+            return jsonify({
+                'success': False,
+                'error': f'Falha ao enviar WhatsApp: {error_msg}',
+                'details': response
+            })
+    
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Erro ao enviar WhatsApp: {error_details}")
+        return jsonify({'success': False, 'error': f'Erro ao enviar WhatsApp: {str(e)}'})
 
 # ========== ROTAS DE LANCES SERVOPA ==========
 

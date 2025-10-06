@@ -138,6 +138,42 @@ class TodoistRestAPI:
         # reopen_task retorna 204 No Content em sucesso
         return response.status_code == 204
     
+    def update_task(self, task_id: str, **kwargs) -> Dict:
+        """
+        Atualiza uma tarefa
+        
+        Args:
+            task_id: ID da tarefa
+            **kwargs: Campos a atualizar (content, description, labels, etc)
+            
+        Returns:
+            Dados da tarefa atualizada
+        """
+        url = f"{self.BASE_URL}/tasks/{task_id}"
+        response = requests.post(url, headers=self.headers, json=kwargs)
+        response.raise_for_status()
+        return response.json()
+    
+    def add_comment(self, task_id: str, content: str) -> Dict:
+        """
+        Adiciona um comentário a uma tarefa
+        
+        Args:
+            task_id: ID da tarefa
+            content: Conteúdo do comentário
+            
+        Returns:
+            Dados do comentário criado
+        """
+        url = f"{self.BASE_URL}/comments"
+        payload = {
+            "task_id": task_id,
+            "content": content
+        }
+        response = requests.post(url, headers=self.headers, json=payload)
+        response.raise_for_status()
+        return response.json()
+    
     def extract_boletos_board(self, project_name: str = "Boletos Servopa Outubro", 
                             section_dia08: str = "Vencimento dia 08",
                             section_dia16: str = "Vencimento dia 16",
