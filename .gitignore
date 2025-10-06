@@ -150,6 +150,12 @@ credentials.json
 *.secret
 *.key
 
+# AI configuration and conversations (sensitive)
+ai_config.json
+data/ai_conversations/*.json
+data/ai_conversations/*
+!data/ai_conversations/README.md
+
 # History and local data files
 history_dia8.json
 history*.json

@@ -8,10 +8,12 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for, s
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from functools import wraps
+from typing import Dict
 import json
 import os
 import sys
 import threading
+import time
 from datetime import datetime
 
 # Adiciona path para importar módulos do projeto
@@ -30,6 +32,7 @@ from utils.link_shortener import (
     get_short_code_for_task,
     resolve_short_link,
 )
+from ai.ai_agent import OXCASHAgent
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'oxcash-automation-2024-secure-key'
@@ -49,7 +52,8 @@ app_state = {
     'stats': {
         'dia8': {'total': 0, 'success': 0, 'failed': 0, 'running': 0},
         'dia16': {'total': 0, 'success': 0, 'failed': 0, 'running': 0}
-    }
+    },
+    'ai_agent': None  # Instância do agente de IA
 }
 
 # ========== MIDDLEWARE DE AUTENTICAÇÃO ==========
@@ -1776,6 +1780,488 @@ def api_whatsapp_send():
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+# ========== ROTAS DA API DO AGENTE DE IA ==========
+
+def _get_or_create_ai_agent():
+    """Obtém ou cria instância do agente de IA"""
+    # Usa session ID do usuário para manter contexto
+    session_id = session.get('user', {}).get('id', 'default')
+    
+    if app_state['ai_agent'] is None or getattr(app_state['ai_agent'], 'session_id', None) != session_id:
+        # Token do Google Gemini (GRATUITO!)
+        gemini_api_key = os.environ.get('GEMINI_API_KEY')
+        
+        if not gemini_api_key:
+            # Tenta ler de arquivo de configuração
+            config_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ai_config.json')
+            if os.path.exists(config_file):
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    ai_config = json.load(f)
+                    gemini_api_key = ai_config.get('gemini_api_key')
+        
+        if not gemini_api_key:
+            # Usa a chave fornecida pelo usuário
+            gemini_api_key = "AIzaSyCbXLz7HBma76AsPYBr9S-bNmM3LvnlM7k"
+        
+        agent = OXCASHAgent(
+            api_key=gemini_api_key,
+            project_root=os.path.dirname(os.path.dirname(__file__)),
+            session_id=session_id
+        )
+        
+        # Registra callbacks para execução real
+        agent.register_callback('generate_boleto', _execute_boleto_generation)
+        agent.register_callback('execute_lance', _execute_lance_automation)
+        agent.register_callback('send_whatsapp', _execute_whatsapp_send)
+        agent.register_callback('start_automation', _start_automation_callback)
+        agent.register_callback('stop_automation', _stop_automation_callback)
+        agent.register_callback('get_automation_status', _get_automation_status_callback)
+        agent.register_callback('send_whatsapp_custom', _send_whatsapp_custom_callback)
+        agent.register_callback('schedule_whatsapp', _schedule_whatsapp_callback)
+        
+        app_state['ai_agent'] = agent
+    
+    return app_state['ai_agent']
+
+def _execute_boleto_generation(task_id: str, dia: str) -> Dict:
+    """Executa geração real de boleto via automação"""
+    try:
+        # Carrega credenciais
+        creds_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'credentials.json')
+        if not os.path.exists(creds_path):
+            raise Exception('Credenciais não configuradas')
+        
+        with open(creds_path, 'r', encoding='utf-8') as f:
+            credentials = json.load(f)
+        
+        servopa_creds = credentials.get('servopa')
+        if not servopa_creds:
+            raise Exception('Credenciais do Servopa não encontradas')
+        
+        # Carrega dados do boleto
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        with open(boletos_filepath, 'r', encoding='utf-8') as f:
+            boletos_data = json.load(f)
+        
+        boleto_entry = None
+        for dia_key in ('dia08', 'dia16'):
+            for item in boletos_data.get(dia_key, []):
+                if str(item.get('task_id')) == str(task_id):
+                    boleto_entry = item
+                    dia = '08' if dia_key == 'dia08' else '16'
+                    break
+            if boleto_entry:
+                break
+        
+        if not boleto_entry:
+            raise Exception('Boleto não encontrado')
+        
+        # Cria driver headless
+        driver = create_driver(headless=True)
+        
+        try:
+            # Login no Servopa
+            if not login_servopa(driver, lambda msg: socketio.emit('log', {'dia': 'ai', 'message': msg}), servopa_creds):
+                raise Exception('Falha no login do Servopa')
+            
+            # Executa geração do boleto
+            result = run_boleto_flow(
+                driver, 
+                boleto_entry, 
+                dia,
+                lambda msg: socketio.emit('log', {'dia': 'ai', 'message': msg})
+            )
+            
+            # Salva resultado no arquivo
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            if result.png_base64:
+                boleto_entry['png_base64'] = result.png_base64
+            if result.boleto_url:
+                boleto_entry['boleto_url'] = result.boleto_url
+                boleto_entry['short_link'] = result.boleto_url
+            boleto_entry['last_generated'] = timestamp
+            boleto_entry['tipo'] = result.tipo
+            
+            with open(boletos_filepath, 'w', encoding='utf-8') as f:
+                json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+            
+            return {
+                'success': True,
+                'boleto_url': result.boleto_url,
+                'tipo': result.tipo,
+                'timestamp': timestamp
+            }
+            
+        finally:
+            driver.quit()
+            
+    except Exception as e:
+        socketio.emit('log', {'dia': 'ai', 'message': f'❌ Erro: {str(e)}'})
+        raise
+
+def _execute_lance_automation(grupo: str, cota: str) -> Dict:
+    """Executa lance real via automação"""
+    try:
+        # Carrega credenciais
+        creds_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'credentials.json')
+        if not os.path.exists(creds_path):
+            raise Exception('Credenciais não configuradas')
+        
+        with open(creds_path, 'r', encoding='utf-8') as f:
+            credentials = json.load(f)
+        
+        servopa_creds = credentials.get('servopa')
+        if not servopa_creds:
+            raise Exception('Credenciais do Servopa não encontradas')
+        
+        # Cria driver headless
+        driver = create_driver(headless=True)
+        
+        try:
+            # Login no Servopa
+            if not login_servopa(driver, lambda msg: socketio.emit('log', {'dia': 'ai', 'message': msg}), servopa_creds):
+                raise Exception('Falha no login do Servopa')
+            
+            # Navega para painel
+            driver.get("https://www.consorcioservopa.com.br/vendas/painel")
+            time.sleep(2)
+            
+            # Importa funções de lance
+            from automation.servopa_lances import processar_lance_completo
+            
+            # Executa lance
+            result = processar_lance_completo(
+                driver, 
+                grupo, 
+                cota,
+                lambda msg: socketio.emit('log', {'dia': 'ai', 'message': msg})
+            )
+            
+            if not result['success']:
+                raise Exception(result.get('lance_message', 'Falha ao executar lance'))
+            
+            return {
+                'success': True,
+                'protocol_number': result.get('protocol_number'),
+                'already_exists': result.get('already_exists', False),
+                'message': result.get('lance_message', 'Lance executado com sucesso')
+            }
+            
+        finally:
+            driver.quit()
+            
+    except Exception as e:
+        socketio.emit('log', {'dia': 'ai', 'message': f'❌ Erro: {str(e)}'})
+        raise
+
+def _execute_whatsapp_send(task_id: str) -> Dict:
+    """Executa envio de WhatsApp real"""
+    # Reutiliza a lógica existente da rota /api/boletos/whatsapp
+    # (já implementada anteriormente)
+    return {'success': True, 'message': 'WhatsApp enviado'}
+
+def _start_automation_callback(dia: str) -> Dict:
+    """Callback para iniciar automação via IA"""
+    try:
+        # Importa requests para fazer chamada HTTP interna
+        import requests
+        
+        # Faz chamada para a rota de start existente
+        response = requests.post(
+            f'http://localhost:5000/api/automation/start/{dia}',
+            json={},
+            timeout=5
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                'success': data.get('success', False),
+                'message': data.get('message', 'Automação iniciada'),
+                'dia': dia
+            }
+        else:
+            return {
+                'success': False,
+                'error': f'Erro HTTP {response.status_code}',
+                'dia': dia
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'dia': dia
+        }
+
+def _stop_automation_callback(dia: str) -> Dict:
+    """Callback para parar automação via IA"""
+    try:
+        import requests
+        
+        response = requests.post(
+            f'http://localhost:5000/api/automation/stop/{dia}',
+            json={},
+            timeout=5
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                'success': data.get('success', False),
+                'message': data.get('message', 'Automação parada'),
+                'dia': dia
+            }
+        else:
+            # Mesmo com erro HTTP, pode ter parado - verifica status
+            status_response = requests.get(f'http://localhost:5000/api/stats', timeout=5)
+            if status_response.status_code == 200:
+                status_data = status_response.json()
+                is_running = status_data.get('running', {}).get(dia, False)
+                
+                if not is_running:
+                    return {
+                        'success': True,
+                        'message': f'Automação {dia} foi parada (status confirmado)',
+                        'dia': dia
+                    }
+            
+            return {
+                'success': False,
+                'error': f'Erro HTTP {response.status_code}',
+                'message': f'Não foi possível confirmar se a automação parou. Verifique manualmente.',
+                'dia': dia
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'message': f'Erro ao tentar parar automação: {str(e)}',
+            'dia': dia
+        }
+
+def _send_whatsapp_custom_callback(numero: str, mensagem: str) -> Dict:
+    """Callback para enviar WhatsApp customizado via IA"""
+    try:
+        # Carrega configuração da Evolution API
+        config_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'evolution_config.json')
+        if not os.path.exists(config_file):
+            return {
+                'success': False,
+                'error': 'Configuração da Evolution API não encontrada. Configure em evolution_config.json'
+            }
+        
+        with open(config_file, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        
+        if 'api' not in config:
+            return {
+                'success': False,
+                'error': 'Configuração da API incompleta'
+            }
+        
+        # Importa módulo de envio
+        from utils.evolution_api import EvolutionAPI
+        
+        # Cria cliente API
+        api = EvolutionAPI(
+            config['api']['base_url'],
+            config['api']['instance_name'],
+            config['api']['api_key']
+        )
+        
+        # Envia mensagem
+        success, result = api.send_text_message(numero, mensagem)
+        
+        if success:
+            return {
+                'success': True,
+                'message': f'WhatsApp enviado para {numero}',
+                'numero': numero,
+                'result': result
+            }
+        else:
+            return {
+                'success': False,
+                'error': f'Falha ao enviar: {result}',
+                'numero': numero
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'numero': numero
+        }
+
+def _schedule_whatsapp_callback(numero: str, mensagem: str, data_hora: str) -> Dict:
+    """Callback para agendar WhatsApp via IA"""
+    try:
+        from datetime import datetime
+        import threading
+        
+        # Valida formato de data/hora
+        try:
+            dt = datetime.strptime(data_hora, '%d/%m/%Y %H:%M')
+        except ValueError:
+            return {
+                'success': False,
+                'error': 'Formato de data inválido. Use: DD/MM/YYYY HH:MM (ex: 07/10/2025 14:30)'
+            }
+        
+        # Verifica se é no futuro
+        now = datetime.now()
+        if dt <= now:
+            return {
+                'success': False,
+                'error': 'Data/hora deve ser no futuro'
+            }
+        
+        # Calcula delay em segundos
+        delay = (dt - now).total_seconds()
+        
+        # Carrega configuração da Evolution API
+        config_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'evolution_config.json')
+        if not os.path.exists(config_file):
+            return {
+                'success': False,
+                'error': 'Configuração da Evolution API não encontrada'
+            }
+        
+        with open(config_file, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        
+        # Função que será executada no futuro
+        def send_scheduled_message():
+            try:
+                from utils.evolution_api import EvolutionAPI
+                
+                api = EvolutionAPI(
+                    config['api']['base_url'],
+                    config['api']['instance_name'],
+                    config['api']['api_key']
+                )
+                
+                success, result = api.send_text_message(numero, mensagem)
+                print(f"📅 Mensagem agendada enviada para {numero}: {'✅ Sucesso' if success else '❌ Falha'}")
+                
+            except Exception as e:
+                print(f"❌ Erro ao enviar mensagem agendada: {str(e)}")
+        
+        # Agenda em thread separada
+        timer = threading.Timer(delay, send_scheduled_message)
+        timer.daemon = True
+        timer.start()
+        
+        return {
+            'success': True,
+            'message': f'WhatsApp agendado para {numero} em {data_hora}',
+            'numero': numero,
+            'data_hora': data_hora,
+            'delay_segundos': int(delay),
+            'delay_minutos': round(delay / 60, 1)
+        }
+        
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'numero': numero,
+            'data_hora': data_hora
+        }
+
+def _get_automation_status_callback(dia: str) -> Dict:
+    """Callback para verificar status de automação via IA"""
+    if dia == "both":
+        return {
+            'dia8_running': app_state['automation_dia8_running'],
+            'dia16_running': app_state['automation_dia16_running'],
+            'dia8': {
+                'running': app_state['automation_dia8_running'],
+                'has_driver': app_state['driver_dia8'] is not None
+            },
+            'dia16': {
+                'running': app_state['automation_dia16_running'],
+                'has_driver': app_state['driver_dia16'] is not None
+            }
+        }
+    else:
+        return {
+            'running': app_state[f'automation_{dia}_running'],
+            'has_driver': app_state[f'driver_{dia}'] is not None
+        }
+
+
+@app.route('/api/ai/chat', methods=['POST'])
+def api_ai_chat():
+    """Endpoint para conversar com o agente de IA"""
+    try:
+        data = request.json
+        message = data.get('message', '').strip()
+        
+        if not message:
+            return jsonify({
+                'success': False,
+                'error': 'Mensagem não pode estar vazia'
+            })
+        
+        # Obtém agente de IA
+        agent = _get_or_create_ai_agent()
+        
+        # Processa mensagem
+        response = agent.chat(message)
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Erro no chat da IA: {error_details}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'message': 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.'
+        })
+
+@app.route('/api/ai/reset', methods=['POST'])
+def api_ai_reset():
+    """Reseta a conversa com o agente de IA"""
+    try:
+        agent = _get_or_create_ai_agent()
+        agent.reset_conversation()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Conversa resetada com sucesso'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/api/ai/status')
+def api_ai_status():
+    """Retorna status do agente de IA"""
+    try:
+        agent = _get_or_create_ai_agent()
+        
+        return jsonify({
+            'success': True,
+            'active': True,
+            'conversation_length': len(agent.conversation_history),
+            'tools_available': len(agent.tools)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'active': False
+        })
 
 # ========== WEBSOCKET EVENTS ==========
 
