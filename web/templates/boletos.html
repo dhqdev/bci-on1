@@ -595,24 +595,101 @@
         .status-top {
             flex-direction: column;
             align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .status-actions {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .status-actions button {
+            width: 100%;
         }
 
         .search-container {
             flex-direction: column;
             align-items: stretch;
+            gap: 12px;
         }
 
         .search-input-wrapper {
             max-width: 100%;
         }
 
+        .nav-tabs {
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+        
         .nav-tabs .nav-link {
             padding: 10px 16px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            white-space: nowrap;
         }
 
         .boleto-grid {
             grid-template-columns: 1fr;
+        }
+        
+        .page-header {
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+        }
+        
+        .page-subtitle {
+            font-size: 0.9rem;
+        }
+        
+        .status-card {
+            padding: 16px;
+        }
+        
+        .status-card h2 {
+            font-size: 1.1rem;
+        }
+        
+        .status-description {
+            font-size: 0.85rem;
+        }
+        
+        .btn-retry {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .page-title {
+            font-size: 1.25rem;
+        }
+        
+        .page-subtitle {
+            font-size: 0.85rem;
+        }
+        
+        .status-card {
+            padding: 12px;
+        }
+        
+        .status-card h2 {
+            font-size: 1rem;
+        }
+        
+        .btn-retry {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+        
+        .nav-tabs .nav-link {
+            padding: 8px 12px;
+            font-size: 0.85rem;
         }
     }
 </style>

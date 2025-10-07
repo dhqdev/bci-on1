@@ -539,11 +539,106 @@
     @media (max-width: 968px) {
         .dashboard-sections {
             grid-template-columns: 1fr;
-            gap: 32px;
+            gap: 24px;
         }
         
         .content-grid {
             grid-template-columns: 1fr;
+        }
+        
+        .stats-grid {
+            gap: 16px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px;
+        }
+        
+        .summary-card {
+            padding: 16px;
+        }
+        
+        .summary-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+        }
+        
+        .summary-info h3 {
+            font-size: 14px;
+        }
+        
+        .summary-value {
+            font-size: 24px !important;
+        }
+        
+        .summary-details {
+            gap: 8px;
+        }
+        
+        .summary-item {
+            font-size: 13px;
+        }
+        
+        .summary-breakdown {
+            gap: 8px;
+        }
+        
+        .breakdown-item {
+            padding: 8px;
+            font-size: 12px;
+        }
+        
+        .section-title {
+            font-size: 20px !important;
+        }
+        
+        .dashboard-sections {
+            gap: 16px;
+        }
+        
+        .card {
+            padding: 16px;
+        }
+        
+        .card h3 {
+            font-size: 16px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .summary-card {
+            padding: 12px;
+        }
+        
+        .summary-header {
+            gap: 10px;
+        }
+        
+        .summary-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+        }
+        
+        .summary-info h3 {
+            font-size: 13px;
+        }
+        
+        .summary-value {
+            font-size: 20px !important;
+        }
+        
+        .summary-item {
+            font-size: 12px;
+        }
+        
+        .breakdown-item {
+            padding: 6px;
+            font-size: 11px;
         }
     }
 </style>
