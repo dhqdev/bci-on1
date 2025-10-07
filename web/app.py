@@ -552,6 +552,165 @@ def api_boletos_create():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/api/boletos/import-from-clientes', methods=['POST'])
+def api_boletos_import_from_clientes():
+    """Importa clientes para boletos - cria boletos baseados nos dados dos clientes"""
+    try:
+        data = request.json or {}
+        dias_selecionados = data.get('dias', ['08', '16'])  # Por padrão, importa ambos os dias
+        sobrescrever = data.get('sobrescrever', False)  # Se True, limpa boletos existentes antes
+        
+        # Emite progresso via WebSocket
+        def emit_progress(message):
+            socketio.emit('boletos_progress', {'message': message})
+        
+        emit_progress('📂 Carregando dados de clientes...')
+        
+        # Carrega dados dos clientes
+        clientes_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
+        if not os.path.exists(clientes_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo de clientes não encontrado. Configure clientes primeiro.'})
+        
+        with open(clientes_filepath, 'r', encoding='utf-8') as f:
+            clientes_data = json.load(f)
+        
+        # Carrega ou cria estrutura de boletos
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        if os.path.exists(boletos_filepath):
+            with open(boletos_filepath, 'r', encoding='utf-8') as f:
+                boletos_data = json.load(f)
+        else:
+            boletos_data = {'dia08': [], 'dia16': [], 'last_import': None}
+        
+        import uuid
+        stats = {
+            'importados': 0,
+            'ignorados': 0,
+            'erros': 0,
+            'dia08': 0,
+            'dia16': 0
+        }
+        
+        # Processa cada dia selecionado
+        for dia_num in dias_selecionados:
+            dia_key = f'dia{dia_num}'
+            
+            if dia_key not in clientes_data or not clientes_data[dia_key]:
+                emit_progress(f'⚠️ Nenhum cliente encontrado para o dia {dia_num}')
+                continue
+            
+            emit_progress(f'📋 Processando {len(clientes_data[dia_key])} clientes do dia {dia_num}...')
+            
+            # Se sobrescrever, limpa boletos existentes
+            if sobrescrever:
+                boletos_data[dia_key] = []
+                emit_progress(f'🗑️ Boletos anteriores do dia {dia_num} foram removidos')
+            
+            # Cria conjunto de IDs de clientes já existentes em boletos para evitar duplicatas
+            existing_client_ids = {b.get('client_id') for b in boletos_data.get(dia_key, []) if b.get('client_id')}
+            
+            # Converte cada cliente em boleto
+            for cliente in clientes_data[dia_key]:
+                try:
+                    client_id = cliente.get('client_id')
+                    
+                    # Verifica se já existe (evita duplicata)
+                    if not sobrescrever and client_id in existing_client_ids:
+                        stats['ignorados'] += 1
+                        continue
+                    
+                    # Monta o texto de cotas para o boleto
+                    cotas_texto = cliente.get('cotas_texto', '')
+                    if not cotas_texto:
+                        grupo = cliente.get('grupo', '')
+                        cota = cliente.get('cota', '')
+                        if grupo and cota:
+                            cotas_texto = f'{cota} - {grupo}'
+                        elif grupo or cota:
+                            cotas_texto = grupo or cota
+                    
+                    # Cria task_id se não existir (usando o mesmo do cliente se disponível)
+                    task_id = cliente.get('task_id')
+                    if not task_id:
+                        task_id = str(uuid.uuid4())
+                    
+                    # Monta estrutura do boleto
+                    novo_boleto = {
+                        'task_id': task_id,
+                        'client_id': client_id,  # Mantém referência ao cliente
+                        'nome': cliente.get('nome', ''),
+                        'celular': cliente.get('contato', ''),
+                        'cotas': cotas_texto,
+                        'grupo': cliente.get('grupo', ''),
+                        'cota': cliente.get('cota', ''),
+                        'valor_primeira_cota': cliente.get('valor_primeira_cota', ''),
+                        'is_completed': False,
+                        'imported_from_cliente': True,
+                        'imported_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                    
+                    # Mantém histórico de boletos do cliente se existir
+                    historico_boletos = cliente.get('historico_boletos', [])
+                    if historico_boletos:
+                        novo_boleto['historico_boletos'] = historico_boletos
+                        
+                        # Se houver histórico, pega o último link como link principal
+                        if isinstance(historico_boletos, list) and len(historico_boletos) > 0:
+                            ultimo_link = historico_boletos[-1]  # Pega o último link do histórico
+                            novo_boleto['boleto_url'] = ultimo_link
+                            novo_boleto['short_link'] = ultimo_link
+                            novo_boleto['png_base64'] = ultimo_link  # Para compatibilidade
+                    
+                    # Se o cliente tiver um campo de link direto, usa ele também
+                    if cliente.get('boleto_url'):
+                        novo_boleto['boleto_url'] = cliente['boleto_url']
+                    
+                    if cliente.get('short_link'):
+                        novo_boleto['short_link'] = cliente['short_link']
+                    
+                    if cliente.get('png_base64'):
+                        novo_boleto['png_base64'] = cliente['png_base64']
+                    
+                    boletos_data[dia_key].append(novo_boleto)
+                    stats['importados'] += 1
+                    stats[dia_key] += 1
+                    
+                except Exception as e:
+                    stats['erros'] += 1
+                    emit_progress(f'❌ Erro ao importar cliente {cliente.get("nome", "desconhecido")}: {str(e)}')
+        
+        # Atualiza timestamp de importação
+        boletos_data['last_import'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Salva os boletos
+        with open(boletos_filepath, 'w', encoding='utf-8') as f:
+            json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+        
+        # Mensagem de sucesso
+        msg_parts = []
+        if stats['dia08'] > 0:
+            msg_parts.append(f"{stats['dia08']} boletos do dia 08")
+        if stats['dia16'] > 0:
+            msg_parts.append(f"{stats['dia16']} boletos do dia 16")
+        
+        mensagem_final = f"✅ Importação concluída! {' e '.join(msg_parts)}"
+        if stats['ignorados'] > 0:
+            mensagem_final += f" | {stats['ignorados']} já existentes (ignorados)"
+        if stats['erros'] > 0:
+            mensagem_final += f" | {stats['erros']} erros"
+        
+        emit_progress(mensagem_final)
+        
+        return jsonify({
+            'success': True,
+            'message': mensagem_final,
+            'stats': stats,
+            'data': boletos_data
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Erro ao importar: {str(e)}'})
+
 @app.route('/api/boletos/delete/<task_id>', methods=['POST', 'DELETE'])
 def api_boletos_delete(task_id):
     """Deleta um boleto (apenas localmente)"""

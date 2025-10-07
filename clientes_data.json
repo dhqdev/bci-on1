@@ -9,7 +9,7 @@
       "valor_primeira_cota": "100000",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "cotas_texto": "4077 - 1556",
       "task_id": "9585006727"
     },
@@ -23,7 +23,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:36:57",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006709"
     }
   ],
@@ -37,7 +37,7 @@
       "valor_primeira_cota": "100000",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:29:34"
+      "updated_at": "2025-10-07 16:33:57"
     },
     {
       "client_id": "29e3bc0e-711b-422f-8eaf-11bffe94c115",
@@ -51,7 +51,7 @@
         "https://consorcioservopa.com.br/docparser/view/eyJ1cmwiOiJodHRwczpcL1wvd3d3LmNvbnNvcmNpb3NlcnZvcGEuY29tLmJyXC9kb2NnZW5cL2JvbGV0by0ydmlhXC9pbmRleC5waHAiLCJkYXRhIjp7InNlbmhhIjoiNDM0MTgiLCJjb250cmF0byI6IjI0MDUzSTA5IiwibnVtX3BhcmNlbGEiOiI5IiwidGlwb191c3VhcmlvIjoiUiIsImNwZl9jbnBqIjoiMjYzNTA2NTkwMDAxNjEiLCJncnVwbyI6IjE1NTMiLCJwbGFubyI6IjE5MjAiLCJkaWdpdG8iOiI1IiwidGlwb2JvbGV0byI6IldTMDMzIiwidGlwb2RvYyI6Ik4iLCJpcCI6IjE3Ny4xMzkuMjI0LjE2OSJ9fQ=="
       ],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006798",
       "cotas_texto": "1920 - 1553"
     },
@@ -64,7 +64,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006803"
     },
     {
@@ -74,10 +74,13 @@
       "cota": "2507",
       "contato": "",
       "valor_primeira_cota": "",
-      "historico_boletos": [],
+      "historico_boletos": [
+        "https://consorcioservopa.com.br/docparser/view/eyJ1cmwiOiJodHRwczpcL1wvd3d3LmNvbnNvcmNpb3NlcnZvcGEuY29tLmJyXC9kb2NnZW5cL2JvbGV0by0ydmlhXC9pbmRleC5waHAiLCJkYXRhIjp7InNlbmhhIjoiNDM0MTgiLCJjb250cmF0byI6IjI4OTEzSTA5IiwibnVtX3BhcmNlbGEiOiI3IiwidGlwb191c3VhcmlvIjoiUiIsImNwZl9jbnBqIjoiMjYzNTA2NTkwMDAxNjEiLCJncnVwbyI6IjE1NjAiLCJwbGFubyI6IjI1MDciLCJkaWdpdG8iOiI4IiwidGlwb2JvbGV0byI6IldTMDM0IiwidGlwb2RvYyI6IkQiLCJpcCI6IjE3Ny4xMzkuMjI0LjE2OSJ9fQ=="
+      ],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
-      "task_id": "9585006815"
+      "updated_at": "2025-10-07 16:33:57",
+      "task_id": "9585006815",
+      "cotas_texto": "2507 - 1560"
     },
     {
       "client_id": "49897125-7bcc-4de8-bf46-581d41f5d4fc",
@@ -88,7 +91,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006824"
     },
     {
@@ -100,7 +103,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006830"
     },
     {
@@ -112,7 +115,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006840"
     },
     {
@@ -124,7 +127,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006851"
     },
     {
@@ -136,7 +139,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006868"
     },
     {
@@ -148,7 +151,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006878"
     },
     {
@@ -160,7 +163,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006888"
     },
     {
@@ -172,7 +175,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006902"
     },
     {
@@ -184,7 +187,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006907"
     },
     {
@@ -196,7 +199,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006914"
     },
     {
@@ -208,7 +211,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006923"
     },
     {
@@ -220,7 +223,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006935"
     },
     {
@@ -232,7 +235,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006948"
     },
     {
@@ -244,7 +247,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006954"
     },
     {
@@ -256,7 +259,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006965"
     },
     {
@@ -268,7 +271,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006974"
     },
     {
@@ -280,7 +283,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006981"
     },
     {
@@ -292,7 +295,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006993"
     },
     {
@@ -304,7 +307,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007026"
     },
     {
@@ -316,7 +319,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007036"
     },
     {
@@ -328,7 +331,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007045"
     },
     {
@@ -340,7 +343,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007083"
     },
     {
@@ -352,7 +355,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007089"
     },
     {
@@ -364,7 +367,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007098"
     },
     {
@@ -376,7 +379,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007100"
     },
     {
@@ -388,7 +391,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007107"
     },
     {
@@ -400,7 +403,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007116"
     },
     {
@@ -412,7 +415,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007126"
     },
     {
@@ -424,7 +427,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007136"
     },
     {
@@ -436,7 +439,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007142"
     },
     {
@@ -448,7 +451,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007153"
     },
     {
@@ -460,7 +463,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007171"
     },
     {
@@ -472,7 +475,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007179"
     },
     {
@@ -484,7 +487,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007193"
     },
     {
@@ -496,7 +499,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007202"
     },
     {
@@ -508,7 +511,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007210"
     },
     {
@@ -520,7 +523,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007223"
     },
     {
@@ -532,7 +535,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007233"
     },
     {
@@ -544,7 +547,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007245"
     },
     {
@@ -556,7 +559,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007263"
     },
     {
@@ -568,7 +571,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007276"
     },
     {
@@ -580,7 +583,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007282"
     },
     {
@@ -592,7 +595,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007329"
     },
     {
@@ -604,7 +607,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585007333"
     },
     {
@@ -616,7 +619,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9605642067"
     },
     {
@@ -628,7 +631,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9605642542"
     },
     {
@@ -640,7 +643,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9605643151"
     },
     {
@@ -654,7 +657,7 @@
         "https://www.consorcioservopa.com.br/docparser/view/eyJ1cmwiOiJodHRwczovL3d3dy5jb25zb3JjaW9zZXJ2b3BhLmNvbS5ici9kb2NnZW4vYm9sZXRvLWFncnVwYWRvL2luZGV4LnBocCIsImRhdGEiOnsiaXAiOiIxNzcuMTM5LjIyNC4xNjkiLCJjcGZjbnBqIjoiMTE5MzA4NzY4NjYiLCJzZW5oYSI6IjUxMzYxIiwidG9rZW4iOiJTWkJCZzRzMTV2YnNjR0hpemM2WjJDZlIzdE44NU8iLCJ0cF9yZWdpc3RybyI6IlIiLCJucmNvdGFzIjoiNiIsInRvdGFsIjoiMS41ODIsMjAiLCJjb250cmF0byI6IjYzNTcySTA5IiwiZ3J1cG8iOiIxNTY2IiwiY290YSI6IjM2NzciLCJkaWdpdG8iOiI4In19"
       ],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9605647401"
     },
     {
@@ -666,7 +669,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006759"
     },
     {
@@ -678,7 +681,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:09:14",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006769"
     },
     {
@@ -690,7 +693,7 @@
       "valor_primeira_cota": "",
       "historico_boletos": [],
       "created_at": "2025-10-07 15:29:34",
-      "updated_at": "2025-10-07 15:55:08",
+      "updated_at": "2025-10-07 16:33:57",
       "task_id": "9585006779"
     }
   ],

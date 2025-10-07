@@ -430,6 +430,11 @@
         transform: scale(1.1);
     }
 
+    .btn-card-action.view:hover {
+        background: #9f7aea;
+        border-color: #9f7aea;
+    }
+
     .btn-card-action.whatsapp:hover {
         background: #25D366;
         border-color: #25D366;
@@ -705,9 +710,13 @@
         <div class="status-top">
             <div>
                 <h2>Gerenciar Boletos</h2>
-                <p class="status-description">Lembre-se que ele não puxará nenhum boleto, se não for adicionado Nome e grupo - cota ou "2 cotas"</p>
+                <p class="status-description">Lembre-se que ele não puxará nenhum boleto, se não for adicionado Nome Completo e grupo - cota ou "2 cotas"</p>
             </div>
             <div class="status-actions">
+                <button id="btnImportarClientes" class="btn-retry" onclick="abrirModalImportarClientes()" 
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                    <i class="fas fa-users-cog"></i> Importar de Clientes
+                </button>
                 <button id="btnAdicionarBoleto" class="btn-retry" onclick="abrirModalAdicionarBoleto()">
                     <i class="fas fa-plus"></i> Adicionar Boleto
                 </button>
@@ -822,6 +831,76 @@
                 <button type="submit" class="btn-modal save">Salvar</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal de Importar Clientes -->
+<div id="importarClientesModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>
+                <i class="fas fa-users-cog"></i> Importar Clientes para Boletos
+            </h3>
+            <button class="btn-close-modal" onclick="closeImportarClientesModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="padding: 24px;">
+            <div style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+                <p style="margin: 0; color: var(--text-primary); font-size: 0.95rem; line-height: 1.6;">
+                    <i class="fas fa-info-circle" style="color: #667eea; margin-right: 8px;"></i>
+                    Esta função irá <strong>importar todos os clientes cadastrados</strong> e criar boletos correspondentes automaticamente.
+                </p>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 12px; font-weight: 600; color: var(--text-primary);">
+                    <i class="fas fa-calendar-check"></i> Selecione os dias para importar:
+                </label>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 16px; background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 8px; transition: all 0.2s;">
+                        <input type="checkbox" id="importDia08" checked style="cursor: pointer; width: 18px; height: 18px;">
+                        <span style="font-weight: 500;">Dia 08</span>
+                        <span id="countDia08" class="tab-badge" style="margin-left: 4px;">0</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 16px; background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 8px; transition: all 0.2s;">
+                        <input type="checkbox" id="importDia16" checked style="cursor: pointer; width: 18px; height: 18px;">
+                        <span style="font-weight: 500;">Dia 16</span>
+                        <span id="countDia16" class="tab-badge" style="margin-left: 4px;">0</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px; background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 8px;">
+                    <input type="checkbox" id="importSobrescrever" style="cursor: pointer; width: 18px; height: 18px;">
+                    <div>
+                        <div style="font-weight: 500; color: var(--text-primary);">
+                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Sobrescrever boletos existentes
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+                            Remove todos os boletos atuais antes de importar. Use com cuidado!
+                        </div>
+                    </div>
+                </label>
+            </div>
+            
+            <div id="importProgress" style="display: none; background: var(--bg-tertiary); padding: 16px; border-radius: 10px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <i class="fas fa-spinner fa-spin" style="color: #667eea; font-size: 1.2rem;"></i>
+                    <span id="importProgressText" style="font-weight: 500; color: var(--text-primary);">Importando clientes...</span>
+                </div>
+                <div id="importMessages" style="max-height: 200px; overflow-y: auto; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal cancel" onclick="closeImportarClientesModal()">Cancelar</button>
+            <button type="button" id="btnConfirmarImportacao" class="btn-modal save" onclick="confirmarImportacaoClientes()" 
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <i class="fas fa-download"></i> Importar Agora
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1029,6 +1108,10 @@ function createBoletoCard(boleto, dia) {
     const taskIdAttr = encodeHtmlAttr(String(rawTaskId));
     const nomeDisplay = escapeHtml(rawNome);
     const cotasDisplay = escapeHtml(rawCotas);
+    
+    // Verifica se tem link de boleto disponível
+    const boletoLink = getBestBoletoLink(boleto);
+    const hasLink = Boolean(boletoLink);
 
     return `
         <article class="boleto-card ${isCompleted ? 'completed' : ''}" data-task-id="${taskIdAttr}" data-dia="${dia}" data-celular="${encodeHtmlAttr(String(rawCelular).toLowerCase())}" data-title="${encodeHtmlAttr(String(rawNome).toLowerCase())}">
@@ -1041,6 +1124,9 @@ function createBoletoCard(boleto, dia) {
                 ${lastGeneratedHtml ? `<div class="boleto-meta">${lastGeneratedHtml}</div>` : ''}
             </div>
             <div class="card-actions">
+                ${hasLink ? `<button class="btn-card-action view" onclick="visualizarBoleto('${taskIdAttr}', '${dia}')" title="Visualizar Boleto">
+                    <i class="fas fa-eye"></i>
+                </button>` : ''}
                 <button class="btn-card-action whatsapp" onclick="enviarWhatsAppBoleto('${taskIdAttr}', '${dia}')" title="Enviar WhatsApp">
                     <i class="fab fa-whatsapp"></i>
                 </button>
@@ -1289,6 +1375,14 @@ function getBestBoletoLink(boleto = {}) {
         boleto?.png_base64,
         boleto?.boleto_url,
     ];
+    
+    // Adiciona o último link do histórico se existir
+    if (boleto?.historico_boletos && Array.isArray(boleto.historico_boletos) && boleto.historico_boletos.length > 0) {
+        // Pega o último link do histórico
+        const ultimoHistorico = boleto.historico_boletos[boleto.historico_boletos.length - 1];
+        candidates.push(ultimoHistorico);
+    }
+    
     for (const candidate of candidates) {
         if (isValidHttpUrl(candidate)) {
             return candidate.trim();
@@ -1476,6 +1570,26 @@ async function saveBoleto(taskId, boletoData) {
 
 function editBoleto(taskId, dia) {
     openBoletoModal(taskId, dia);
+}
+
+function visualizarBoleto(taskId, dia) {
+    const diaKey = dia === '16' ? 'dia16' : 'dia08';
+    const boleto = boletosData[diaKey]?.find(b => String(b.task_id) === String(taskId));
+    
+    if (!boleto) {
+        alert('❌ Boleto não encontrado!');
+        return;
+    }
+    
+    const link = getBestBoletoLink(boleto);
+    
+    if (!link) {
+        alert('⚠️ Este boleto ainda não possui um link gerado.\n\nClique no botão "Extrair Boleto" para gerar o link primeiro.');
+        return;
+    }
+    
+    // Abre o link em nova aba
+    window.open(link, '_blank', 'noopener,noreferrer');
 }
 
 async function enviarWhatsAppBoleto(taskId, dia) {
@@ -1690,6 +1804,146 @@ document.getElementById('modalAdicionarBoleto')?.addEventListener('click', (e) =
         fecharModalAdicionarBoleto();
     }
 });
+
+// ========== MODAL IMPORTAR CLIENTES ==========
+async function abrirModalImportarClientes() {
+    const modal = document.getElementById('importarClientesModal');
+    if (!modal) return;
+    
+    // Carrega contagem de clientes antes de abrir o modal
+    try {
+        const response = await fetch('/api/clientes');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            const countDia08 = (result.data.dia08 || []).length;
+            const countDia16 = (result.data.dia16 || []).length;
+            
+            document.getElementById('countDia08').textContent = countDia08;
+            document.getElementById('countDia16').textContent = countDia16;
+            
+            if (countDia08 === 0 && countDia16 === 0) {
+                alert('⚠️ Nenhum cliente cadastrado!\n\nPor favor, cadastre clientes primeiro na página de Clientes.');
+                return;
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao carregar clientes:', error);
+    }
+    
+    // Reseta o formulário
+    document.getElementById('importDia08').checked = true;
+    document.getElementById('importDia16').checked = true;
+    document.getElementById('importSobrescrever').checked = false;
+    document.getElementById('importProgress').style.display = 'none';
+    document.getElementById('importMessages').innerHTML = '';
+    
+    modal.style.display = 'flex';
+}
+
+function closeImportarClientesModal() {
+    const modal = document.getElementById('importarClientesModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function confirmarImportacaoClientes() {
+    const dia08Checked = document.getElementById('importDia08').checked;
+    const dia16Checked = document.getElementById('importDia16').checked;
+    const sobrescrever = document.getElementById('importSobrescrever').checked;
+    
+    if (!dia08Checked && !dia16Checked) {
+        alert('⚠️ Selecione pelo menos um dia para importar!');
+        return;
+    }
+    
+    // Confirma sobrescrita se marcado
+    if (sobrescrever) {
+        if (!confirm('⚠️ ATENÇÃO!\n\nVocê está prestes a SOBRESCREVER todos os boletos existentes!\n\nTodos os boletos atuais serão PERMANENTEMENTE REMOVIDOS.\n\nDeseja realmente continuar?')) {
+            return;
+        }
+    }
+    
+    const progressDiv = document.getElementById('importProgress');
+    const messagesDiv = document.getElementById('importMessages');
+    const btnConfirmar = document.getElementById('btnConfirmarImportacao');
+    
+    // Mostra progresso
+    progressDiv.style.display = 'block';
+    messagesDiv.innerHTML = '';
+    btnConfirmar.disabled = true;
+    btnConfirmar.style.opacity = '0.6';
+    btnConfirmar.style.cursor = 'not-allowed';
+    
+    // Configura WebSocket para receber progresso
+    const socket = io();
+    socket.on('boletos_progress', (data) => {
+        const msg = document.createElement('div');
+        msg.textContent = data.message;
+        msg.style.padding = '4px 0';
+        messagesDiv.appendChild(msg);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+    
+    try {
+        const dias = [];
+        if (dia08Checked) dias.push('08');
+        if (dia16Checked) dias.push('16');
+        
+        const response = await fetch('/api/boletos/import-from-clientes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                dias: dias,
+                sobrescrever: sobrescrever
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Erro ao importar clientes');
+        }
+        
+        // Atualiza os dados locais
+        if (result.data) {
+            boletosData = result.data;
+            renderBoletos(boletosData);
+        }
+        
+        // Mensagem de sucesso
+        const successMsg = document.createElement('div');
+        successMsg.innerHTML = `<br><strong style="color: #48bb78;">✅ ${result.message}</strong>`;
+        messagesDiv.appendChild(successMsg);
+        
+        // Fecha modal após 2 segundos
+        setTimeout(() => {
+            closeImportarClientesModal();
+            setSectionStatus('boletos', 'success', result.message);
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Erro ao importar clientes:', error);
+        const errorMsg = document.createElement('div');
+        errorMsg.innerHTML = `<br><strong style="color: #f56565;">❌ ${error.message}</strong>`;
+        messagesDiv.appendChild(errorMsg);
+        setSectionStatus('boletos', 'error', error.message);
+    } finally {
+        btnConfirmar.disabled = false;
+        btnConfirmar.style.opacity = '1';
+        btnConfirmar.style.cursor = 'pointer';
+        socket.disconnect();
+    }
+}
+
+// Fecha modal ao clicar fora
+document.getElementById('importarClientesModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'importarClientesModal') {
+        closeImportarClientesModal();
+    }
+});
+
 </script>
 
 <!-- Modal Adicionar Boleto -->
