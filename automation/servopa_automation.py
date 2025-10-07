@@ -197,6 +197,119 @@ def navigate_to_lances(driver, progress_callback=None):
             progress_callback(f"❌ Erro ao navegar para lances: {e}")
         return False
 
+def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
+    """
+    Extrai todas as cotas de um grupo específico
+    
+    Args:
+        driver: Instância do WebDriver já logado
+        grupo_number: Número do grupo para extração
+        progress_callback: Função para atualizar progresso na UI
+        
+    Returns:
+        dict: Resultado com lista de cotas extraídas
+    """
+    result = {
+        'success': False,
+        'grupo_number': grupo_number,
+        'cotas': []
+    }
+    
+    try:
+        if progress_callback:
+            progress_callback(f"🏠 Navegando para painel de seleção...")
+        
+        # Navega diretamente para o painel
+        driver.get(SERVOPA_PAINEL_URL)
+        time.sleep(3)
+        
+        wait = WebDriverWait(driver, TIMEOUT)
+        
+        if progress_callback:
+            progress_callback(f"🔍 Localizando campo de grupo...")
+        
+        # Localiza o campo de grupo
+        grupo_input = wait.until(EC.presence_of_element_located((By.ID, "grupofrm")))
+        
+        if progress_callback:
+            progress_callback(f"✏️ Preenchendo grupo: {grupo_number}")
+        
+        # Preenche o campo com delay natural
+        grupo_input.clear()
+        time.sleep(0.5)
+        for char in str(grupo_number):
+            grupo_input.send_keys(char)
+            time.sleep(0.1)
+        
+        time.sleep(1)
+        
+        if progress_callback:
+            progress_callback("🔍 Clicando em buscar...")
+        
+        # Localiza e clica no botão Buscar
+        buscar_button = wait.until(EC.element_to_be_clickable(
+            (By.ID, "btn_representante_cota")
+        ))
+        buscar_button.click()
+        time.sleep(4)  # Aguarda tabela carregar
+        
+        if progress_callback:
+            progress_callback("📋 Extraindo dados da tabela...")
+        
+        # Aguarda tabela aparecer
+        table = wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, ".cotas-table table tbody")
+        ))
+        
+        # Extrai todas as linhas da tabela
+        rows = table.find_elements(By.TAG_NAME, "tr")
+        
+        if progress_callback:
+            progress_callback(f"📊 Encontradas {len(rows)} cotas no grupo {grupo_number}")
+        
+        for idx, row in enumerate(rows, 1):
+            try:
+                # Extrai células da linha
+                cells = row.find_elements(By.TAG_NAME, "td")
+                
+                if len(cells) >= 9:
+                    cota_data = {
+                        'nome': cells[0].text.strip(),
+                        'valor': cells[1].text.strip(),
+                        'data_compra': cells[2].text.strip(),
+                        'grupo': cells[3].text.strip(),
+                        'cota': cells[4].text.strip(),
+                        'digito': cells[5].text.strip(),
+                        'contrato': cells[6].text.strip(),
+                        'dep_id': cells[7].text.strip(),
+                        'status': cells[8].text.strip()
+                    }
+                    
+                    result['cotas'].append(cota_data)
+                    
+                    if progress_callback and idx % 5 == 0:
+                        progress_callback(f"✅ Processadas {idx}/{len(rows)} cotas...")
+                        
+            except Exception as e:
+                if progress_callback:
+                    progress_callback(f"⚠️ Erro ao extrair linha {idx}: {e}")
+                continue
+        
+        if progress_callback:
+            progress_callback(f"✅ Extração concluída! Total: {len(result['cotas'])} cotas")
+        
+        result['success'] = True
+        return result
+        
+    except TimeoutException as e:
+        if progress_callback:
+            progress_callback(f"⏰ Timeout na extração: Tabela não carregou")
+        return result
+    except Exception as e:
+        if progress_callback:
+            progress_callback(f"❌ Erro na extração: {e}")
+        return result
+
 def complete_servopa_automation(driver, grupo_number, progress_callback=None):
     """
     Executa o processo completo de automação no Servopa

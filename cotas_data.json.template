@@ -1,0 +1,26 @@
+{
+  "grupos": [],
+  "last_update": null,
+  "_comment": "Este arquivo armazena as cotas extraídas do sistema Servopa organizadas por grupos",
+  "_example": {
+    "grupos": [
+      {
+        "numero": "1550",
+        "extracted_at": "2024-10-07 15:30:00",
+        "cotas": [
+          {
+            "nome": "EXEMPLO CLIENTE",
+            "valor": "R$ 332.586,00",
+            "data_compra": "15/09/2023",
+            "grupo": "1550",
+            "cota": "1065",
+            "digito": "4",
+            "contrato": "46462I07",
+            "dep_id": "1550106546",
+            "status": "ATIVO"
+          }
+        ]
+      }
+    ]
+  }
+}

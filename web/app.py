@@ -184,6 +184,12 @@ def lances():
     """Página de Kanban de Lances Servopa"""
     return render_template('lances.html')
 
+@app.route('/extracao-cotas')
+@login_required
+def extracao_cotas():
+    """Página de Extração das Cotas"""
+    return render_template('extracao_cotas.html')
+
 
 def _best_boleto_link(boleto: dict) -> str:
     for key in ('short_link', 'png_base64', 'boleto_url'):
@@ -1500,6 +1506,148 @@ def api_lances_sync():
         return jsonify({'success': False, 'error': f'Erro na sincronização: {str(e)}'})
 
 # ========== FIM ROTAS DE LANCES ==========
+
+# ========== ROTAS DE EXTRAÇÃO DE COTAS ==========
+
+@app.route('/api/cotas', methods=['GET'])
+def api_cotas():
+    """Retorna dados das cotas extraídas"""
+    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'cotas_data.json')
+    
+    try:
+        if os.path.exists(filepath):
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return jsonify({'success': True, 'data': data})
+        else:
+            return jsonify({'success': True, 'data': {'grupos': []}})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/cotas/extract/<grupo>', methods=['POST'])
+def api_cotas_extract(grupo):
+    """Extrai cotas de um grupo específico"""
+    try:
+        # Valida grupo
+        if not grupo or not grupo.isdigit() or len(grupo) > 4:
+            return jsonify({'success': False, 'error': 'Número do grupo inválido'})
+        
+        # Emite progresso via WebSocket
+        def emit_progress(message):
+            socketio.emit('cotas_progress', {'message': message})
+        
+        emit_progress(f'🔐 Carregando credenciais...')
+        
+        # Carrega credenciais
+        creds_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'credentials.json')
+        if not os.path.exists(creds_path):
+            return jsonify({'success': False, 'error': 'Credenciais não configuradas'})
+        
+        with open(creds_path, 'r', encoding='utf-8') as f:
+            credentials = json.load(f)
+        
+        servopa_creds = credentials.get('servopa')
+        if not servopa_creds:
+            return jsonify({'success': False, 'error': 'Credenciais do Servopa não encontradas'})
+        
+        emit_progress('🌐 Abrindo navegador...')
+        
+        # Cria driver headless
+        driver = create_driver(headless=True)
+        
+        try:
+            emit_progress('🔐 Fazendo login no Servopa...')
+            
+            # Login no Servopa
+            if not login_servopa(driver, emit_progress, servopa_creds):
+                raise Exception('Falha no login do Servopa')
+            
+            emit_progress(f'📊 Extraindo cotas do grupo {grupo}...')
+            
+            # Importa função de extração
+            from automation.servopa_automation import extract_cotas_from_grupo
+            
+            # Executa extração
+            result = extract_cotas_from_grupo(driver, grupo, emit_progress)
+            
+            if not result['success']:
+                raise Exception('Falha na extração das cotas')
+            
+            emit_progress('💾 Salvando dados...')
+            
+            # Carrega dados existentes
+            cotas_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'cotas_data.json')
+            cotas_data = {'grupos': []}
+            
+            if os.path.exists(cotas_filepath):
+                try:
+                    with open(cotas_filepath, 'r', encoding='utf-8') as f:
+                        cotas_data = json.load(f)
+                except:
+                    cotas_data = {'grupos': []}
+            
+            if 'grupos' not in cotas_data:
+                cotas_data['grupos'] = []
+            
+            # Remove grupo existente se houver
+            cotas_data['grupos'] = [g for g in cotas_data['grupos'] if g.get('numero') != grupo]
+            
+            # Adiciona novo grupo
+            cotas_data['grupos'].append({
+                'numero': grupo,
+                'cotas': result['cotas'],
+                'extracted_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            })
+            
+            # Salva arquivo
+            with open(cotas_filepath, 'w', encoding='utf-8') as f:
+                json.dump(cotas_data, f, indent=2, ensure_ascii=False)
+            
+            emit_progress('✅ Extração concluída com sucesso!')
+            
+            return jsonify({
+                'success': True,
+                'message': f'Grupo {grupo} extraído com sucesso',
+                'grupo': grupo,
+                'total_cotas': len(result['cotas'])
+            })
+            
+        finally:
+            try:
+                driver.quit()
+            except:
+                pass
+            
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Erro na extração de cotas: {error_details}")
+        socketio.emit('cotas_progress', {'message': f'❌ Erro: {str(e)}'})
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/cotas/delete/<grupo>', methods=['POST'])
+def api_cotas_delete(grupo):
+    """Remove um grupo extraído"""
+    try:
+        cotas_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'cotas_data.json')
+        
+        if os.path.exists(cotas_filepath):
+            with open(cotas_filepath, 'r', encoding='utf-8') as f:
+                cotas_data = json.load(f)
+            
+            # Remove grupo
+            if 'grupos' in cotas_data:
+                cotas_data['grupos'] = [g for g in cotas_data['grupos'] if g.get('numero') != grupo]
+            
+            with open(cotas_filepath, 'w', encoding='utf-8') as f:
+                json.dump(cotas_data, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({'success': True, 'message': f'Grupo {grupo} removido com sucesso'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+# ========== FIM ROTAS DE EXTRAÇÃO DE COTAS ==========
 
 @app.route('/api/history/clear/<dia>', methods=['POST'])
 def api_clear_history(dia):

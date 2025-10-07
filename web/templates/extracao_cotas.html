@@ -1,0 +1,1114 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Extração das Cotas - OXCASH{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 30px;
+    }
+    
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .page-header p {
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+    
+    .import-section {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 30px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+    }
+    
+    .import-btn {
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .import-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .grupos-tabs-container {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+    }
+    
+    .grupos-tabs-container .nav-tabs {
+        border-bottom: 2px solid var(--border-color);
+    }
+    
+    .grupos-tabs-container .nav-link {
+        color: var(--text-secondary);
+        font-weight: 600;
+        padding: 12px 24px;
+        border: none;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .grupos-tabs-container .nav-link:hover {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+        background: rgba(102, 126, 234, 0.05);
+    }
+    
+    .grupos-tabs-container .nav-link.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+        background: rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-delete-grupo {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .btn-delete-grupo:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    }
+    
+    .grupos-container {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+    
+    .grupo-section {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+        animation: fadeInUp 0.5s ease-out;
+        display: none; /* Hidden by default, shown by tab */
+    }
+    
+    .grupo-section.active {
+        display: block;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .grupo-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--border-color);
+    }
+    
+    .grupo-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .grupo-title i {
+        color: var(--accent);
+    }
+    
+    .grupo-badge {
+        background: var(--accent);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .cotas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .cota-card {
+        background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .cota-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    }
+    
+    .cota-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        border-color: var(--accent);
+    }
+    
+    .cota-card.status-ativo::before {
+        background: linear-gradient(135deg, var(--success) 0%, #38a169 100%);
+    }
+    
+    .cota-card.status-inativo::before {
+        background: linear-gradient(135deg, var(--danger) 0%, #e53e3e 100%);
+    }
+    
+    .cota-info {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .cota-field {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .cota-field i {
+        font-size: 14px;
+        color: var(--accent);
+        margin-top: 2px;
+        width: 16px;
+    }
+    
+    .cota-field-content {
+        flex: 1;
+    }
+    
+    .cota-field-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-tertiary);
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+    
+    .cota-field-value {
+        font-size: 14px;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .cota-field-value.nome {
+        font-weight: 600;
+        font-size: 15px;
+    }
+    
+    .cota-field-value.valor {
+        color: var(--success);
+        font-weight: 700;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-badge.ativo {
+        background: rgba(72, 187, 120, 0.15);
+        color: var(--success);
+    }
+    
+    .status-badge.inativo {
+        background: rgba(245, 101, 101, 0.15);
+        color: var(--danger);
+    }
+    
+    .status-badge i {
+        font-size: 10px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-tertiary);
+    }
+    
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+    
+    .empty-state h3 {
+        font-size: 20px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+    
+    .empty-state p {
+        font-size: 14px;
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .loading-overlay.active {
+        display: flex;
+    }
+    
+    .loading-content {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        padding: 40px;
+        text-align: center;
+        max-width: 400px;
+    }
+    
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid var(--border-color);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+    
+    .loading-subtext {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    /* Progress Log */
+    .progress-log {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 16px;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+    }
+    
+    .progress-log-item {
+        padding: 4px 0;
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <i class="fas fa-download"></i>
+        Extração das Cotas
+    </h1>
+    <p>Extraia e visualize todas as cotas de um grupo do consórcio Servopa</p>
+</div>
+
+<!-- Seção de Importação -->
+<div class="import-section">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h5 class="mb-1" style="color: var(--text-primary); font-weight: 600;">
+                <i class="fas fa-file-import me-2" style="color: var(--accent);"></i>
+                Gerenciar Grupos
+            </h5>
+            <p class="mb-0 text-muted" style="font-size: 13px;">
+                Clique nos botões abaixo para importar ou atualizar grupos
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="import-btn" id="btnAtualizarGrupo" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <i class="fas fa-sync-alt"></i>
+                Atualizar Grupo
+            </button>
+            <button class="import-btn" id="btnImportarGrupo">
+                <i class="fas fa-plus"></i>
+                Importar Grupo
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs dos Grupos -->
+<div id="gruposTabs" class="grupos-tabs-container mb-3" style="display: none;">
+    <ul class="nav nav-tabs" id="gruposNavTabs" role="tablist">
+        <!-- Tabs serão inseridas aqui dinamicamente -->
+    </ul>
+</div>
+
+<!-- Container dos Grupos -->
+<div id="gruposContainer" class="grupos-container">
+    <!-- Empty state inicial -->
+    <div class="empty-state">
+        <i class="fas fa-folder-open"></i>
+        <h3>Nenhum grupo importado ainda</h3>
+        <p>Clique em "Importar Grupo" para começar a extrair cotas</p>
+    </div>
+</div>
+
+<!-- Modal de Importação/Atualização -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-download me-2"></i>
+                    Importar Cotas de Grupo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="grupoNumber" class="form-label" style="font-weight: 600; color: var(--text-primary);">
+                        Número do Grupo
+                    </label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="grupoNumber" 
+                        placeholder="Ex: 1550"
+                        maxlength="4"
+                        pattern="\d{1,4}"
+                        style="font-size: 16px; padding: 12px;"
+                    >
+                    <small class="form-text text-muted">
+                        Digite o número do grupo (até 4 dígitos)
+                    </small>
+                </div>
+                
+                <div class="alert alert-info" style="font-size: 13px;">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Atenção:</strong> A extração pode levar alguns segundos. 
+                    O sistema irá fazer login automaticamente no portal da Servopa e comparar as cotas com os dados atuais.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmarExtracao">
+                    <i class="fas fa-download me-2"></i>
+                    Executar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Deleção -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmar Deleção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger" style="font-size: 14px;">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>ATENÇÃO: Esta ação não pode ser desfeita!</strong>
+                </div>
+                
+                <p style="font-size: 15px; color: var(--text-primary); margin-bottom: 16px;">
+                    Tem certeza que deseja deletar o <strong>Grupo <span id="deleteGrupoNumero"></span></strong>?
+                </p>
+                
+                <div style="background: var(--bg-secondary); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <i class="fas fa-folder" style="font-size: 24px; color: var(--accent);"></i>
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-primary);">
+                                Grupo <span id="deleteGrupoNumero2"></span>
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">
+                                <span id="deleteCotasCount"></span> cotas
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <p style="font-size: 13px; color: var(--text-secondary);">
+                    Todas as cotas deste grupo serão <strong style="color: var(--danger);">removidas permanentemente</strong> 
+                    do sistema. Você precisará importar novamente se quiser recuperá-las.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarDelete">
+                    <i class="fas fa-trash me-2"></i>
+                    Sim, Deletar Grupo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Extraindo cotas...</div>
+        <div class="loading-subtext" id="loadingSubtext">Conectando ao servidor...</div>
+        <div class="progress-log" id="progressLog"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+(function() {
+    'use strict';
+    
+    console.log('🎬 Script Extração de Cotas carregando...');
+    
+    // Variáveis globais
+    let socket;
+    let currentModal;
+    let deleteModal; // Modal de confirmação de deleção
+    let grupoToDelete = null; // Armazena grupo a ser deletado
+    let gruposData = []; // Armazena dados dos grupos
+    
+    // Função de inicialização principal
+    function inicializarExtracaoCotas() {
+        console.log('🚀 Inicializando Extração de Cotas...');
+        
+        // Verifica se Bootstrap está disponível
+        if (typeof bootstrap === 'undefined') {
+            console.error('❌ Bootstrap não está disponível!');
+            setTimeout(inicializarExtracaoCotas, 100); // Tenta novamente em 100ms
+            return;
+        }
+        
+        console.log('✅ Bootstrap disponível:', bootstrap);
+        
+        initSocket();
+        loadGrupos();
+        setupEventListeners();
+        
+        console.log('✅ Inicialização completa!');
+    }
+    
+    // Conecta ao WebSocket
+    function initSocket() {
+        console.log('🔌 Inicializando WebSocket...');
+        socket = io();
+        
+        socket.on('cotas_progress', function(data) {
+            console.log('Progress:', data.message);
+            updateProgress(data.message);
+        });
+    }
+    
+    // Configura event listeners
+    function setupEventListeners() {
+        console.log('🎯 Configurando event listeners...');
+        
+        // Botão Importar Grupo
+        const btnImportarGrupo = document.getElementById('btnImportarGrupo');
+        console.log('📍 Botão Importar Grupo:', btnImportarGrupo);
+        
+        if (btnImportarGrupo) {
+            btnImportarGrupo.onclick = function(e) {
+                console.log('🔘 Botão Importar Grupo clicado via onclick!');
+                e.preventDefault();
+                e.stopPropagation();
+                openImportModal();
+                return false;
+            };
+            console.log('✅ onclick adicionado ao botão Importar Grupo');
+        } else {
+            console.error('❌ Botão btnImportarGrupo NÃO encontrado!');
+        }
+        
+        // Botão Atualizar Grupo
+        const btnAtualizarGrupo = document.getElementById('btnAtualizarGrupo');
+        console.log('📍 Botão Atualizar Grupo:', btnAtualizarGrupo);
+        
+        if (btnAtualizarGrupo) {
+            btnAtualizarGrupo.onclick = function(e) {
+                console.log('🔘 Botão Atualizar Grupo clicado via onclick!');
+                e.preventDefault();
+                e.stopPropagation();
+                openUpdateModal();
+                return false;
+            };
+            console.log('✅ onclick adicionado ao botão Atualizar Grupo');
+        } else {
+            console.error('❌ Botão btnAtualizarGrupo NÃO encontrado!');
+        }
+        
+        // Botão Confirmar Extração
+        const btnConfirmarExtracao = document.getElementById('btnConfirmarExtracao');
+        console.log('📍 Botão Confirmar Extração:', btnConfirmarExtracao);
+        
+        if (btnConfirmarExtracao) {
+            btnConfirmarExtracao.onclick = function(e) {
+                console.log('🔘 Botão Confirmar Extração clicado via onclick!');
+                e.preventDefault();
+                e.stopPropagation();
+                startExtraction();
+                return false;
+            };
+            console.log('✅ onclick adicionado ao botão Confirmar Extração');
+        } else {
+            console.error('❌ Botão btnConfirmarExtracao NÃO encontrado!');
+        }
+        
+        // Botão Confirmar Delete
+        const btnConfirmarDelete = document.getElementById('btnConfirmarDelete');
+        console.log('📍 Botão Confirmar Delete:', btnConfirmarDelete);
+        
+        if (btnConfirmarDelete) {
+            btnConfirmarDelete.onclick = function(e) {
+                console.log('🔘 Botão Confirmar Delete clicado!');
+                e.preventDefault();
+                e.stopPropagation();
+                confirmDeleteGrupo();
+                return false;
+            };
+            console.log('✅ onclick adicionado ao botão Confirmar Delete');
+        } else {
+            console.error('❌ Botão btnConfirmarDelete NÃO encontrado!');
+        }
+        
+        // Enter no campo grupo
+        const grupoNumber = document.getElementById('grupoNumber');
+        if (grupoNumber) {
+            grupoNumber.onkeypress = function(e) {
+                if (e.key === 'Enter') {
+                    console.log('⌨️ Enter pressionado');
+                    e.preventDefault();
+                    startExtraction();
+                    return false;
+                }
+            };
+            console.log('✅ onkeypress adicionado ao campo grupo');
+        }
+    }
+    
+    // Carrega grupos ao carregar a página
+    async function loadGrupos() {
+        try {
+            const response = await fetch('/api/cotas');
+            const data = await response.json();
+            
+            if (data.success && data.data && data.data.grupos && data.data.grupos.length > 0) {
+                gruposData = data.data.grupos; // Armazena dados
+                renderGrupos(data.data.grupos);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar grupos:', error);
+        }
+    }
+    
+    // Função para selecionar grupo (chamada pelo click nas tabs)
+    window.selectGrupo = function(grupoNumero) {
+        console.log('🔄 Selecionando grupo:', grupoNumero);
+        
+        // Atualiza tabs
+        const tabs = document.querySelectorAll('.grupos-tabs-container .nav-link');
+        tabs.forEach(tab => {
+            if (tab.dataset.grupo === grupoNumero) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+        
+        // Atualiza seções
+        const sections = document.querySelectorAll('.grupo-section');
+        sections.forEach(section => {
+            if (section.dataset.grupo === grupoNumero) {
+                section.classList.add('active');
+                section.style.display = 'block';
+            } else {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            }
+        });
+        
+        console.log('✅ Grupo selecionado:', grupoNumero);
+    };
+    
+    // Função para deletar grupo
+    window.deleteGrupo = function(grupoNumero) {
+        console.log('🗑️ Preparando deleção do grupo:', grupoNumero);
+        
+        // Encontra dados do grupo
+        const grupo = gruposData.find(g => g.numero === grupoNumero);
+        if (!grupo) {
+            showToast('error', 'Grupo não encontrado');
+            return;
+        }
+        
+        // Armazena grupo a ser deletado
+        grupoToDelete = grupoNumero;
+        
+        // Preenche informações no modal
+        document.getElementById('deleteGrupoNumero').textContent = grupoNumero;
+        document.getElementById('deleteGrupoNumero2').textContent = grupoNumero;
+        document.getElementById('deleteCotasCount').textContent = grupo.cotas.length;
+        
+        // Abre modal
+        const modalElement = document.getElementById('deleteModal');
+        if (modalElement) {
+            deleteModal = new bootstrap.Modal(modalElement);
+            deleteModal.show();
+        }
+    };
+    
+    // Confirma deleção do grupo
+    async function confirmDeleteGrupo() {
+        if (!grupoToDelete) {
+            console.error('❌ Nenhum grupo para deletar');
+            return;
+        }
+        
+        console.log('🗑️ Deletando grupo:', grupoToDelete);
+        
+        // Fecha modal
+        if (deleteModal) {
+            deleteModal.hide();
+        }
+        
+        try {
+            // Mostra loading
+            document.getElementById('loadingOverlay').classList.add('active');
+            document.getElementById('loadingSubtext').textContent = `Deletando grupo ${grupoToDelete}...`;
+            
+            const response = await fetch(`/api/cotas/delete/${grupoToDelete}`, {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Remove dos dados locais
+                gruposData = gruposData.filter(g => g.numero !== grupoToDelete);
+                
+                // Recarrega grupos
+                await loadGrupos();
+                
+                showToast('success', `Grupo ${grupoToDelete} deletado com sucesso!`);
+                grupoToDelete = null;
+            } else {
+                showToast('error', `Erro ao deletar: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Erro ao deletar grupo:', error);
+            showToast('error', 'Erro ao conectar com o servidor');
+        } finally {
+            // Esconde loading
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+    }
+    
+    // Abre modal de importação
+    function openImportModal() {
+        console.log('📂 openImportModal() chamada');
+        try {
+            const modalElement = document.getElementById('importModal');
+            console.log('🔍 Modal element:', modalElement);
+            
+            if (!modalElement) {
+                console.error('❌ Elemento modal não encontrado!');
+                alert('Erro: Modal não encontrado. Recarregue a página.');
+                return;
+            }
+            
+            console.log('🔍 Bootstrap:', typeof bootstrap);
+            if (typeof bootstrap === 'undefined') {
+                console.error('❌ Bootstrap não carregado!');
+                alert('Erro: Bootstrap não carregado. Recarregue a página.');
+                return;
+            }
+            
+            // Muda título do modal
+            const modalTitle = modalElement.querySelector('.modal-title');
+            if (modalTitle) {
+                modalTitle.innerHTML = '<i class="fas fa-download me-2"></i>Importar Cotas de Grupo';
+            }
+            
+            currentModal = new bootstrap.Modal(modalElement);
+            console.log('✅ Modal criado:', currentModal);
+            
+            currentModal.show();
+            console.log('✅ Modal.show() chamado');
+            
+            const grupoInput = document.getElementById('grupoNumber');
+            if (grupoInput) {
+                grupoInput.value = '';
+                grupoInput.focus();
+                console.log('✅ Campo grupo limpo e focado');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao abrir modal:', error);
+            alert('Erro ao abrir modal: ' + error.message);
+        }
+    }
+    
+    // Abre modal de atualização
+    function openUpdateModal() {
+        console.log('🔄 openUpdateModal() chamada');
+        
+        if (!gruposData || gruposData.length === 0) {
+            alert('Nenhum grupo importado ainda. Importe um grupo primeiro.');
+            return;
+        }
+        
+        try {
+            const modalElement = document.getElementById('importModal');
+            
+            if (!modalElement) {
+                console.error('❌ Elemento modal não encontrado!');
+                alert('Erro: Modal não encontrado. Recarregue a página.');
+                return;
+            }
+            
+            if (typeof bootstrap === 'undefined') {
+                console.error('❌ Bootstrap não carregado!');
+                alert('Erro: Bootstrap não carregado. Recarregue a página.');
+                return;
+            }
+            
+            // Muda título do modal
+            const modalTitle = modalElement.querySelector('.modal-title');
+            if (modalTitle) {
+                modalTitle.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Atualizar Cotas de Grupo';
+            }
+            
+            // Preenche com opções dos grupos existentes
+            const grupoInput = document.getElementById('grupoNumber');
+            if (grupoInput && gruposData.length > 0) {
+                // Se houver apenas um grupo, preenche automaticamente
+                if (gruposData.length === 1) {
+                    grupoInput.value = gruposData[0].numero;
+                } else {
+                    grupoInput.value = '';
+                    grupoInput.placeholder = `Ex: ${gruposData.map(g => g.numero).join(', ')}`;
+                }
+            }
+            
+            currentModal = new bootstrap.Modal(modalElement);
+            currentModal.show();
+            
+            if (grupoInput) {
+                grupoInput.focus();
+            }
+        } catch (error) {
+            console.error('❌ Erro ao abrir modal:', error);
+            alert('Erro ao abrir modal: ' + error.message);
+        }
+    }
+    
+    // Inicia extração
+    async function startExtraction() {
+        console.log('🚀 startExtraction() chamada');
+        const grupoNumber = document.getElementById('grupoNumber').value.trim();
+        
+        if (!grupoNumber) {
+            alert('Por favor, digite o número do grupo');
+            return;
+        }
+        
+        if (!/^\d{1,4}$/.test(grupoNumber)) {
+            alert('Número do grupo inválido (deve conter até 4 dígitos)');
+            return;
+        }
+        
+        // Fecha modal
+        if (currentModal) {
+            currentModal.hide();
+        }
+        
+        // Mostra loading
+        document.getElementById('loadingOverlay').classList.add('active');
+        document.getElementById('loadingSubtext').textContent = `Extraindo grupo ${grupoNumber}...`;
+        document.getElementById('progressLog').innerHTML = '';
+        
+        try {
+            const response = await fetch(`/api/cotas/extract/${grupoNumber}`, {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Recarrega grupos
+                await loadGrupos();
+                
+                // Mostra sucesso
+                showToast('success', `Grupo ${grupoNumber} importado com sucesso! ${data.total_cotas} cotas encontradas.`);
+            } else {
+                showToast('error', `Erro ao importar: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Erro na extração:', error);
+            showToast('error', 'Erro ao conectar com o servidor');
+        } finally {
+            // Esconde loading
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+    }
+    
+    // Atualiza progresso
+    function updateProgress(message) {
+        const log = document.getElementById('progressLog');
+        const item = document.createElement('div');
+        item.className = 'progress-log-item';
+        item.textContent = message;
+        log.appendChild(item);
+        log.scrollTop = log.scrollHeight;
+        
+        // Atualiza subtexto
+        document.getElementById('loadingSubtext').textContent = message;
+    }
+    
+    // Renderiza grupos
+    function renderGrupos(grupos) {
+        const container = document.getElementById('gruposContainer');
+        const tabsContainer = document.getElementById('gruposTabs');
+        const navTabs = document.getElementById('gruposNavTabs');
+        
+        if (!grupos || grupos.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <h3>Nenhum grupo importado ainda</h3>
+                    <p>Clique em "Importar Grupo" para começar a extrair cotas</p>
+                </div>
+            `;
+            tabsContainer.style.display = 'none';
+            return;
+        }
+        
+        // Mostra container de tabs
+        tabsContainer.style.display = 'block';
+        
+        // Renderiza tabs
+        navTabs.innerHTML = grupos.map((grupo, index) => `
+            <li class="nav-item" role="presentation">
+                <button 
+                    class="nav-link ${index === 0 ? 'active' : ''}" 
+                    type="button" 
+                    role="tab"
+                    data-grupo="${grupo.numero}"
+                    onclick="selectGrupo('${grupo.numero}')"
+                >
+                    <i class="fas fa-folder me-2"></i>
+                    Grupo ${grupo.numero}
+                    <span class="badge bg-primary ms-2">${grupo.cotas.length}</span>
+                </button>
+            </li>
+        `).join('');
+        
+        // Renderiza seções de grupos
+        container.innerHTML = grupos.map((grupo, index) => `
+            <div class="grupo-section ${index === 0 ? 'active' : ''}" data-grupo="${grupo.numero}">
+                <div class="grupo-header">
+                    <div class="grupo-title">
+                        <i class="fas fa-folder"></i>
+                        Grupo ${grupo.numero}
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="grupo-badge">${grupo.cotas.length} cotas</div>
+                        <button 
+                            class="btn-delete-grupo" 
+                            onclick="deleteGrupo('${grupo.numero}')"
+                            title="Deletar este grupo"
+                        >
+                            <i class="fas fa-trash"></i>
+                            Deletar Grupo
+                        </button>
+                    </div>
+                </div>
+                <div class="cotas-grid">
+                    ${grupo.cotas.map(cota => renderCotaCard(cota)).join('')}
+                </div>
+            </div>
+        `).join('');
+        
+        // Aplica display inicial correto
+        grupos.forEach((grupo, index) => {
+            const section = container.querySelector(`[data-grupo="${grupo.numero}"]`);
+            if (section) {
+                section.style.display = index === 0 ? 'block' : 'none';
+            }
+        });
+    }
+    
+    // Renderiza card de cota
+    function renderCotaCard(cota) {
+        const statusClass = cota.status.toLowerCase() === 'ativo' ? 'ativo' : 'inativo';
+        
+        return `
+            <div class="cota-card status-${statusClass}">
+                <div class="cota-info">
+                    <div class="cota-field">
+                        <i class="fas fa-user"></i>
+                        <div class="cota-field-content">
+                            <div class="cota-field-label">Nome</div>
+                            <div class="cota-field-value nome">${cota.nome}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cota-field">
+                        <i class="fas fa-ticket-alt"></i>
+                        <div class="cota-field-content">
+                            <div class="cota-field-label">Cota</div>
+                            <div class="cota-field-value">${cota.cota} - Dígito ${cota.digito}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cota-field">
+                        <i class="fas fa-dollar-sign"></i>
+                        <div class="cota-field-content">
+                            <div class="cota-field-label">Valor</div>
+                            <div class="cota-field-value valor">${cota.valor}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cota-field">
+                        <i class="fas fa-calendar"></i>
+                        <div class="cota-field-content">
+                            <div class="cota-field-label">Data da Compra</div>
+                            <div class="cota-field-value">${cota.data_compra}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cota-field">
+                        <i class="fas fa-info-circle"></i>
+                        <div class="cota-field-content">
+                            <div class="cota-field-label">Status</div>
+                            <span class="status-badge ${statusClass}">
+                                <i class="fas fa-circle"></i>
+                                ${cota.status}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Toast notification
+    function showToast(type, message) {
+        const toastHTML = `
+            <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" 
+                 role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 10000;">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        
+        const toastElement = document.createElement('div');
+        toastElement.innerHTML = toastHTML;
+        document.body.appendChild(toastElement);
+        
+        const toast = new bootstrap.Toast(toastElement.querySelector('.toast'));
+        toast.show();
+        
+        setTimeout(() => {
+            toastElement.remove();
+        }, 5000);
+    }
+    
+    // Inicialização
+    if (document.readyState === 'loading') {
+        console.log('� DOM ainda carregando, aguardando DOMContentLoaded...');
+        document.addEventListener('DOMContentLoaded', inicializarExtracaoCotas);
+    } else {
+        console.log('� DOM já carregado, inicializando imediatamente...');
+        inicializarExtracaoCotas();
+    }
+    
+})(); // IIFE para evitar poluir escopo global
+</script>
+{% endblock %}
