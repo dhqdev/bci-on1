@@ -1002,11 +1002,6 @@
                     <span>Boletos</span>
                     <span class="sidebar-menu-badge" id="boletos-badge"></span>
                 </a>
-                <a href="/lances" class="sidebar-menu-item {% if '/lances' in request.path %}active{% endif %}">
-                    <i class="fas fa-gavel"></i>
-                    <span>Lances</span>
-                    <span class="sidebar-menu-badge" id="lances-badge"></span>
-                </a>
                 <a href="/extracao-cotas" class="sidebar-menu-item {% if '/extracao-cotas' in request.path %}active{% endif %}">
                     <i class="fas fa-download"></i>
                     <span>Extração das Cotas</span>
@@ -1015,14 +1010,6 @@
             
             <div class="sidebar-menu-section">
                 <div class="sidebar-menu-title">Automação</div>
-                <a href="/automation/dia8" class="sidebar-menu-item {% if '/automation/dia8' in request.path %}active{% endif %}">
-                    <i class="fas fa-calendar-day"></i>
-                    <span>Dia 8</span>
-                </a>
-                <a href="/automation/dia16" class="sidebar-menu-item {% if '/automation/dia16' in request.path %}active{% endif %}">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>Dia 16</span>
-                </a>
                 <a href="/whatsapp" class="sidebar-menu-item {% if '/whatsapp' in request.path %}active{% endif %}">
                     <i class="fab fa-whatsapp"></i>
                     <span>WhatsApp</span>
@@ -1394,67 +1381,23 @@
                 .catch(err => console.error('Erro ao atualizar badge de boletos:', err));
         }
         
-        // ========== ATUALIZAR BADGE DE LANCES ==========
-        function updateLancesBadge() {
-            fetch('/api/lances')
-                .then(res => res.json())
-                .then(data => {
-                    console.log('📊 Dados lances recebidos:', data);
-                    if (data.success && data.data) {
-                        // Conta apenas lances NÃO concluídos (pendentes)
-                        let pendentes = 0;
-                        
-                        if (data.data.dia08) {
-                            for (let grupo of data.data.dia08) {
-                                if (grupo.tasks) {
-                                    pendentes += grupo.tasks.filter(t => !t.is_completed).length;
-                                }
-                            }
-                        }
-                        
-                        if (data.data.dia16) {
-                            for (let grupo of data.data.dia16) {
-                                if (grupo.tasks) {
-                                    pendentes += grupo.tasks.filter(t => !t.is_completed).length;
-                                }
-                            }
-                        }
-                        
-                        console.log('🔢 Lances pendentes:', pendentes);
-                        
-                        const badge = document.getElementById('lances-badge');
-                        if (badge) {
-                            badge.textContent = pendentes;
-                            badge.className = 'sidebar-menu-badge';
-                            console.log('✅ Badge lances atualizado:', pendentes);
-                        } else {
-                            console.error('❌ Elemento lances-badge não encontrado');
-                        }
-                    }
-                })
-                .catch(err => console.error('Erro ao atualizar badge de lances:', err));
-        }
-        
         // Atualiza badges ao carregar página
         updateBoletosBadge();
-        updateLancesBadge();
         
         // Atualiza badges a cada 5 segundos (tempo real com a sincronização)
         setInterval(updateBoletosBadge, 5000);
-        setInterval(updateLancesBadge, 5000);
         
         // Função global para notificar dashboard sobre mudanças
         window.notifyDashboardUpdate = function() {
             // Atualiza badges
             updateBoletosBadge();
-            updateLancesBadge();
             
             // Se estiver na página principal, atualiza stats
             if (typeof loadStats === 'function') {
                 loadStats();
             }
         };
-        // ========== FIM BADGE DE BOLETOS E LANCES ==========
+        // ========== FIM BADGE DE BOLETOS ==========
     </script>
     
     <!-- ========== CHAT AI FLUTUANTE (BOLINHA) ========== -->

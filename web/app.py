@@ -137,18 +137,6 @@ def index():
     """Dashboard principal"""
     return render_template('index_modern.html')
 
-@app.route('/automation/dia8')
-@login_required
-def automation_dia8():
-    """Página de automação Dia 8"""
-    return render_template('automation_dia8.html')
-
-@app.route('/automation/dia16')
-@login_required
-def automation_dia16():
-    """Página de automação Dia 16"""
-    return render_template('automation_dia16.html')
-
 @app.route('/whatsapp')
 @login_required
 def whatsapp():
@@ -178,12 +166,6 @@ def credentials():
 def boletos():
     """Página de Kanban de Boletos"""
     return render_template('boletos.html')
-
-@app.route('/lances')
-@login_required
-def lances():
-    """Página de Kanban de Lances Servopa"""
-    return render_template('lances.html')
 
 @app.route('/extracao-cotas')
 @login_required
@@ -371,137 +353,39 @@ def api_boletos():
 
 @app.route('/api/boletos/import', methods=['POST'])
 def api_boletos_import():
-    """Importa boletos do Todoist via API REST"""
+    """Recarrega boletos do arquivo local (não usa mais Todoist)"""
     try:
-        from utils.todoist_rest_api import TodoistRestAPI
-        
-        # Token do Todoist (pode ser movido para credentials.json futuramente)
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
         
         # Emite progresso via WebSocket
         def emit_progress(message):
             socketio.emit('boletos_progress', {'message': message})
         
-        # Função para parsear descrição e extrair cotas e celular
-        def parse_boleto_description(description_text):
-            """Extrai cotas e celular da descrição do Todoist"""
-            cotas = ''
-            celular = ''
-            
-            if not description_text:
-                return cotas, celular
-            
-            # Remove quebras de linha e limpa o texto
-            text = description_text.replace('\n', ' ').strip()
-            
-            # Extrai celular (formato: 📱 Celular: XXXXX ou apenas Celular: XXXXX)
-            import re
-            celular_match = re.search(r'(?:📱\s*)?[Cc]elular:\s*(\d+)', text)
-            if celular_match:
-                celular = celular_match.group(1)
-                # Remove a parte do celular do texto
-                text = re.sub(r'(?:📱\s*)?[Cc]elular:\s*\d+', '', text)
-            
-            # Limpa repetições de "Cotas:" e extrai o valor
-            # Remove todos os "Cotas:" extras e pega só o número/valor
-            text = re.sub(r'[Cc]otas:\s*', '', text, flags=re.IGNORECASE)
-            text = text.strip()
-            
-            # Se sobrou algo, é a cota
-            if text:
-                cotas = text
-            
-            return cotas, celular
+        emit_progress('📂 Carregando boletos do sistema...')
         
-        emit_progress('🔄 Conectando à API do Todoist...')
-        
-        # Cria cliente da API
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        # Extrai dados via API REST
-        boletos_data = api.extract_boletos_board(
-            project_name="Boletos Servopa Outubro",
-            section_dia08="Vencimento dia 08",
-            section_dia16="Vencimento dia 16",
-            progress_callback=emit_progress
-        )
-        
-        # Salva dados
-        clean_data = {
-            'dia08': [],
-            'dia16': [],
-            'last_import': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-        
-        for boleto in boletos_data['dia08']:
-            # Parseia descrição para separar cotas e celular
-            raw_cotas = boleto.get('cotas', '')
-            cotas, celular = parse_boleto_description(raw_cotas)
-            
-            clean_data['dia08'].append({
-                'nome': boleto['nome'],
-                'cotas': cotas,
-                'celular': celular,
-                'task_id': boleto.get('task_id', ''),
-                'is_completed': boleto.get('is_completed', False)
-            })
-        
-        for boleto in boletos_data['dia16']:
-            # Parseia descrição para separar cotas e celular
-            raw_cotas = boleto.get('cotas', '')
-            cotas, celular = parse_boleto_description(raw_cotas)
-            
-            clean_data['dia16'].append({
-                'nome': boleto['nome'],
-                'cotas': cotas,
-                'celular': celular,
-                'task_id': boleto.get('task_id', ''),
-                'is_completed': boleto.get('is_completed', False)
-            })
-        
-        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
-
-        # Preserva campos locais adicionais (png_base64, boleto_url, etc.)
-        existing_data = {}
+        # Carrega dados do arquivo local
         if os.path.exists(boletos_filepath):
-            try:
-                with open(boletos_filepath, 'r', encoding='utf-8') as f:
-                    existing_data = json.load(f)
-            except Exception:
-                existing_data = {}
-
-        def merge_preserved_fields(new_list, old_list):
-            if not isinstance(old_list, list):
-                return
-            old_map = {str(item.get('task_id')): item for item in old_list if item.get('task_id')}
-            for entry in new_list:
-                existing = old_map.get(str(entry.get('task_id')))
-                if not existing:
-                    continue
-
-                # Preferir celular existente se o novo vier vazio
-                if not entry.get('celular') and existing.get('celular'):
-                    entry['celular'] = existing['celular']
-
-                for field in ('png_base64', 'boleto_url', 'short_link', 'last_generated', 'tipo', 'grupo', 'cota', 'metadata'):
-                    if existing.get(field) and not entry.get(field):
-                        entry[field] = existing[field]
-
-        merge_preserved_fields(clean_data['dia08'], existing_data.get('dia08', []))
-        merge_preserved_fields(clean_data['dia16'], existing_data.get('dia16', []))
+            with open(boletos_filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        else:
+            # Se não existe, cria arquivo vazio
+            data = {
+                'dia08': [],
+                'dia16': [],
+                'last_import': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+            with open(boletos_filepath, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
         
-        with open(boletos_filepath, 'w', encoding='utf-8') as f:
-            json.dump(clean_data, f, indent=2, ensure_ascii=False)
+        emit_progress('✅ Boletos carregados com sucesso!')
         
-        emit_progress('✅ Importação concluída!')
-        
-        total_dia08 = len(clean_data['dia08'])
-        total_dia16 = len(clean_data['dia16'])
+        total_dia08 = len(data.get('dia08', []))
+        total_dia16 = len(data.get('dia16', []))
         
         return jsonify({
             'success': True, 
-            'message': f'Importado: {total_dia08} boletos (dia 08) e {total_dia16} boletos (dia 16)',
-            'data': clean_data
+            'message': f'Carregados: {total_dia08} boletos (dia 08) e {total_dia16} boletos (dia 16)',
+            'data': data
         })
             
     except Exception as e:
@@ -509,46 +393,38 @@ def api_boletos_import():
 
 @app.route('/api/boletos/toggle/<task_id>', methods=['POST'])
 def api_boletos_toggle(task_id):
-    """Marca/desmarca uma tarefa no Todoist"""
+    """Marca/desmarca um boleto como concluído (apenas localmente)"""
     try:
-        from utils.todoist_rest_api import TodoistRestAPI
-        
-        # Token do Todoist
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        
         data = request.json
         is_completed = data.get('is_completed', False)
         
-        # Cria cliente da API
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        if is_completed:
-            # Marca como concluída
-            api.close_task(task_id)
-        else:
-            # Reabre tarefa
-            api.reopen_task(task_id)
-        
-        # Atualiza arquivo local também
+        # Atualiza arquivo local
         boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
-        if os.path.exists(boletos_filepath):
-            with open(boletos_filepath, 'r', encoding='utf-8') as f:
-                boletos_data = json.load(f)
+        if not os.path.exists(boletos_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo de boletos não encontrado'})
             
-            # Atualiza status no cache local
-            for dia_key in ['dia08', 'dia16']:
-                if dia_key in boletos_data:
-                    for boleto in boletos_data[dia_key]:
-                        if boleto.get('task_id') == task_id:
-                            boleto['is_completed'] = is_completed
-                            break
-            
-            with open(boletos_filepath, 'w', encoding='utf-8') as f:
-                json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+        with open(boletos_filepath, 'r', encoding='utf-8') as f:
+            boletos_data = json.load(f)
+        
+        # Atualiza status no cache local
+        found = False
+        for dia_key in ['dia08', 'dia16']:
+            if dia_key in boletos_data:
+                for boleto in boletos_data[dia_key]:
+                    if boleto.get('task_id') == task_id:
+                        boleto['is_completed'] = is_completed
+                        found = True
+                        break
+        
+        if not found:
+            return jsonify({'success': False, 'error': 'Boleto não encontrado'})
+        
+        with open(boletos_filepath, 'w', encoding='utf-8') as f:
+            json.dump(boletos_data, f, indent=2, ensure_ascii=False)
         
         return jsonify({
             'success': True,
-            'message': 'Tarefa atualizada no Todoist'
+            'message': 'Boleto atualizado com sucesso'
         })
             
     except Exception as e:
@@ -556,58 +432,44 @@ def api_boletos_toggle(task_id):
 
 @app.route('/api/boletos/update/<task_id>', methods=['POST'])
 def api_boletos_update(task_id):
-    """Atualiza um boleto existente"""
+    """Atualiza um boleto existente (apenas localmente)"""
     try:
         data = request.json
         nome = data.get('nome', '')
         celular = data.get('celular', '')
         cotas = data.get('cotas', '')
         dia = data.get('dia', '08')
-        png_base64 = data.get('png_base64', '')  # Pode ser imagem ou link
+        png_base64 = data.get('png_base64', '')
         short_link = data.get('short_link', '')
-        
-        # Atualiza no Todoist
-        from utils.todoist_rest_api import TodoistRestAPI
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        # Monta novo conteúdo da tarefa
-        new_content = nome
-        
-        # Monta descrição com dados estruturados
-        description_parts = []
-        if cotas:
-            description_parts.append(f"Cotas: {cotas}")
-        if celular:
-            description_parts.append(f"📱 Celular: {celular}")
-        
-        new_description = "\n".join(description_parts) if description_parts else ""
-        
-        # Atualiza task no Todoist
-        api.update_task(task_id, content=new_content, description=new_description)
         
         # Atualiza arquivo local
         boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
-        if os.path.exists(boletos_filepath):
-            with open(boletos_filepath, 'r', encoding='utf-8') as f:
-                boletos_data = json.load(f)
+        if not os.path.exists(boletos_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo de boletos não encontrado'})
             
-            dia_key = f'dia{dia}'
-            if dia_key in boletos_data:
-                for boleto in boletos_data[dia_key]:
-                    if boleto.get('task_id') == task_id:
-                        boleto['nome'] = nome
-                        boleto['celular'] = celular
-                        boleto['cotas'] = cotas
-                        # ✅ Salva PNG em base64
-                        if png_base64:
-                            boleto['png_base64'] = png_base64
-                        if short_link:
-                            boleto['short_link'] = short_link
-                        break
-            
-            with open(boletos_filepath, 'w', encoding='utf-8') as f:
-                json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+        with open(boletos_filepath, 'r', encoding='utf-8') as f:
+            boletos_data = json.load(f)
+        
+        dia_key = f'dia{dia}'
+        found = False
+        if dia_key in boletos_data:
+            for boleto in boletos_data[dia_key]:
+                if boleto.get('task_id') == task_id:
+                    boleto['nome'] = nome
+                    boleto['celular'] = celular
+                    boleto['cotas'] = cotas
+                    if png_base64:
+                        boleto['png_base64'] = png_base64
+                    if short_link:
+                        boleto['short_link'] = short_link
+                    found = True
+                    break
+        
+        if not found:
+            return jsonify({'success': False, 'error': 'Boleto não encontrado'})
+        
+        with open(boletos_filepath, 'w', encoding='utf-8') as f:
+            json.dump(boletos_data, f, indent=2, ensure_ascii=False)
         
         return jsonify({'success': True, 'message': 'Boleto atualizado com sucesso'})
         
@@ -616,39 +478,22 @@ def api_boletos_update(task_id):
 
 @app.route('/api/boletos/create', methods=['POST'])
 def api_boletos_create():
-    """Cria um novo boleto"""
+    """Cria um novo boleto (apenas localmente)"""
     try:
         data = request.json
         nome = data.get('nome', '')
         celular = data.get('celular', '')
         cotas = data.get('cotas', '')
         dia = data.get('dia', '08')
-        png_base64 = data.get('png_base64', '')  # Pode ser imagem ou link
+        png_base64 = data.get('png_base64', '')
         short_link = data.get('short_link', '')
         
         if not nome:
             return jsonify({'success': False, 'error': 'Nome é obrigatório'})
         
-        # Cria no Todoist
-        from utils.todoist_rest_api import TodoistRestAPI
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        # Monta conteúdo da tarefa
-        content = nome
-        
-        # Monta descrição com dados estruturados
-        description_parts = []
-        if cotas:
-            description_parts.append(f"Cotas: {cotas}")
-        if celular:
-            description_parts.append(f"📱 Celular: {celular}")
-        
-        description = "\n".join(description_parts) if description_parts else ""
-        
-        # Cria a tarefa
-        task = api.create_task(content=content, description=description)
-        task_id = task.get('id')
+        # Gera ID único para o boleto
+        import uuid
+        task_id = str(uuid.uuid4())
         
         # Adiciona ao arquivo local
         boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
@@ -670,7 +515,6 @@ def api_boletos_create():
             'is_completed': False
         }
         
-        # ✅ Adiciona PNG se fornecido
         if png_base64:
             new_boleto['png_base64'] = png_base64
         if short_link:
@@ -692,135 +536,37 @@ def api_boletos_create():
 
 @app.route('/api/boletos/delete/<task_id>', methods=['POST'])
 def api_boletos_delete(task_id):
-    """Deleta um boleto"""
+    """Deleta um boleto (apenas localmente)"""
     try:
-        # Deleta no Todoist
-        from utils.todoist_rest_api import TodoistRestAPI
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        api.delete_task(task_id)
-        
         # Remove do arquivo local
         boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
-        if os.path.exists(boletos_filepath):
-            with open(boletos_filepath, 'r', encoding='utf-8') as f:
-                boletos_data = json.load(f)
+        if not os.path.exists(boletos_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo de boletos não encontrado'})
             
-            for dia_key in ['dia08', 'dia16']:
-                if dia_key in boletos_data:
-                    boletos_data[dia_key] = [
-                        b for b in boletos_data[dia_key] 
-                        if b.get('task_id') != task_id
-                    ]
-            
-            with open(boletos_filepath, 'w', encoding='utf-8') as f:
-                json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+        with open(boletos_filepath, 'r', encoding='utf-8') as f:
+            boletos_data = json.load(f)
+        
+        found = False
+        for dia_key in ['dia08', 'dia16']:
+            if dia_key in boletos_data:
+                original_len = len(boletos_data[dia_key])
+                boletos_data[dia_key] = [
+                    b for b in boletos_data[dia_key] 
+                    if b.get('task_id') != task_id
+                ]
+                if len(boletos_data[dia_key]) < original_len:
+                    found = True
+        
+        if not found:
+            return jsonify({'success': False, 'error': 'Boleto não encontrado'})
+        
+        with open(boletos_filepath, 'w', encoding='utf-8') as f:
+            json.dump(boletos_data, f, indent=2, ensure_ascii=False)
         
         return jsonify({'success': True, 'message': 'Boleto deletado com sucesso'})
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
-
-@app.route('/api/boletos/sync', methods=['POST'])
-def api_boletos_sync():
-    """Sincroniza status dos boletos do Todoist para o site (bidirecional)"""
-    try:
-        from utils.todoist_rest_api import TodoistRestAPI
-        
-        # Token do Todoist
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        
-        # Carrega dados locais
-        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
-        if not os.path.exists(boletos_filepath):
-            return jsonify({'success': False, 'error': 'Nenhum dado local encontrado'})
-        
-        try:
-            with open(boletos_filepath, 'r', encoding='utf-8') as f:
-                local_data = json.load(f)
-        except json.JSONDecodeError as e:
-            return jsonify({'success': False, 'error': f'Erro ao ler dados locais: {str(e)}'})
-        
-        # Busca dados atualizados do Todoist
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        try:
-            updated_data = api.extract_boletos_board(
-                project_name="Boletos Servopa Outubro",
-                section_dia08="Vencimento dia 08",
-                section_dia16="Vencimento dia 16"
-            )
-        except Exception as e:
-            return jsonify({'success': False, 'error': f'Erro ao buscar dados do Todoist: {str(e)}'})
-        
-        # Conta mudanças e mescla dados (preserva celular local)
-        changes = 0
-        merged_data = {'dia08': [], 'dia16': []}
-        
-        for dia_key in ['dia08', 'dia16']:
-            local_tasks = {t.get('task_id'): t for t in local_data.get(dia_key, []) if t.get('task_id')}
-            updated_tasks = {t.get('task_id'): t for t in updated_data.get(dia_key, []) if t.get('task_id')}
-            
-            for task_id, updated_task in updated_tasks.items():
-                # Começa com dados do Todoist
-                merged_task = updated_task.copy()
-                
-                # Se já existia localmente, preserva o celular local
-                if task_id in local_tasks:
-                    local_task = local_tasks[task_id]
-                    
-                    # Preserva celular local se existir
-                    if local_task.get('celular'):
-                        merged_task['celular'] = local_task['celular']
-                    
-                    # ✅ Preserva PNG local se existir
-                    if local_task.get('png_base64'):
-                        merged_task['png_base64'] = local_task['png_base64']
-
-                    # Preserva demais metadados do boleto gerado
-                    if local_task.get('boleto_url'):
-                        merged_task['boleto_url'] = local_task['boleto_url']
-                    if local_task.get('last_generated'):
-                        merged_task['last_generated'] = local_task['last_generated']
-                    if local_task.get('tipo'):
-                        merged_task['tipo'] = local_task['tipo']
-                    if local_task.get('metadata'):
-                        merged_task['metadata'] = local_task['metadata']
-                    if local_task.get('grupo'):
-                        merged_task['grupo'] = local_task['grupo']
-                    if local_task.get('cota'):
-                        merged_task['cota'] = local_task['cota']
-                    
-                    # Conta mudança de status
-                    if local_task.get('is_completed') != updated_task.get('is_completed'):
-                        changes += 1
-                
-                merged_data[dia_key].append(merged_task)
-        
-        # Adiciona timestamp
-        merged_data['last_sync'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
-        # Salva dados atualizados
-        try:
-            with open(boletos_filepath, 'w', encoding='utf-8') as f:
-                json.dump(merged_data, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            return jsonify({'success': False, 'error': f'Erro ao salvar dados: {str(e)}'})
-        
-        return jsonify({
-            'success': True,
-            'changes': changes,
-            'data': merged_data,
-            'message': f'{changes} alterações sincronizadas do Todoist' if changes > 0 else 'Tudo sincronizado'
-        })
-            
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"Erro na sincronização: {error_details}")
-        return jsonify({'success': False, 'error': f'Erro na sincronização: {str(e)}'})
-
 
 @app.route('/api/boletos/extrair/<task_id>', methods=['POST'])
 def api_boletos_extrair(task_id):
@@ -1088,425 +834,6 @@ _Mensagem automática - Sistema OXCASH_"""
         error_details = traceback.format_exc()
         print(f"Erro ao enviar WhatsApp: {error_details}")
         return jsonify({'success': False, 'error': f'Erro ao enviar WhatsApp: {str(e)}'})
-
-# ========== ROTAS DE LANCES SERVOPA ==========
-
-@app.route('/api/lances', methods=['GET'])
-def api_lances():
-    """Retorna dados dos lances"""
-    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
-    
-    try:
-        if os.path.exists(filepath):
-            with open(filepath, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            return jsonify({'success': True, 'data': data})
-        else:
-            return jsonify({'success': True, 'data': {'dia08': [], 'dia16': []}})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
-
-@app.route('/api/lances/import', methods=['POST'])
-def api_lances_import():
-    """Importa lances do Todoist via API REST"""
-    try:
-        from utils.todoist_rest_api import TodoistRestAPI
-        
-        # Token do Todoist
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        
-        # Emite progresso via WebSocket
-        def emit_progress(message):
-            socketio.emit('lances_progress', {'message': message})
-        
-        emit_progress('🔄 Conectando à API do Todoist...')
-        
-        # Cria cliente da API
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        # Extrai dados via API REST
-        lances_data = api.extract_lances_board(
-            project_dia8="Lances Servopa Outubro Dia 8",
-            project_dia16="Lances Servopa Outubro Dia 16",
-            progress_callback=emit_progress
-        )
-        
-        # Salva dados
-        clean_data = {
-            'dia08': [],
-            'dia16': [],
-            'last_import': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-        
-        # Copia dados do dia 8 (com grupos/seções)
-        for grupo in lances_data['dia08']:
-            clean_grupo = {
-                'grupo': grupo['grupo'],
-                'title': grupo['title'],
-                'tasks': []
-            }
-            for task in grupo['tasks']:
-                clean_grupo['tasks'].append({
-                    'cota': task['cota'],
-                    'nome': task['nome'],
-                    'task_id': task['task_id'],
-                    'is_completed': task.get('is_completed', False)
-                })
-            clean_data['dia08'].append(clean_grupo)
-        
-        # Copia dados do dia 16
-        for grupo in lances_data['dia16']:
-            clean_grupo = {
-                'grupo': grupo['grupo'],
-                'title': grupo['title'],
-                'tasks': []
-            }
-            for task in grupo['tasks']:
-                clean_grupo['tasks'].append({
-                    'cota': task['cota'],
-                    'nome': task['nome'],
-                    'task_id': task['task_id'],
-                    'is_completed': task.get('is_completed', False)
-                })
-            clean_data['dia16'].append(clean_grupo)
-        
-        lances_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
-        
-        with open(lances_filepath, 'w', encoding='utf-8') as f:
-            json.dump(clean_data, f, indent=2, ensure_ascii=False)
-        
-        emit_progress('✅ Importação concluída!')
-        
-        total_grupos_8 = len(clean_data['dia08'])
-        total_cotas_8 = sum(len(g['tasks']) for g in clean_data['dia08'])
-        total_grupos_16 = len(clean_data['dia16'])
-        total_cotas_16 = sum(len(g['tasks']) for g in clean_data['dia16'])
-        
-        return jsonify({
-            'success': True,
-            'message': f'Importado: Dia 08 ({total_grupos_8} grupos, {total_cotas_8} cotas) | Dia 16 ({total_grupos_16} grupos, {total_cotas_16} cotas)',
-            'data': clean_data
-        })
-            
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"Erro na importação de lances: {error_details}")
-        return jsonify({'success': False, 'error': str(e)})
-
-@app.route('/api/lances/toggle/<task_id>', methods=['POST'])
-def api_lances_toggle(task_id):
-    """Marca/desmarca uma tarefa de lance no Todoist"""
-    try:
-        from utils.todoist_rest_api import TodoistRestAPI
-        
-        # Token do Todoist
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        
-        data = request.json
-        is_completed = data.get('is_completed', False)
-        
-        # Cria cliente da API
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        if is_completed:
-            # Marca como concluída
-            api.close_task(task_id)
-        else:
-            # Reabre tarefa
-            api.reopen_task(task_id)
-        
-        # Atualiza arquivo local também
-        lances_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
-        if os.path.exists(lances_filepath):
-            with open(lances_filepath, 'r', encoding='utf-8') as f:
-                lances_data = json.load(f)
-            
-            # Atualiza status no cache local (busca em grupos)
-            for dia_key in ['dia08', 'dia16']:
-                if dia_key in lances_data:
-                    for grupo in lances_data[dia_key]:
-                        if 'tasks' in grupo:
-                            for task in grupo['tasks']:
-                                if task.get('task_id') == task_id:
-                                    task['is_completed'] = is_completed
-                                    break
-            
-            with open(lances_filepath, 'w', encoding='utf-8') as f:
-                json.dump(lances_data, f, indent=2, ensure_ascii=False)
-        
-        return jsonify({
-            'success': True,
-            'message': 'Lance atualizado no Todoist'
-        })
-            
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"Erro ao toggle lance: {error_details}")
-        return jsonify({'success': False, 'error': str(e)})
-
-@app.route('/api/lances/update/<task_id>', methods=['POST'])
-def api_lances_update(task_id):
-    """Atualiza um lance existente"""
-    try:
-        data = request.json
-        cota = data.get('cota', '')
-        nome = data.get('nome', '')
-        grupo = data.get('grupo', '')
-        dia = data.get('dia', '08')
-        
-        # Atualiza no Todoist
-        from utils.todoist_rest_api import TodoistRestAPI
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        # Monta novo conteúdo
-        new_content = f"Cota {cota} - {nome}"
-        api.update_task(task_id, content=new_content)
-        
-        # Atualiza arquivo local
-        lances_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
-        if os.path.exists(lances_filepath):
-            with open(lances_filepath, 'r', encoding='utf-8') as f:
-                lances_data = json.load(f)
-            
-            dia_key = f'dia{dia}'
-            if dia_key in lances_data:
-                for grp in lances_data[dia_key]:
-                    if 'tasks' in grp:
-                        for task in grp['tasks']:
-                            if task.get('task_id') == task_id:
-                                task['cota'] = cota
-                                task['nome'] = nome
-                                break
-            
-            with open(lances_filepath, 'w', encoding='utf-8') as f:
-                json.dump(lances_data, f, indent=2, ensure_ascii=False)
-        
-        return jsonify({'success': True, 'message': 'Lance atualizado com sucesso'})
-        
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
-
-@app.route('/api/lances/create', methods=['POST'])
-def api_lances_create():
-    """Cria um novo lance"""
-    try:
-        data = request.json
-        cota = data.get('cota', '')
-        nome = data.get('nome', '')
-        grupo = data.get('grupo', '')
-        dia = data.get('dia', '08')
-        
-        if not cota or not nome:
-            return jsonify({'success': False, 'error': 'Cota e Nome são obrigatórios'})
-        
-        # Cria no Todoist
-        from utils.todoist_rest_api import TodoistRestAPI
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        content = f"Cota {cota} - {nome}"
-        task = api.create_task(content=content)
-        task_id = task.get('id')
-        
-        # Adiciona ao arquivo local
-        lances_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
-        lances_data = {'dia08': [], 'dia16': []}
-        
-        if os.path.exists(lances_filepath):
-            with open(lances_filepath, 'r', encoding='utf-8') as f:
-                lances_data = json.load(f)
-        
-        dia_key = f'dia{dia}'
-        if dia_key not in lances_data:
-            lances_data[dia_key] = []
-        
-        # Procura grupo existente ou cria novo
-        grupo_obj = None
-        for grp in lances_data[dia_key]:
-            if grp.get('grupo') == grupo:
-                grupo_obj = grp
-                break
-        
-        if not grupo_obj:
-            grupo_obj = {
-                'grupo': grupo,
-                'title': f'{grupo} - dia {dia}',
-                'tasks': []
-            }
-            lances_data[dia_key].append(grupo_obj)
-        
-        new_lance = {
-            'task_id': task_id,
-            'cota': cota,
-            'nome': nome,
-            'is_completed': False
-        }
-        
-        grupo_obj['tasks'].append(new_lance)
-        
-        with open(lances_filepath, 'w', encoding='utf-8') as f:
-            json.dump(lances_data, f, indent=2, ensure_ascii=False)
-        
-        return jsonify({
-            'success': True,
-            'message': 'Lance criado com sucesso',
-            'data': new_lance
-        })
-        
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
-
-@app.route('/api/lances/delete/<task_id>', methods=['POST'])
-def api_lances_delete(task_id):
-    """Deleta um lance"""
-    try:
-        # Deleta no Todoist
-        from utils.todoist_rest_api import TodoistRestAPI
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        api.delete_task(task_id)
-        
-        # Remove do arquivo local
-        lances_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
-        if os.path.exists(lances_filepath):
-            with open(lances_filepath, 'r', encoding='utf-8') as f:
-                lances_data = json.load(f)
-            
-            for dia_key in ['dia08', 'dia16']:
-                if dia_key in lances_data:
-                    for grupo in lances_data[dia_key]:
-                        if 'tasks' in grupo:
-                            grupo['tasks'] = [
-                                t for t in grupo['tasks']
-                                if t.get('task_id') != task_id
-                            ]
-            
-            with open(lances_filepath, 'w', encoding='utf-8') as f:
-                json.dump(lances_data, f, indent=2, ensure_ascii=False)
-        
-        return jsonify({'success': True, 'message': 'Lance deletado com sucesso'})
-        
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
-
-@app.route('/api/lances/sync', methods=['POST'])
-def api_lances_sync():
-    """Sincroniza status dos lances do Todoist para o site (bidirecional)"""
-    try:
-        from utils.todoist_rest_api import TodoistRestAPI
-        
-        # Token do Todoist
-        TODOIST_TOKEN = "aa4b5ab41a462bd6fd5dbae643b45fe9bfaeeded"
-        
-        # Carrega dados locais
-        lances_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lances_data.json')
-        if not os.path.exists(lances_filepath):
-            return jsonify({'success': False, 'error': 'Nenhum dado local encontrado'})
-        
-        try:
-            with open(lances_filepath, 'r', encoding='utf-8') as f:
-                local_data = json.load(f)
-        except json.JSONDecodeError as e:
-            return jsonify({'success': False, 'error': f'Erro ao ler dados locais: {str(e)}'})
-        
-        # Busca dados atualizados do Todoist
-        api = TodoistRestAPI(TODOIST_TOKEN)
-        
-        try:
-            updated_data = api.extract_lances_board(
-                project_dia8="Lances Servopa Outubro Dia 8",
-                project_dia16="Lances Servopa Outubro Dia 16"
-            )
-        except Exception as e:
-            return jsonify({'success': False, 'error': f'Erro ao buscar dados do Todoist: {str(e)}'})
-        
-        # Conta mudanças
-        changes = 0
-        for dia_key in ['dia08', 'dia16']:
-            # Cria dicionário de tasks por task_id (local)
-            local_tasks = {}
-            for grupo in local_data.get(dia_key, []):
-                for task in grupo.get('tasks', []):
-                    if task.get('task_id'):
-                        local_tasks[task['task_id']] = task
-            
-            # Cria dicionário de tasks por task_id (updated)
-            updated_tasks = {}
-            for grupo in updated_data.get(dia_key, []):
-                for task in grupo.get('tasks', []):
-                    if task.get('task_id'):
-                        updated_tasks[task['task_id']] = task
-            
-            # Compara mudanças
-            for task_id, updated_task in updated_tasks.items():
-                if task_id in local_tasks:
-                    local_task = local_tasks[task_id]
-                    if local_task.get('is_completed') != updated_task.get('is_completed'):
-                        changes += 1
-        
-        # Salva dados atualizados
-        clean_data = {
-            'dia08': [],
-            'dia16': [],
-            'last_sync': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-        
-        # Copia dados do dia 8
-        for grupo in updated_data['dia08']:
-            clean_grupo = {
-                'grupo': grupo['grupo'],
-                'title': grupo['title'],
-                'tasks': []
-            }
-            for task in grupo['tasks']:
-                clean_grupo['tasks'].append({
-                    'cota': task['cota'],
-                    'nome': task['nome'],
-                    'task_id': task['task_id'],
-                    'is_completed': task.get('is_completed', False)
-                })
-            clean_data['dia08'].append(clean_grupo)
-        
-        # Copia dados do dia 16
-        for grupo in updated_data['dia16']:
-            clean_grupo = {
-                'grupo': grupo['grupo'],
-                'title': grupo['title'],
-                'tasks': []
-            }
-            for task in grupo['tasks']:
-                clean_grupo['tasks'].append({
-                    'cota': task['cota'],
-                    'nome': task['nome'],
-                    'task_id': task['task_id'],
-                    'is_completed': task.get('is_completed', False)
-                })
-            clean_data['dia16'].append(clean_grupo)
-        
-        try:
-            with open(lances_filepath, 'w', encoding='utf-8') as f:
-                json.dump(clean_data, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            return jsonify({'success': False, 'error': f'Erro ao salvar dados: {str(e)}'})
-        
-        return jsonify({
-            'success': True,
-            'changes': changes,
-            'data': clean_data,
-            'message': f'{changes} alterações sincronizadas do Todoist' if changes > 0 else 'Tudo sincronizado'
-        })
-            
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"Erro na sincronização de lances: {error_details}")
-        return jsonify({'success': False, 'error': f'Erro na sincronização: {str(e)}'})
-
-# ========== FIM ROTAS DE LANCES ==========
 
 # ========== ROTAS DE EXTRAÇÃO DE COTAS ==========
 

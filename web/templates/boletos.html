@@ -628,12 +628,15 @@
     <section class="status-card">
         <div class="status-top">
             <div>
-                <h2>Sincronização automática</h2>
-                <p class="status-description">Atualizamos os boletos continuamente em segundo plano. Se algo falhar, é só tentar novamente.</p>
+                <h2>Gerenciar Boletos</h2>
+                <p class="status-description">Adicione, edite e gerencie todos os boletos do sistema localmente.</p>
             </div>
             <div class="status-actions">
+                <button id="btnAdicionarBoleto" class="btn-retry" onclick="abrirModalAdicionarBoleto()">
+                    <i class="fas fa-plus"></i> Adicionar Boleto
+                </button>
                 <button id="btnRetryBoletos" class="btn-retry" onclick="refreshBoletosFromTodoist(true)" style="display: none;">
-                    <i class="fas fa-sync"></i> Tentar novamente
+                    <i class="fas fa-sync"></i> Recarregar
                 </button>
             </div>
         </div>
@@ -641,7 +644,7 @@
             <i class="fas fa-spinner fa-spin"></i> <span>Carregando boletos...</span>
         </div>
         <div id="lastSyncBoletos" class="last-sync" hidden>
-            <i class="fas fa-history"></i> Última sincronização agora
+            <i class="fas fa-history"></i> Última atualização agora
         </div>
     </section>
 
@@ -676,7 +679,7 @@
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>Nenhum boleto encontrado</p>
-                    <small>Assim que importarmos do Todoist, os boletos do dia 08 aparecem aqui automaticamente.</small>
+                    <small>Nenhum boleto cadastrado para o dia 08. Clique em "Adicionar Boleto" para começar.</small>
                 </div>
             </div>
         </div>
@@ -686,7 +689,7 @@
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <p>Nenhum boleto encontrado</p>
-                    <small>Assim que importarmos do Todoist, os boletos do dia 16 aparecem aqui automaticamente.</small>
+                    <small>Nenhum boleto cadastrado para o dia 16. Clique em "Adicionar Boleto" para começar.</small>
                 </div>
             </div>
         </div>
@@ -816,7 +819,7 @@ async function loadBoletosFromCache() {
     renderBoletos(boletosData);
     updateBadges(0, 0);
     showSearchContainer(false);
-    setSectionStatus('boletos', 'loading', 'Nenhum dado local encontrado. Importando do Todoist...');
+    setSectionStatus('boletos', 'loading', 'Nenhum dado local encontrado. Carregando do sistema...');
     return false;
 }
 
@@ -857,10 +860,10 @@ async function refreshBoletosFromTodoist(forceImport = false) {
     isBoletosSyncing = true;
     const totals = getBoletoTotals();
     const hasCache = totals.total08 + totals.total16 > 0;
-    const endpoint = forceImport || !hasCache ? '/api/boletos/import' : '/api/boletos/sync';
+    const endpoint = '/api/boletos/import';
 
     try {
-        setSectionStatus('boletos', 'loading', endpoint.includes('import') ? 'Importando boletos do Todoist...' : 'Sincronizando boletos com o Todoist...');
+        setSectionStatus('boletos', 'loading', 'Carregando boletos do sistema...');
 
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -879,7 +882,7 @@ async function refreshBoletosFromTodoist(forceImport = false) {
         const hasContent = totalsAfter.total08 + totalsAfter.total16 > 0;
         showSearchContainer(hasContent);
 
-        setSectionStatus('boletos', 'success', endpoint.includes('import') ? 'Importação concluída.' : 'Sincronização concluída com sucesso.');
+        setSectionStatus('boletos', 'success', 'Boletos carregados com sucesso.');
         showRetryButton(false);
 
         lastSuccessfulBoletosSync = new Date();
@@ -1546,5 +1549,154 @@ document.getElementById('boletoModal')?.addEventListener('click', (e) => {
         closeBoletoModal();
     }
 });
+
+// ========== MODAL ADICIONAR BOLETO ==========
+function abrirModalAdicionarBoleto() {
+    const modal = document.getElementById('modalAdicionarBoleto');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Limpa formulário
+        document.getElementById('formAdicionarBoleto').reset();
+    }
+}
+
+function fecharModalAdicionarBoleto() {
+    const modal = document.getElementById('modalAdicionarBoleto');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function salvarNovoBoleto(event) {
+    event.preventDefault();
+    
+    const nome = document.getElementById('inputNome').value.trim();
+    const cotas = document.getElementById('inputCotas').value.trim();
+    const celular = document.getElementById('inputCelular').value.trim();
+    const dia = document.getElementById('inputDia').value;
+    
+    if (!nome) {
+        alert('Nome é obrigatório!');
+        return;
+    }
+    
+    try {
+        setSectionStatus('boletos', 'loading', 'Criando boleto...');
+        
+        const response = await fetch('/api/boletos/create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ nome, cotas, celular, dia })
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Erro ao criar boleto');
+        }
+        
+        setSectionStatus('boletos', 'success', 'Boleto criado com sucesso!');
+        fecharModalAdicionarBoleto();
+        
+        // Recarrega dados
+        await refreshBoletosFromTodoist(true);
+        
+    } catch (error) {
+        console.error('Erro ao criar boleto:', error);
+        setSectionStatus('boletos', 'error', error.message || 'Erro ao criar boleto');
+        alert('Erro: ' + error.message);
+    }
+}
+
+// Fecha modal ao clicar fora
+document.getElementById('modalAdicionarBoleto')?.addEventListener('click', (e) => {
+    if (e.target.id === 'modalAdicionarBoleto') {
+        fecharModalAdicionarBoleto();
+    }
+});
 </script>
+
+<!-- Modal Adicionar Boleto -->
+<div id="modalAdicionarBoleto" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-primary); border-radius: 16px; padding: 32px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="margin: 0; font-size: 1.5rem; color: var(--text-primary);">
+                <i class="fas fa-plus-circle"></i> Adicionar Boleto
+            </h3>
+            <button onclick="fecharModalAdicionarBoleto()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary);">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="formAdicionarBoleto" onsubmit="salvarNovoBoleto(event)">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+                    Nome do Cliente *
+                </label>
+                <input 
+                    id="inputNome" 
+                    type="text" 
+                    required
+                    placeholder="Ex: João Silva"
+                    style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-size: 1rem;"
+                />
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+                    Cotas
+                </label>
+                <input 
+                    id="inputCotas" 
+                    type="text"
+                    placeholder="Ex: 123, 456, 789"
+                    style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-size: 1rem;"
+                />
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+                    Celular
+                </label>
+                <input 
+                    id="inputCelular" 
+                    type="tel"
+                    placeholder="Ex: 11999998888"
+                    style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-size: 1rem;"
+                />
+            </div>
+            
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+                    Dia de Vencimento *
+                </label>
+                <select 
+                    id="inputDia"
+                    required
+                    style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-size: 1rem;"
+                >
+                    <option value="08">Dia 08</option>
+                    <option value="16">Dia 16</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button 
+                    type="button"
+                    onclick="fecharModalAdicionarBoleto()"
+                    style="padding: 12px 24px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-weight: 600; cursor: pointer;"
+                >
+                    Cancelar
+                </button>
+                <button 
+                    type="submit"
+                    style="padding: 12px 24px; border: none; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; cursor: pointer;"
+                >
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}

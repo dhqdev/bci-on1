@@ -4,6 +4,167 @@
 
 {% block extra_css %}
 <style>
+    /* ========== NOVO DASHBOARD - CARDS DE RESUMO ========== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .summary-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        animation: fadeInUp 0.5s ease-out backwards;
+    }
+
+    .summary-card:nth-child(1) { animation-delay: 0.05s; }
+    .summary-card:nth-child(2) { animation-delay: 0.1s; }
+    .summary-card:nth-child(3) { animation-delay: 0.15s; }
+    .summary-card:nth-child(4) { animation-delay: 0.2s; }
+
+    .summary-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        border-color: var(--accent);
+    }
+
+    .summary-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .summary-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .summary-icon.boletos {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .summary-icon.cotas {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .summary-icon.automation {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    .summary-icon.whatsapp {
+        background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+        color: white;
+    }
+
+    .summary-info h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin: 0 0 4px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .summary-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1;
+    }
+
+    .summary-details {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 16px 0;
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 16px;
+    }
+
+    .summary-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .summary-item i {
+        font-size: 14px;
+        width: 16px;
+        text-align: center;
+    }
+
+    .summary-item span {
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .summary-item.success i { color: #10b981; }
+    .summary-item.warning i { color: #f59e0b; }
+    .summary-item.info i { color: #3b82f6; }
+    .summary-item.primary i { color: #667eea; }
+
+    .summary-breakdown {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .breakdown-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+    }
+
+    .breakdown-label {
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .breakdown-value {
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+    }
+
+    .status-badge.running {
+        background: #10b981;
+        color: white;
+    }
+
+    .success-text {
+        color: #10b981 !important;
+    }
+
+    /* ========== ANIMAÇÕES ========== */
     /* Animações suaves */
     @keyframes fadeInUp {
         from {
@@ -385,7 +546,6 @@
             grid-template-columns: 1fr;
         }
     }
-    }
 </style>
 {% endblock %}
 
@@ -395,122 +555,138 @@
     <div class="section-header">
         <div>
             <h1 class="section-title">Dashboard</h1>
-            <p style="color: var(--text-secondary); margin: 0;">Visão geral do sistema de automação</p>
+            <p style="color: var(--text-secondary); margin: 0;">Visão geral completa do sistema de automação</p>
         </div>
     </div>
     
-    <!-- Dashboard Sections: Boletos | Lances -->
-    <div class="dashboard-sections">
-        <!-- BOLETOS -->
-        <div class="section-group">
-            <div class="section-header-custom">
-                <i class="fas fa-file-invoice"></i>
-                <h2>Boletos</h2>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-label">Boletos Totais</span>
-                    <div class="stat-icon boletos">
-                        <i class="fas fa-file-invoice"></i>
-                    </div>
+    <!-- Cards de Resumo Superior -->
+    <div class="stats-grid">
+        <!-- Card Boletos -->
+        <div class="summary-card">
+            <div class="summary-header">
+                <div class="summary-icon boletos">
+                    <i class="fas fa-file-invoice"></i>
                 </div>
-                <div class="stat-value" id="totalBoletos">70</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>12% vs mês anterior</span>
+                <div class="summary-info">
+                    <h3>Boletos</h3>
+                    <div class="summary-value" id="totalBoletos">0</div>
                 </div>
             </div>
-            
-            <div class="stat-card success">
-                <div class="stat-header">
-                    <span class="stat-label">Concluídos</span>
-                    <div class="stat-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
+            <div class="summary-details">
+                <div class="summary-item success">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="boletosCompletos">0</span> Concluídos
                 </div>
-                <div class="stat-value" id="boletosCompletos">0</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>0% de conclusão</span>
+                <div class="summary-item warning">
+                    <i class="fas fa-clock"></i>
+                    <span id="boletosPendentes">0</span> Pendentes
                 </div>
             </div>
-            
-            <div class="stat-card warning">
-                <div class="stat-header">
-                    <span class="stat-label">Pendentes</span>
-                    <div class="stat-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
+            <div class="summary-breakdown">
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Dia 08:</span>
+                    <span class="breakdown-value" id="boletos_dia08">0</span>
                 </div>
-                <div class="stat-value" id="boletosPendentes">70</div>
-                <div class="stat-change">
-                    <i class="fas fa-minus"></i>
-                    <span>Sem alteração</span>
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Dia 16:</span>
+                    <span class="breakdown-value" id="boletos_dia16">0</span>
                 </div>
             </div>
         </div>
-        
-        <!-- LANCES -->
-        <div class="section-group">
-            <div class="section-header-custom">
-                <i class="fas fa-gavel"></i>
-                <h2>Lances</h2>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-label">Lances Totais</span>
-                    <div class="stat-icon lances">
-                        <i class="fas fa-gavel"></i>
-                    </div>
+
+        <!-- Card Cotas/Grupos -->
+        <div class="summary-card">
+            <div class="summary-header">
+                <div class="summary-icon cotas">
+                    <i class="fas fa-users"></i>
                 </div>
-                <div class="stat-value" id="totalLances">0</div>
-                <div class="stat-change">
-                    <i class="fas fa-sync-alt"></i>
-                    <span>Sincronizado</span>
+                <div class="summary-info">
+                    <h3>Cotas Extraídas</h3>
+                    <div class="summary-value" id="totalCotas">0</div>
                 </div>
             </div>
-            
-            <div class="stat-card success">
-                <div class="stat-header">
-                    <span class="stat-label">Concluídos</span>
-                    <div class="stat-icon">
-                        <i class="fas fa-check-double"></i>
-                    </div>
+            <div class="summary-details">
+                <div class="summary-item info">
+                    <i class="fas fa-layer-group"></i>
+                    <span id="totalGrupos">0</span> Grupos
                 </div>
-                <div class="stat-value" id="lancesCompletos">0</div>
-                <div class="stat-change positive">
-                    <span>Progresso</span>
+                <div class="summary-item primary">
+                    <i class="fas fa-user-check"></i>
+                    <span id="cotasComWhatsapp">0</span> Com WhatsApp
                 </div>
             </div>
-            
-            <div class="stat-card warning">
-                <div class="stat-header">
-                    <span class="stat-label">Pendentes</span>
-                    <div class="stat-icon">
-                        <i class="fas fa-hourglass-half"></i>
-                    </div>
+            <div class="summary-breakdown">
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Dia 08:</span>
+                    <span class="breakdown-value" id="cotas_dia08">0</span>
                 </div>
-                <div class="stat-value" id="lancesPendentes">0</div>
-                <div class="stat-change">
-                    <span>Aguardando</span>
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Dia 16:</span>
+                    <span class="breakdown-value" id="cotas_dia16">0</span>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Automações Ativas (fullwidth) -->
-    <div class="stat-card danger" style="margin-bottom: 32px;">
-        <div class="stat-header">
-            <span class="stat-label">Automações Ativas</span>
-            <div class="stat-icon">
-                <i class="fas fa-robot"></i>
+
+        <!-- Card Automações -->
+        <div class="summary-card">
+            <div class="summary-header">
+                <div class="summary-icon automation">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="summary-info">
+                    <h3>Automações</h3>
+                    <div class="summary-value" id="totalAutomacoes">0</div>
+                </div>
+            </div>
+            <div class="summary-details">
+                <div class="summary-item" id="statusAutomacao08">
+                    <i class="fas fa-circle"></i>
+                    Dia 08: <span class="status-badge">Parado</span>
+                </div>
+                <div class="summary-item" id="statusAutomacao16">
+                    <i class="fas fa-circle"></i>
+                    Dia 16: <span class="status-badge">Parado</span>
+                </div>
+            </div>
+            <div class="summary-breakdown">
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Execuções:</span>
+                    <span class="breakdown-value" id="totalExecucoes">0</span>
+                </div>
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Sucesso:</span>
+                    <span class="breakdown-value success-text" id="execucoesSucesso">0</span>
+                </div>
             </div>
         </div>
-        <div class="stat-value" id="automacoesAtivas">2</div>
-        <div class="stat-change">
-            <span>Dia 8 e Dia 16</span>
+
+        <!-- Card WhatsApp -->
+        <div class="summary-card">
+            <div class="summary-header">
+                <div class="summary-icon whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="summary-info">
+                    <h3>WhatsApp</h3>
+                    <div class="summary-value" id="totalMensagens">0</div>
+                </div>
+            </div>
+            <div class="summary-details">
+                <div class="summary-item success">
+                    <i class="fas fa-paper-plane"></i>
+                    <span id="mensagensEnviadas">0</span> Enviadas
+                </div>
+                <div class="summary-item warning">
+                    <i class="fas fa-clock"></i>
+                    <span id="mensagensPendentes">0</span> Pendentes
+                </div>
+            </div>
+            <div class="summary-breakdown">
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Taxa de Sucesso:</span>
+                    <span class="breakdown-value success-text" id="taxaSucessoWhatsapp">0%</span>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -525,28 +701,14 @@
                     <div class="quick-action-icon">
                         <i class="fas fa-file-invoice"></i>
                     </div>
-                    <div class="quick-action-text">Ver Boletos</div>
+                    <div class="quick-action-text">Gerenciar Boletos</div>
                 </a>
                 
-                <a href="/lances" class="quick-action-btn">
+                <a href="/extracao_cotas" class="quick-action-btn">
                     <div class="quick-action-icon">
-                        <i class="fas fa-gavel"></i>
+                        <i class="fas fa-users"></i>
                     </div>
-                    <div class="quick-action-text">Ver Lances</div>
-                </a>
-                
-                <a href="/automation/dia8" class="quick-action-btn">
-                    <div class="quick-action-icon">
-                        <i class="fas fa-play"></i>
-                    </div>
-                    <div class="quick-action-text">Iniciar Automação Dia 8</div>
-                </a>
-                
-                <a href="/automation/dia16" class="quick-action-btn">
-                    <div class="quick-action-icon">
-                        <i class="fas fa-play-circle"></i>
-                    </div>
-                    <div class="quick-action-text">Iniciar Automação Dia 16</div>
+                    <div class="quick-action-text">Extrair Cotas</div>
                 </a>
                 
                 <a href="/whatsapp" class="quick-action-btn">
@@ -568,10 +730,10 @@
 </div>
 
 <script>
-    // Carregar estatísticas dos boletos e lances
+    // Carregar todas as estatísticas do dashboard
     async function loadStats() {
         try {
-            // Busca dados dos boletos
+            // ========== BOLETOS ==========
             const boletosResponse = await fetch('/api/boletos');
             const boletosData = await boletosResponse.json();
             
@@ -589,47 +751,107 @@
                 document.getElementById('totalBoletos').textContent = total;
                 document.getElementById('boletosCompletos').textContent = completos;
                 document.getElementById('boletosPendentes').textContent = pendentes;
+                document.getElementById('boletos_dia08').textContent = dia08.length;
+                document.getElementById('boletos_dia16').textContent = dia16.length;
                 
                 console.log(`📊 Boletos: ${total} total, ${completos} completos, ${pendentes} pendentes`);
             }
+
+            // ========== COTAS ==========
+            const cotasResponse = await fetch('/api/cotas');
+            const cotasData = await cotasResponse.json();
             
-            // Busca dados dos lances
-            const lancesResponse = await fetch('/api/lances');
-            const lancesData = await lancesResponse.json();
-            
-            if (lancesData.success && lancesData.data) {
-                const dia08Lances = lancesData.data.dia08 || [];
-                const dia16Lances = lancesData.data.dia16 || [];
+            if (cotasData.success && cotasData.data) {
+                const grupos = cotasData.data.grupos || [];
                 
-                // Conta todas as tasks dentro dos grupos
-                let totalLances = 0;
-                let completosLances = 0;
+                let totalCotas = 0;
+                let cotasDia08 = 0;
+                let cotasDia16 = 0;
+                let cotasComWhatsapp = 0;
                 
-                for (let grupo of dia08Lances) {
-                    if (grupo.tasks) {
-                        totalLances += grupo.tasks.length;
-                        completosLances += grupo.tasks.filter(t => t.is_completed).length;
+                grupos.forEach(grupo => {
+                    const cotas = grupo.cotas || [];
+                    totalCotas += cotas.length;
+                    
+                    // Conta por dia
+                    if (grupo.dia === 8 || grupo.dia === '8') {
+                        cotasDia08 += cotas.length;
+                    } else if (grupo.dia === 16 || grupo.dia === '16') {
+                        cotasDia16 += cotas.length;
                     }
-                }
+                    
+                    // Conta cotas com WhatsApp
+                    cotasComWhatsapp += cotas.filter(c => c.whatsapp).length;
+                });
                 
-                for (let grupo of dia16Lances) {
-                    if (grupo.tasks) {
-                        totalLances += grupo.tasks.length;
-                        completosLances += grupo.tasks.filter(t => t.is_completed).length;
-                    }
-                }
+                // Atualiza cards de cotas
+                document.getElementById('totalCotas').textContent = totalCotas;
+                document.getElementById('totalGrupos').textContent = grupos.length;
+                document.getElementById('cotasComWhatsapp').textContent = cotasComWhatsapp;
+                document.getElementById('cotas_dia08').textContent = cotasDia08;
+                document.getElementById('cotas_dia16').textContent = cotasDia16;
                 
-                const pendentesLances = totalLances - completosLances;
-                
-                // Atualiza cards de lances
-                document.getElementById('totalLances').textContent = totalLances;
-                document.getElementById('lancesCompletos').textContent = completosLances;
-                document.getElementById('lancesPendentes').textContent = pendentesLances;
-                
-                console.log(`🎯 Lances: ${totalLances} total, ${completosLances} completos, ${pendentesLances} pendentes`);
+                console.log(`👥 Cotas: ${totalCotas} total, ${grupos.length} grupos, ${cotasComWhatsapp} com WhatsApp`);
             }
+
+            // ========== AUTOMAÇÕES ==========
+            // Simula dados de automação (você pode criar uma API real depois)
+            const automacaoData = {
+                dia08_running: false,
+                dia16_running: false,
+                total_execucoes: 0,
+                execucoes_sucesso: 0
+            };
+            
+            const totalAutomacoes = (automacaoData.dia08_running ? 1 : 0) + (automacaoData.dia16_running ? 1 : 0);
+            document.getElementById('totalAutomacoes').textContent = totalAutomacoes;
+            document.getElementById('totalExecucoes').textContent = automacaoData.total_execucoes;
+            document.getElementById('execucoesSucesso').textContent = automacaoData.execucoes_sucesso;
+            
+            // Atualiza status das automações
+            const status08 = document.getElementById('statusAutomacao08');
+            const badge08 = status08.querySelector('.status-badge');
+            if (automacaoData.dia08_running) {
+                badge08.textContent = 'Em Execução';
+                badge08.classList.add('running');
+                status08.querySelector('i').style.color = '#10b981';
+            } else {
+                badge08.textContent = 'Parado';
+                badge08.classList.remove('running');
+                status08.querySelector('i').style.color = '#94a3b8';
+            }
+            
+            const status16 = document.getElementById('statusAutomacao16');
+            const badge16 = status16.querySelector('.status-badge');
+            if (automacaoData.dia16_running) {
+                badge16.textContent = 'Em Execução';
+                badge16.classList.add('running');
+                status16.querySelector('i').style.color = '#10b981';
+            } else {
+                badge16.textContent = 'Parado';
+                badge16.classList.remove('running');
+                status16.querySelector('i').style.color = '#94a3b8';
+            }
+
+            // ========== WHATSAPP ==========
+            // Simula dados de WhatsApp (você pode criar uma API real depois)
+            const whatsappData = {
+                total_mensagens: 0,
+                mensagens_enviadas: 0,
+                mensagens_pendentes: 0
+            };
+            
+            const taxaSucesso = whatsappData.total_mensagens > 0 
+                ? Math.round((whatsappData.mensagens_enviadas / whatsappData.total_mensagens) * 100)
+                : 0;
+            
+            document.getElementById('totalMensagens').textContent = whatsappData.total_mensagens;
+            document.getElementById('mensagensEnviadas').textContent = whatsappData.mensagens_enviadas;
+            document.getElementById('mensagensPendentes').textContent = whatsappData.mensagens_pendentes;
+            document.getElementById('taxaSucessoWhatsapp').textContent = taxaSucesso + '%';
+            
         } catch (error) {
-            console.error('Erro ao carregar estatísticas:', error);
+            console.error('❌ Erro ao carregar estatísticas:', error);
         }
     }
     
