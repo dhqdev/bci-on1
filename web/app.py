@@ -534,7 +534,7 @@ def api_boletos_create():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-@app.route('/api/boletos/delete/<task_id>', methods=['POST'])
+@app.route('/api/boletos/delete/<task_id>', methods=['POST', 'DELETE'])
 def api_boletos_delete(task_id):
     """Deleta um boleto (apenas localmente)"""
     try:
