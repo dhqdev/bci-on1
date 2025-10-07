@@ -596,16 +596,18 @@
                 <input type="text" id="clienteNome" placeholder="Ex: João Silva" required>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <div class="form-group">
-                    <label for="clienteGrupo">Grupo</label>
-                    <input type="text" id="clienteGrupo" placeholder="Ex: 1553">
-                </div>
-                
-                <div class="form-group">
-                    <label for="clienteCota">Cota</label>
-                    <input type="text" id="clienteCota" placeholder="Ex: 1920">
-                </div>
+            <div class="form-group">
+                <label for="clienteCotasGrupos">Cotas e Grupos</label>
+                <textarea 
+                    id="clienteCotasGrupos" 
+                    placeholder="Ex: 0303 - 1545, 0480 - 1545, 0575 - 1545" 
+                    rows="3" 
+                    style="resize: vertical; font-family: inherit; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text-primary);"
+                    readonly
+                ></textarea>
+                <small style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px; display: block;">
+                    📋 Lista completa de todas as cotas e grupos deste cliente
+                </small>
             </div>
             
             <div class="form-group">
@@ -702,31 +704,41 @@ function renderClientes(data) {
 function createClienteCard(cliente, dia) {
     const clientId = cliente.client_id || '';
     const nome = cliente.nome || 'Sem nome';
-    const grupo = cliente.grupo || '';
-    const cota = cliente.cota || '';
-    const cotasTexto = cliente.cotas_texto || '';
     const contato = cliente.contato || '-';
     const valorPrimeiraCota = cliente.valor_primeira_cota || '-';
     const historico = cliente.historico_boletos || [];
     
-    // Define o que mostrar para Grupo/Cota
-    let grupoText, cotaText, infoGrupoCota;
+    // Suporta novo formato (arrays) e formato antigo (strings)
+    let grupos = cliente.grupos || [];
+    let cotas = cliente.cotas || [];
     
-    if (grupo && cota) {
-        // Tem grupo e cota específicos
-        grupoText = grupo;
-        cotaText = cota;
-        infoGrupoCota = `Grupo: <strong>${escapeHtml(grupo)}</strong> | Cota: <strong>${escapeHtml(cota)}</strong>`;
-    } else if (cotasTexto) {
-        // Não tem grupo/cota, mas tem texto (ex: "2 cotas")
-        grupoText = '-';
-        cotaText = cotasTexto;
-        infoGrupoCota = `<strong>${escapeHtml(cotasTexto)}</strong>`;
+    // Migração: se ainda usa formato antigo, converte
+    if (!Array.isArray(grupos) && cliente.grupo) {
+        grupos = cliente.grupo ? [cliente.grupo] : [];
+    }
+    if (!Array.isArray(cotas) && cliente.cota) {
+        cotas = cliente.cota ? [cliente.cota] : [];
+    }
+    
+    // Define o que mostrar para Grupo/Cota
+    // EM CLIENTES: sempre mostra todas as cotas individualmente
+    let infoGrupoCota;
+    
+    if (cotas.length > 0 && grupos.length > 0) {
+        // Monta string com todas as cotas e grupos
+        // Ex: "4077 - 1550, 4078 - 1551, 4079 - 1552"
+        const cotasDetalhadas = cotas.map((cota, index) => {
+            const grupo = grupos[index] || grupos[0]; // Usa mesmo grupo se não tiver correspondente
+            return `${escapeHtml(cota)} - ${escapeHtml(grupo)}`;
+        }).join(', ');
+        
+        infoGrupoCota = `<strong>${cotasDetalhadas}</strong>`;
+    } else if (cliente.cotas_texto) {
+        // Fallback: usa texto customizado
+        infoGrupoCota = `<strong>${escapeHtml(cliente.cotas_texto)}</strong>`;
     } else {
         // Não tem nada
-        grupoText = '-';
-        cotaText = '-';
-        infoGrupoCota = 'Grupo: <strong>-</strong> | Cota: <strong>-</strong>';
+        infoGrupoCota = '<strong>-</strong>';
     }
     
     let historicoHtml = '';
@@ -832,8 +844,26 @@ function abrirModalCliente(clientId = null, dia = '08') {
         
         if (cliente) {
             document.getElementById('clienteNome').value = cliente.nome || '';
-            document.getElementById('clienteGrupo').value = cliente.grupo || '';
-            document.getElementById('clienteCota').value = cliente.cota || '';
+            
+            // Suporta novo formato (arrays) e antigo (strings)
+            const grupos = cliente.grupos || (cliente.grupo ? [cliente.grupo] : []);
+            const cotas = cliente.cotas || (cliente.cota ? [cliente.cota] : []);
+            
+            // ========== EXIBE TODAS AS COTAS NO CAMPO DE VISUALIZAÇÃO ==========
+            const cotasGruposTextarea = document.getElementById('clienteCotasGrupos');
+            if (cotasGruposTextarea) {
+                if (cotas.length > 0 && grupos.length > 0) {
+                    // Monta string com todas as cotas: "0303 - 1545, 0480 - 1545, ..."
+                    const cotasDetalhadas = cotas.map((cota, index) => {
+                        const grupo = grupos[index] || grupos[0];
+                        return `${cota} - ${grupo}`;
+                    }).join(', ');
+                    cotasGruposTextarea.value = cotasDetalhadas;
+                } else {
+                    cotasGruposTextarea.value = '-';
+                }
+            }
+            
             document.getElementById('clienteContato').value = cliente.contato || '';
             document.getElementById('clienteValorPrimeiraCota').value = cliente.valor_primeira_cota || '';
             document.getElementById('clienteDia').value = diaEncontrado;
@@ -845,6 +875,12 @@ function abrirModalCliente(clientId = null, dia = '08') {
         title.textContent = 'Novo Cliente';
         document.getElementById('clienteId').value = '';
         document.getElementById('clienteDia').value = dia;
+        
+        // Limpa campo de cotas/grupos ao criar novo
+        const cotasGruposTextarea = document.getElementById('clienteCotasGrupos');
+        if (cotasGruposTextarea) {
+            cotasGruposTextarea.value = '';
+        }
     }
     
     modal.classList.add('active');
@@ -860,8 +896,6 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
     
     const clientId = document.getElementById('clienteId').value;
     const nome = document.getElementById('clienteNome').value.trim();
-    const grupo = document.getElementById('clienteGrupo').value.trim();
-    const cota = document.getElementById('clienteCota').value.trim();
     const contato = document.getElementById('clienteContato').value.trim();
     const valorPrimeiraCota = document.getElementById('clienteValorPrimeiraCota').value.trim();
     const dia = document.getElementById('clienteDia').value;
@@ -871,10 +905,9 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
         return;
     }
     
+    // Como não temos mais campos editáveis de grupo/cota, apenas atualizamos os outros campos
     const clienteData = {
         nome,
-        grupo,
-        cota,
         contato,
         valor_primeira_cota: valorPrimeiraCota,
         dia
@@ -926,30 +959,42 @@ function editarCliente(clientId, dia) {
 }
 
 async function excluirCliente(clientId) {
-    if (!confirm('Tem certeza que deseja excluir este cliente?')) {
+    console.log('🗑️ Tentando excluir cliente:', clientId);
+    
+    if (!confirm('Tem certeza que deseja excluir este cliente?\n\nO boleto associado também será removido.')) {
+        console.log('❌ Exclusão cancelada pelo usuário');
         return;
     }
     
     try {
-        setStatus('loading', 'Excluindo cliente...');
+        setStatus('loading', 'Excluindo cliente e boleto...');
+        
+        console.log('📡 Enviando requisição DELETE para:', `/api/clientes/delete/${clientId}`);
         
         const response = await fetch(`/api/clientes/delete/${clientId}`, {
             method: 'DELETE'
         });
         
+        console.log('📥 Resposta recebida:', response.status, response.statusText);
+        
         const result = await response.json();
+        console.log('📋 Resultado:', result);
         
         if (!response.ok || !result.success) {
             throw new Error(result.error || 'Erro ao excluir cliente');
         }
         
-        setStatus('success', 'Cliente excluído!');
+        setStatus('success', result.message || 'Cliente e boleto excluídos!');
+        console.log('✅ Cliente excluído com sucesso!');
+        
+        // Aguarda um pouco antes de recarregar para mostrar a mensagem
+        await new Promise(resolve => setTimeout(resolve, 500));
         await refreshClientes();
         
     } catch (error) {
-        console.error('Erro ao excluir cliente:', error);
+        console.error('❌ Erro ao excluir cliente:', error);
         setStatus('error', error.message);
-        alert('Erro: ' + error.message);
+        alert('Erro ao excluir: ' + error.message);
     }
 }
 

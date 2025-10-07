@@ -355,12 +355,38 @@ def api_boletos():
     
     try:
         if os.path.exists(filepath):
-            with open(filepath, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+            # Lê com utf-8-sig para remover BOM automaticamente se existir
+            with open(filepath, 'r', encoding='utf-8-sig') as f:
+                content = f.read().strip()
+            
+            # Remove BOM invisível se existir
+            if content.startswith('\ufeff'):
+                content = content[1:]
+            
+            # Tenta fazer parse do JSON
+            try:
+                data = json.loads(content)
+            except json.JSONDecodeError as json_err:
+                print(f"❌ Erro ao fazer parse do JSON de boletos: {json_err}")
+                print(f"📄 Conteúdo do arquivo (primeiros 200 chars): {content[:200]}")
+                
+                # Recria arquivo limpo
+                data = {'dia08': [], 'dia16': [], 'last_import': None}
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+                print("✅ Arquivo de boletos recriado com estrutura limpa")
+            
             return jsonify({'success': True, 'data': data})
         else:
-            return jsonify({'success': True, 'data': {'dia08': [], 'dia16': []}})
+            # Cria arquivo se não existir
+            data = {'dia08': [], 'dia16': [], 'last_import': None}
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            return jsonify({'success': True, 'data': data})
     except Exception as e:
+        print(f"❌ Erro geral na API de boletos: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/boletos/import', methods=['POST'])
@@ -401,6 +427,34 @@ def api_boletos_import():
         })
             
     except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/boletos/reset', methods=['POST'])
+def api_boletos_reset():
+    """Reset completo do arquivo de boletos - cria arquivo limpo"""
+    try:
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        
+        # Cria estrutura limpa
+        data = {
+            'dia08': [],
+            'dia16': [],
+            'last_import': None
+        }
+        
+        # Salva com encoding correto (sem BOM)
+        with open(boletos_filepath, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        
+        print("✅ Arquivo de boletos resetado com sucesso")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Arquivo de boletos resetado com sucesso',
+            'data': data
+        })
+    except Exception as e:
+        print(f"❌ Erro ao resetar boletos: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/boletos/toggle/<task_id>', methods=['POST'])
@@ -1124,11 +1178,24 @@ def api_cotas_extract(grupo):
             
             emit_progress(f'✅ Extração concluída! Grupo {grupo} configurado para Dia {dia_grupo}')
             
+            # ========== SINCRONIZAÇÃO AUTOMÁTICA COM CLIENTES E BOLETOS ==========
+            emit_progress(f'🔄 Sincronizando cotas com aba de Clientes...')
+            sync_stats = _sync_cotas_to_clientes(result['cotas'], grupo, dia_grupo)
+            
+            if sync_stats.get('error'):
+                emit_progress(f'⚠️ Erro na sincronização: {sync_stats["error"]}')
+            else:
+                msg_sync = f"📋 Clientes: {sync_stats['created']} criados, {sync_stats['updated']} atualizados"
+                msg_boletos = f"💰 Boletos: {sync_stats.get('boletos_created', 0)} criados, {sync_stats.get('boletos_updated', 0)} atualizados"
+                emit_progress(msg_sync)
+                emit_progress(msg_boletos)
+            
             return jsonify({
                 'success': True,
                 'message': f'Grupo {grupo} extraído com sucesso',
                 'grupo': grupo,
-                'total_cotas': len(result['cotas'])
+                'total_cotas': len(result['cotas']),
+                'sync_stats': sync_stats
             })
             
         finally:
@@ -1556,11 +1623,24 @@ def api_clientes_create():
         
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
+        # Novo formato: usa listas para grupos e cotas
+        grupos_list = [grupo] if grupo else []
+        cotas_list = [cota] if cota else []
+        
+        # Define cotas_texto
+        if len(cotas_list) == 1 and len(grupos_list) == 1:
+            cotas_texto = f"{cotas_list[0]} - {grupos_list[0]}"
+        elif len(cotas_list) > 1:
+            cotas_texto = f"{len(cotas_list)} cotas"
+        else:
+            cotas_texto = ''
+        
         new_cliente = {
             'client_id': client_id,
             'nome': nome,
-            'grupo': grupo,
-            'cota': cota,
+            'grupos': grupos_list,
+            'cotas': cotas_list,
+            'cotas_texto': cotas_texto,
             'contato': contato,
             'valor_primeira_cota': valor_primeira_cota,
             'historico_boletos': [],
@@ -1612,11 +1692,31 @@ def api_clientes_update(client_id):
                 for cliente in clientes_data[dia_key]:
                     if cliente.get('client_id') == client_id:
                         print(f"✅ Cliente encontrado em {dia_key}: {cliente.get('nome')}")
+                        
+                        # Atualiza nome
                         cliente['nome'] = nome
-                        cliente['grupo'] = grupo
-                        cliente['cota'] = cota
                         cliente['contato'] = contato
                         cliente['valor_primeira_cota'] = valor_primeira_cota
+                        
+                        # Atualiza grupos/cotas (novo formato)
+                        grupos_list = [grupo] if grupo else []
+                        cotas_list = [cota] if cota else []
+                        
+                        cliente['grupos'] = grupos_list
+                        cliente['cotas'] = cotas_list
+                        
+                        # Atualiza cotas_texto
+                        if len(cotas_list) == 1 and len(grupos_list) == 1:
+                            cliente['cotas_texto'] = f"{cotas_list[0]} - {grupos_list[0]}"
+                        elif len(cotas_list) > 1:
+                            cliente['cotas_texto'] = f"{len(cotas_list)} cotas"
+                        else:
+                            cliente['cotas_texto'] = ''
+                        
+                        # Remove campos antigos se existirem
+                        cliente.pop('grupo', None)
+                        cliente.pop('cota', None)
+                        
                         cliente['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         found = True
                         
@@ -1642,8 +1742,9 @@ def api_clientes_update(client_id):
 
 @app.route('/api/clientes/delete/<client_id>', methods=['POST', 'DELETE'])
 def api_clientes_delete(client_id):
-    """Deleta um cliente"""
+    """Deleta um cliente E o boleto associado"""
     try:
+        # ========== 1. BUSCA E DELETA CLIENTE ==========
         clientes_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
         if not os.path.exists(clientes_filepath):
             return jsonify({'success': False, 'error': 'Arquivo de clientes não encontrado'})
@@ -1652,25 +1753,80 @@ def api_clientes_delete(client_id):
             clientes_data = json.load(f)
         
         found = False
+        cliente_nome = None
+        cliente_task_id = None
+        dia_encontrado = None
+        
         for dia_key in ['dia08', 'dia16']:
             if dia_key in clientes_data:
-                original_len = len(clientes_data[dia_key])
-                clientes_data[dia_key] = [
-                    c for c in clientes_data[dia_key] 
-                    if c.get('client_id') != client_id
-                ]
-                if len(clientes_data[dia_key]) < original_len:
-                    found = True
+                for cliente in clientes_data[dia_key]:
+                    if cliente.get('client_id') == client_id:
+                        cliente_nome = cliente.get('nome', '').strip()
+                        cliente_task_id = cliente.get('task_id', '')
+                        dia_encontrado = dia_key
+                        found = True
+                        break
+                
+                if found:
+                    # Remove cliente
+                    original_len = len(clientes_data[dia_key])
+                    clientes_data[dia_key] = [
+                        c for c in clientes_data[dia_key] 
+                        if c.get('client_id') != client_id
+                    ]
+                    print(f"🗑️ Cliente deletado: {cliente_nome} (ID: {client_id})")
+                    break
         
         if not found:
             return jsonify({'success': False, 'error': 'Cliente não encontrado'})
         
+        # Salva clientes atualizados
         with open(clientes_filepath, 'w', encoding='utf-8') as f:
             json.dump(clientes_data, f, indent=2, ensure_ascii=False)
         
-        return jsonify({'success': True, 'message': 'Cliente deletado com sucesso'})
+        # ========== 2. DELETA BOLETO ASSOCIADO ==========
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        boleto_deletado = False
+        
+        if os.path.exists(boletos_filepath):
+            try:
+                with open(boletos_filepath, 'r', encoding='utf-8-sig') as f:
+                    content = f.read().strip()
+                    if content.startswith('\ufeff'):
+                        content = content[1:]
+                    boletos_data = json.loads(content)
+                
+                if dia_encontrado and dia_encontrado in boletos_data:
+                    original_len = len(boletos_data[dia_encontrado])
+                    
+                    # Tenta deletar por task_id ou por nome (case-insensitive)
+                    boletos_data[dia_encontrado] = [
+                        b for b in boletos_data[dia_encontrado]
+                        if not (
+                            (cliente_task_id and b.get('task_id') == cliente_task_id) or
+                            (cliente_nome and b.get('nome', '').strip().lower() == cliente_nome.lower())
+                        )
+                    ]
+                    
+                    if len(boletos_data[dia_encontrado]) < original_len:
+                        boleto_deletado = True
+                        print(f"🗑️ Boleto deletado: {cliente_nome}")
+                    
+                    # Salva boletos atualizados
+                    with open(boletos_filepath, 'w', encoding='utf-8') as f:
+                        json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+                        
+            except Exception as e:
+                print(f"⚠️ Erro ao deletar boleto: {e}")
+        
+        mensagem = f'Cliente deletado com sucesso'
+        if boleto_deletado:
+            mensagem += ' (boleto também removido)'
+        
+        return jsonify({'success': True, 'message': mensagem})
         
     except Exception as e:
+        print(f"❌ Erro ao deletar cliente: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/clientes/sync-from-boletos', methods=['POST'])
@@ -1783,6 +1939,233 @@ def api_clientes_sync_from_boletos():
         print(f"Erro na sincronização: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)})
 
+def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
+    """
+    Sincroniza cotas extraídas para a aba de clientes
+    
+    Para cada cota extraída:
+    1. Verifica se já existe cliente com o mesmo NOME
+    2. Se existe: adiciona grupo/cota ao cliente (se ainda não tiver)
+    3. Se não existe: cria novo cliente
+    
+    Args:
+        cotas_list: Lista de cotas extraídas do grupo
+        grupo: Número do grupo extraído
+        dia_grupo: Dia do grupo (8 ou 16)
+    
+    Returns:
+        dict com estatísticas (criados, atualizados)
+    """
+    try:
+        import uuid
+        from datetime import datetime
+        
+        clientes_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
+        
+        # Carrega ou cria estrutura de clientes
+        clientes_data = {'dia08': [], 'dia16': []}
+        if os.path.exists(clientes_filepath):
+            with open(clientes_filepath, 'r', encoding='utf-8') as f:
+                clientes_data = json.load(f)
+        
+        dia_key = f'dia{dia_grupo:02d}'
+        if dia_key not in clientes_data:
+            clientes_data[dia_key] = []
+        
+        stats = {'created': 0, 'updated': 0, 'skipped': 0}
+        
+        print(f"\n🔄 Sincronizando {len(cotas_list)} cotas do grupo {grupo} para clientes (Dia {dia_grupo})...")
+        
+        for cota_info in cotas_list:
+            nome = cota_info.get('nome', '').strip()
+            cota = cota_info.get('cota', '').strip()
+            
+            if not nome or not cota:
+                stats['skipped'] += 1
+                continue
+            
+            # Busca cliente existente por NOME (case-insensitive)
+            cliente_encontrado = None
+            for idx, cliente in enumerate(clientes_data[dia_key]):
+                nome_cliente = cliente.get('nome', '').strip()
+                if nome_cliente.lower() == nome.lower():
+                    cliente_encontrado = cliente
+                    print(f"  ✓ Cliente encontrado: {nome}")
+                    break
+            
+            if cliente_encontrado:
+                # Cliente já existe - atualizar grupos/cotas
+                grupos_atual = cliente_encontrado.get('grupos', [])
+                cotas_atual = cliente_encontrado.get('cotas', [])
+                
+                # Se ainda usa formato antigo (string), converte para lista
+                if isinstance(cliente_encontrado.get('grupo'), str):
+                    grupo_antigo = cliente_encontrado.get('grupo', '').strip()
+                    cota_antiga = cliente_encontrado.get('cota', '').strip()
+                    
+                    if grupo_antigo and cota_antiga:
+                        grupos_atual = [grupo_antigo]
+                        cotas_atual = [cota_antiga]
+                    else:
+                        grupos_atual = []
+                        cotas_atual = []
+                
+                # Adiciona nova cota/grupo se não existir
+                cota_grupo_key = f"{cota}-{grupo}"
+                cotas_grupos_existentes = [f"{c}-{g}" for c, g in zip(cotas_atual, grupos_atual)]
+                
+                if cota_grupo_key not in cotas_grupos_existentes:
+                    grupos_atual.append(grupo)
+                    cotas_atual.append(cota)
+                    
+                    cliente_encontrado['grupos'] = grupos_atual
+                    cliente_encontrado['cotas'] = cotas_atual
+                    cliente_encontrado['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    # Atualiza cotas_texto
+                    if len(cotas_atual) == 1:
+                        cliente_encontrado['cotas_texto'] = f"{cotas_atual[0]} - {grupos_atual[0]}"
+                    else:
+                        cliente_encontrado['cotas_texto'] = f"{len(cotas_atual)} cotas"
+                    
+                    # Remove campos antigos (migração)
+                    cliente_encontrado.pop('grupo', None)
+                    cliente_encontrado.pop('cota', None)
+                    
+                    stats['updated'] += 1
+                    print(f"  ↻ Cliente atualizado: {nome} - Agora com {len(cotas_atual)} cota(s)")
+                else:
+                    stats['skipped'] += 1
+                    print(f"  ⊘ Cliente já possui esta cota: {nome}")
+                    
+            else:
+                # Cliente não existe - criar novo
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                
+                novo_cliente = {
+                    'client_id': str(uuid.uuid4()),
+                    'nome': nome,
+                    'grupos': [grupo],
+                    'cotas': [cota],
+                    'cotas_texto': f"{cota} - {grupo}",
+                    'contato': '',
+                    'valor_primeira_cota': cota_info.get('valor', '').replace('R$ ', '').replace('.', '').replace(',', '.'),
+                    'historico_boletos': [],
+                    'created_at': timestamp,
+                    'updated_at': timestamp
+                }
+                
+                clientes_data[dia_key].append(novo_cliente)
+                stats['created'] += 1
+                print(f"  + Cliente criado: {nome}")
+        
+        # Salva clientes atualizados
+        with open(clientes_filepath, 'w', encoding='utf-8') as f:
+            json.dump(clientes_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"✅ Sincronização de clientes concluída: {stats['created']} criados, {stats['updated']} atualizados, {stats['skipped']} ignorados")
+        
+        # ========== CRIA/ATUALIZA BOLETOS AUTOMATICAMENTE ==========
+        print(f"\n🎫 Sincronizando boletos automaticamente...")
+        
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        
+        # Carrega ou cria estrutura de boletos
+        boletos_data = {'dia08': [], 'dia16': [], 'last_import': None}
+        if os.path.exists(boletos_filepath):
+            with open(boletos_filepath, 'r', encoding='utf-8-sig') as f:
+                content = f.read().strip()
+                if content.startswith('\ufeff'):
+                    content = content[1:]
+                try:
+                    boletos_data = json.loads(content)
+                except:
+                    boletos_data = {'dia08': [], 'dia16': [], 'last_import': None}
+        
+        if dia_key not in boletos_data:
+            boletos_data[dia_key] = []
+        
+        # Para cada cliente criado/atualizado, cria/atualiza boleto
+        boletos_stats = {'created': 0, 'updated': 0, 'skipped': 0}
+        
+        for cliente in clientes_data[dia_key]:
+            nome = cliente.get('nome', '').strip()
+            grupos = cliente.get('grupos', [])
+            cotas = cliente.get('cotas', [])
+            cotas_texto = cliente.get('cotas_texto', '')
+            contato = cliente.get('contato', '')
+            task_id = cliente.get('task_id', '')
+            
+            if not nome:
+                continue
+            
+            # Busca boleto existente pelo nome
+            boleto_encontrado = None
+            for boleto in boletos_data[dia_key]:
+                if boleto.get('nome', '').strip().lower() == nome.lower():
+                    boleto_encontrado = boleto
+                    break
+            
+            if boleto_encontrado:
+                # Atualiza boleto existente
+                boleto_encontrado['cotas'] = cotas_texto
+                if contato:
+                    boleto_encontrado['celular'] = contato
+                if grupos:
+                    boleto_encontrado['grupo'] = grupos[0]
+                if cotas:
+                    boleto_encontrado['cota'] = cotas[0]
+                boletos_stats['updated'] += 1
+                print(f"  ↻ Boleto atualizado: {nome}")
+            else:
+                # Cria novo boleto
+                if not task_id:
+                    task_id = str(uuid.uuid4())
+                
+                novo_boleto = {
+                    'task_id': task_id,
+                    'client_id': cliente.get('client_id'),
+                    'nome': nome,
+                    'celular': contato,
+                    'cotas': cotas_texto,
+                    'grupo': grupos[0] if grupos else '',
+                    'cota': cotas[0] if cotas else '',
+                    'valor_primeira_cota': cliente.get('valor_primeira_cota', ''),
+                    'is_completed': False,
+                    'created_from_cotas': True,
+                    'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+                
+                boletos_data[dia_key].append(novo_boleto)
+                
+                # Atualiza task_id no cliente se não tinha
+                if not cliente.get('task_id'):
+                    cliente['task_id'] = task_id
+                
+                boletos_stats['created'] += 1
+                print(f"  + Boleto criado: {nome} - {cotas_texto}")
+        
+        # Salva boletos atualizados
+        with open(boletos_filepath, 'w', encoding='utf-8') as f:
+            json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+        
+        # Salva clientes com task_id atualizado
+        with open(clientes_filepath, 'w', encoding='utf-8') as f:
+            json.dump(clientes_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"✅ Sincronização de boletos concluída: {boletos_stats['created']} criados, {boletos_stats['updated']} atualizados\n")
+        
+        stats['boletos_created'] = boletos_stats['created']
+        stats['boletos_updated'] = boletos_stats['updated']
+        
+        return stats
+        
+    except Exception as e:
+        import traceback
+        print(f"❌ Erro ao sincronizar cotas para clientes: {e}")
+        print(traceback.format_exc())
+        return {'created': 0, 'updated': 0, 'skipped': 0, 'error': str(e)}
+
 def _sync_cliente_to_boleto(cliente, dia_key):
     """Sincroniza dados do cliente para o boleto correspondente
     
@@ -1798,16 +2181,30 @@ def _sync_cliente_to_boleto(cliente, dia_key):
         with open(boletos_filepath, 'r', encoding='utf-8') as f:
             boletos_data = json.load(f)
         
-        # Extrai dados do cliente
+        # Extrai dados do cliente - suporta novo formato (arrays) e antigo (strings)
         nome = cliente.get('nome', '').strip()
-        grupo = str(cliente.get('grupo', '')).strip()
-        cota = str(cliente.get('cota', '')).strip()
+        
+        # Novo formato: arrays
+        grupos = cliente.get('grupos', [])
+        cotas = cliente.get('cotas', [])
+        
+        # Migração do formato antigo
+        if not grupos and cliente.get('grupo'):
+            grupos = [str(cliente.get('grupo', '')).strip()]
+        if not cotas and cliente.get('cota'):
+            cotas = [str(cliente.get('cota', '')).strip()]
+        
+        # Pega primeiro grupo/cota para busca
+        grupo = grupos[0] if grupos else ''
+        cota = cotas[0] if cotas else ''
+        
         contato = cliente.get('contato', '')
+        cotas_texto = cliente.get('cotas_texto', '')
         
         if not nome:
             return
         
-        print(f"🔄 SYNC Cliente→Boleto: Nome='{nome}', Grupo={grupo or 'N/A'}, Cota={cota or 'N/A'}, Dia={dia_key}")
+        print(f"🔄 SYNC Cliente→Boleto: Nome='{nome}', Grupos={grupos}, Cotas={cotas}, Dia={dia_key}")
         
         # Busca boleto existente - PRIORIDADE: Grupo+Cota, depois Nome
         boleto_encontrado = None
@@ -1842,7 +2239,7 @@ def _sync_cliente_to_boleto(cliente, dia_key):
             # Atualiza NOME se mudou (permite correção de nomes)
             boleto_encontrado['nome'] = nome
             
-            # Atualiza grupo e cota
+            # Atualiza grupo e cota (primeiro da lista)
             if grupo:
                 boleto_encontrado['grupo'] = grupo
             if cota:
@@ -1852,15 +2249,17 @@ def _sync_cliente_to_boleto(cliente, dia_key):
             if contato:
                 boleto_encontrado['celular'] = contato
             
-            # Atualiza campo cotas com formato "cota - grupo"
-            if grupo and cota:
-                boleto_encontrado['cotas'] = f"{cota} - {grupo}"
-            elif cliente.get('cotas_texto'):
-                boleto_encontrado['cotas'] = cliente['cotas_texto']
+            # Atualiza campo cotas
+            if cotas_texto:
+                boleto_encontrado['cotas'] = cotas_texto
+            elif len(cotas) == 1 and len(grupos) == 1:
+                boleto_encontrado['cotas'] = f"{cotas[0]} - {grupos[0]}"
+            elif len(cotas) > 1:
+                boleto_encontrado['cotas'] = f"{len(cotas)} cotas"
             
             print(f"✅ Boleto atualizado: Nome='{nome}', Cotas='{boleto_encontrado.get('cotas')}'")
         else:
-            print(f"⚠️ Boleto NÃO encontrado para o cliente: '{nome}' (Grupo: {grupo}, Cota: {cota})")
+            print(f"⚠️ Boleto NÃO encontrado para o cliente: '{nome}' (Grupos: {grupos}, Cotas: {cotas})")
             print(f"📋 Boletos existentes em {dia_key}: {[(b.get('nome'), b.get('grupo'), b.get('cota')) for b in boletos_data.get(dia_key, [])]}")
         
         # Salva boletos atualizados
@@ -1946,7 +2345,7 @@ def _sync_boleto_to_cliente(boleto, dia_key):
         if not cliente_encontrado:
             for idx, cliente in enumerate(clientes_data.get(dia_key, [])):
                 nome_cliente = cliente.get('nome', '').strip()
-                if nome_cliente == nome:
+                if nome_cliente.lower() == nome.lower():
                     print(f"✅ Cliente ENCONTRADO por Nome (posição {idx}): '{nome_cliente}'")
                     cliente_encontrado = cliente
                     metodo_busca = "nome"
@@ -1956,13 +2355,50 @@ def _sync_boleto_to_cliente(boleto, dia_key):
             # ATUALIZA cliente existente
             print(f"📝 ATUALIZANDO cliente existente (método: {metodo_busca}): {cliente_encontrado.get('client_id')}")
             
-            # Atualiza NOME se mudou (permite correção de nomes)
+            # Converte formato antigo (string) para novo (listas) se necessário
+            grupos_atual = cliente_encontrado.get('grupos', [])
+            cotas_atual = cliente_encontrado.get('cotas', [])
+            
+            # Migração de formato antigo
+            if isinstance(cliente_encontrado.get('grupo'), str):
+                grupo_antigo = cliente_encontrado.get('grupo', '').strip()
+                cota_antiga = cliente_encontrado.get('cota', '').strip()
+                
+                if grupo_antigo and cota_antiga:
+                    grupos_atual = [grupo_antigo]
+                    cotas_atual = [cota_antiga]
+                else:
+                    grupos_atual = []
+                    cotas_atual = []
+            
+            # Adiciona nova cota/grupo se existir e ainda não estiver na lista
+            if grupo and cota:
+                cota_grupo_key = f"{cota}-{grupo}"
+                cotas_grupos_existentes = [f"{c}-{g}" for c, g in zip(cotas_atual, grupos_atual)]
+                
+                if cota_grupo_key not in cotas_grupos_existentes:
+                    grupos_atual.append(grupo)
+                    cotas_atual.append(cota)
+                    print(f"  ↻ Adicionando nova cota: {cota} - {grupo}")
+            
+            # Atualiza cliente
             cliente_encontrado['nome'] = nome
-            cliente_encontrado['grupo'] = grupo or cliente_encontrado.get('grupo', '')
-            cliente_encontrado['cota'] = cota or cliente_encontrado.get('cota', '')
-            cliente_encontrado['cotas_texto'] = cotas_texto  # Preserva texto original (ex: "2 cotas")
+            cliente_encontrado['grupos'] = grupos_atual
+            cliente_encontrado['cotas'] = cotas_atual
             cliente_encontrado['contato'] = contato or cliente_encontrado.get('contato', '')
-            cliente_encontrado['task_id'] = task_id  # Vincula ao boleto pelo task_id
+            cliente_encontrado['task_id'] = task_id
+            
+            # Atualiza cotas_texto
+            if len(cotas_atual) == 1:
+                cliente_encontrado['cotas_texto'] = f"{cotas_atual[0]} - {grupos_atual[0]}"
+            elif len(cotas_atual) > 1:
+                cliente_encontrado['cotas_texto'] = f"{len(cotas_atual)} cotas"
+            else:
+                cliente_encontrado['cotas_texto'] = cotas_texto
+            
+            # Remove campos antigos (migração)
+            cliente_encontrado.pop('grupo', None)
+            cliente_encontrado.pop('cota', None)
             
             # Adiciona link ao histórico se não existir
             if boleto_link:
@@ -1972,20 +2408,34 @@ def _sync_boleto_to_cliente(boleto, dia_key):
                     cliente_encontrado['historico_boletos'].append(boleto_link)
             
             cliente_encontrado['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f"✅ Cliente atualizado: {nome} - {cliente_encontrado.get('cotas_texto')}")
         else:
             # CRIA novo cliente apenas se não existir
             print(f"🆕 Cliente NÃO encontrado, CRIANDO NOVO: '{nome}' (Grupo: {grupo}, Cota: {cota})")
-            print(f"📋 Clientes existentes em {dia_key}: {[(c.get('nome'), c.get('grupo'), c.get('cota')) for c in clientes_data.get(dia_key, [])]}")
+            print(f"📋 Clientes existentes em {dia_key}: {[(c.get('nome'), c.get('grupos', c.get('grupo')), c.get('cotas', c.get('cota'))) for c in clientes_data.get(dia_key, [])]}")
             
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            # Inicia listas vazias
+            grupos_list = []
+            cotas_list = []
+            
+            # Adiciona grupo/cota se existirem
+            if grupo and cota:
+                grupos_list = [grupo]
+                cotas_list = [cota]
+                cotas_texto_calc = f"{cota} - {grupo}"
+            else:
+                cotas_texto_calc = cotas_texto
+            
             novo_cliente = {
                 'client_id': str(uuid.uuid4()),
                 'nome': nome,
-                'grupo': grupo,
-                'cota': cota,
-                'cotas_texto': cotas_texto,  # Preserva texto original (ex: "2 cotas")
+                'grupos': grupos_list,
+                'cotas': cotas_list,
+                'cotas_texto': cotas_texto_calc,
                 'contato': contato,
-                'task_id': task_id,  # Vincula ao boleto pelo task_id
+                'task_id': task_id,
                 'valor_primeira_cota': '',
                 'historico_boletos': [boleto_link] if boleto_link else [],
                 'created_at': timestamp,
@@ -1995,6 +2445,7 @@ def _sync_boleto_to_cliente(boleto, dia_key):
             if dia_key not in clientes_data:
                 clientes_data[dia_key] = []
             clientes_data[dia_key].append(novo_cliente)
+            print(f"✅ Novo cliente criado: {nome} - {cotas_texto_calc}")
         
         # Salva clientes atualizados
         with open(clientes_filepath, 'w', encoding='utf-8') as f:
