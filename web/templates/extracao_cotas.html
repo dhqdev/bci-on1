@@ -50,6 +50,94 @@
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
     
+    /* ========== ABAS DE FILTRO POR DIA ========== */
+    .day-filter-tabs {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+    }
+    
+    .day-filter-tabs .nav-pills {
+        gap: 12px;
+    }
+    
+    .day-filter-tabs .nav-link {
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-weight: 600;
+        padding: 14px 32px;
+        border-radius: 12px;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+    }
+    
+    .day-filter-tabs .nav-link:hover {
+        background: rgba(102, 126, 234, 0.1);
+        color: var(--accent);
+        transform: translateY(-2px);
+        border-color: var(--accent);
+    }
+    
+    .day-filter-tabs .nav-link.active {
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+        color: white;
+        border-color: var(--accent);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .day-filter-tabs .nav-link i {
+        font-size: 18px;
+    }
+    
+    .day-filter-tabs .nav-link .badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    
+    .day-filter-tabs .nav-link:not(.active) .badge {
+        background: var(--bg-primary);
+        color: var(--text-secondary);
+    }
+    
+    /* Badge de dia no grupo */
+    .grupo-day-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .grupo-day-badge.day-8 {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+    }
+    
+    .grupo-day-badge.day-16 {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+    }
+    
+    .grupo-day-badge i {
+        font-size: 13px;
+    }
+    
     .grupos-tabs-container {
         background: var(--bg-primary);
         border-radius: 16px;
@@ -102,6 +190,159 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
         background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    }
+    
+    .btn-automatizar-grupo {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-right: 8px;
+    }
+    
+    .btn-automatizar-grupo:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+    
+    .btn-automatizar-grupo:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    /* Modal de Progresso de Automação */
+    .automation-modal .modal-dialog {
+        max-width: 700px;
+    }
+    
+    .automation-modal .modal-body {
+        padding: 24px;
+    }
+    
+    .automation-progress-container {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .automation-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-box {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+    }
+    
+    .stat-box-label {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    
+    .stat-box-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .stat-box.success .stat-box-value {
+        color: var(--success);
+    }
+    
+    .stat-box.error .stat-box-value {
+        color: var(--danger);
+    }
+    
+    .automation-log {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+    
+    .automation-log-item {
+        padding: 4px 0;
+        color: var(--text-secondary);
+        word-wrap: break-word;
+    }
+    
+    .automation-log-item.success {
+        color: var(--success);
+    }
+    
+    .automation-log-item.error {
+        color: var(--danger);
+    }
+    
+    .automation-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .btn-stop-automation {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .btn-stop-automation:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+    
+    .btn-close-automation {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .btn-close-automation:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
     
     .grupos-container {
@@ -204,6 +445,49 @@
     
     .cota-card.status-inativo::before {
         background: linear-gradient(135deg, var(--danger) 0%, #e53e3e 100%);
+    }
+    
+    /* Checkbox de automação */
+    .cota-checkbox-container {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 10;
+    }
+    
+    .cota-checkbox {
+        font-size: 24px;
+        color: var(--text-tertiary);
+        opacity: 0.3;
+        transition: all 0.3s ease;
+    }
+    
+    .cota-card.processing .cota-checkbox {
+        color: #f59e0b;
+        opacity: 1;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    .cota-card.completed .cota-checkbox {
+        color: var(--success);
+        opacity: 1;
+        animation: checkmark 0.5s ease-out;
+    }
+    
+    .cota-card.error .cota-checkbox {
+        color: var(--danger);
+        opacity: 1;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.7; }
+    }
+    
+    @keyframes checkmark {
+        0% { transform: scale(0) rotate(-45deg); }
+        50% { transform: scale(1.3) rotate(0deg); }
+        100% { transform: scale(1) rotate(0deg); }
     }
     
     .cota-info {
@@ -406,6 +690,28 @@
     </div>
 </div>
 
+<!-- Filtro por Dia -->
+<div class="day-filter-tabs" id="dayFilterTabs" style="display: none;">
+    <ul class="nav nav-pills justify-content-center" id="dayFilterNav" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="day-8-tab" data-bs-toggle="pill" data-bs-target="#day-8-content" 
+                    type="button" role="tab" onclick="filterByDay(8)">
+                <i class="fas fa-calendar-day"></i>
+                <span>Dia 8</span>
+                <span class="badge" id="day8Count">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="day-16-tab" data-bs-toggle="pill" data-bs-target="#day-16-content" 
+                    type="button" role="tab" onclick="filterByDay(16)">
+                <i class="fas fa-calendar-day"></i>
+                <span>Dia 16</span>
+                <span class="badge" id="day16Count">0</span>
+            </button>
+        </li>
+    </ul>
+</div>
+
 <!-- Tabs dos Grupos -->
 <div id="gruposTabs" class="grupos-tabs-container mb-3" style="display: none;">
     <ul class="nav nav-tabs" id="gruposNavTabs" role="tablist">
@@ -450,6 +756,39 @@
                     >
                     <small class="form-text text-muted">
                         Digite o número do grupo (até 4 dígitos)
+                    </small>
+                </div>
+                
+                <!-- ========== SELEÇÃO DE DIA ========== -->
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 600; color: var(--text-primary);">
+                        <i class="fas fa-calendar-day me-2" style="color: var(--accent);"></i>
+                        Dia do Consórcio
+                    </label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check form-check-inline" style="flex: 1;">
+                            <input class="form-check-input" type="radio" name="grupoDia" id="dia8Radio" value="8" checked
+                                   style="cursor: pointer; width: 20px; height: 20px;">
+                            <label class="form-check-label" for="dia8Radio" style="cursor: pointer; font-size: 15px; margin-left: 8px;">
+                                <span class="grupo-day-badge day-8">
+                                    <i class="fas fa-calendar"></i>
+                                    Dia 8
+                                </span>
+                            </label>
+                        </div>
+                        <div class="form-check form-check-inline" style="flex: 1;">
+                            <input class="form-check-input" type="radio" name="grupoDia" id="dia16Radio" value="16"
+                                   style="cursor: pointer; width: 20px; height: 20px;">
+                            <label class="form-check-label" for="dia16Radio" style="cursor: pointer; font-size: 15px; margin-left: 8px;">
+                                <span class="grupo-day-badge day-16">
+                                    <i class="fas fa-calendar"></i>
+                                    Dia 16
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    <small class="form-text text-muted">
+                        Selecione em qual dia do mês este grupo realiza assembleia
                     </small>
                 </div>
                 
@@ -519,6 +858,56 @@
                     <i class="fas fa-trash me-2"></i>
                     Sim, Deletar Grupo
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Automação de Lances -->
+<div class="modal fade automation-modal" id="modalAutomacao" tabindex="-1" aria-labelledby="modalAutomacaoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAutomacaoLabel">
+                    <i class="fas fa-robot me-2"></i>
+                    Automação de Lances - Grupo <span id="automacaoGrupoNumero"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Estatísticas -->
+                <div class="automation-stats">
+                    <div class="stat-box">
+                        <div class="stat-box-label">Total</div>
+                        <div class="stat-box-value" id="statTotal">0</div>
+                    </div>
+                    <div class="stat-box success">
+                        <div class="stat-box-label">Sucesso</div>
+                        <div class="stat-box-value" id="statSuccess">0</div>
+                    </div>
+                    <div class="stat-box error">
+                        <div class="stat-box-label">Falhas</div>
+                        <div class="stat-box-value" id="statFailed">0</div>
+                    </div>
+                </div>
+                
+                <!-- Log de Progresso -->
+                <div class="automation-log" id="automationLog">
+                    <div class="automation-log-item">Aguardando início da automação...</div>
+                </div>
+                
+                <!-- Controles -->
+                <div class="automation-controls">
+                    <button type="button" class="btn-close-automation" id="btnCloseAutomation" style="display: none;">
+                        <i class="fas fa-check me-2"></i>
+                        Fechar
+                    </button>
+                    <div style="flex: 1;"></div>
+                    <button type="button" class="btn-stop-automation" id="btnStopAutomation" style="display: none;">
+                        <i class="fas fa-stop me-2"></i>
+                        Parar Automação
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -676,7 +1065,16 @@
             
             if (data.success && data.data && data.data.grupos && data.data.grupos.length > 0) {
                 gruposData = data.data.grupos; // Armazena dados
-                renderGrupos(data.data.grupos);
+                
+                // Atualiza contadores das abas de dia
+                updateDayFilterCounts();
+                
+                // Renderiza grupos filtrados pelo dia atual
+                const gruposFiltrados = gruposData.filter(g => (g.dia || 8) === currentDayFilter);
+                renderGrupos(gruposFiltrados);
+            } else {
+                // Sem grupos, esconde filtro de dia
+                document.getElementById('dayFilterTabs').style.display = 'none';
             }
         } catch (error) {
             console.error('Erro ao carregar grupos:', error);
@@ -898,6 +1296,18 @@
             return;
         }
         
+        // ========== CAPTURA DIA SELECIONADO ==========
+        const diaRadios = document.getElementsByName('grupoDia');
+        let diaSelecionado = 8; // Padrão dia 8
+        for (const radio of diaRadios) {
+            if (radio.checked) {
+                diaSelecionado = parseInt(radio.value);
+                break;
+            }
+        }
+        
+        console.log(`📅 Dia selecionado: ${diaSelecionado}`);
+        
         // Fecha modal
         if (currentModal) {
             currentModal.hide();
@@ -905,12 +1315,18 @@
         
         // Mostra loading
         document.getElementById('loadingOverlay').classList.add('active');
-        document.getElementById('loadingSubtext').textContent = `Extraindo grupo ${grupoNumber}...`;
+        document.getElementById('loadingSubtext').textContent = `Extraindo grupo ${grupoNumber} (Dia ${diaSelecionado})...`;
         document.getElementById('progressLog').innerHTML = '';
         
         try {
             const response = await fetch(`/api/cotas/extract/${grupoNumber}`, {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    dia: diaSelecionado
+                })
             });
             
             const data = await response.json();
@@ -920,7 +1336,7 @@
                 await loadGrupos();
                 
                 // Mostra sucesso
-                showToast('success', `Grupo ${grupoNumber} importado com sucesso! ${data.total_cotas} cotas encontradas.`);
+                showToast('success', `Grupo ${grupoNumber} (Dia ${diaSelecionado}) importado com sucesso! ${data.total_cotas} cotas encontradas.`);
             } else {
                 showToast('error', `Erro ao importar: ${data.error}`);
             }
@@ -944,6 +1360,45 @@
         
         // Atualiza subtexto
         document.getElementById('loadingSubtext').textContent = message;
+    }
+    
+    // ========== VARIÁVEL GLOBAL PARA FILTRO ==========
+    let currentDayFilter = 8; // Padrão: Dia 8
+    
+    // ========== FUNÇÃO DE FILTRO POR DIA ==========
+    window.filterByDay = function(dia) {
+        console.log(`🔍 Filtrando por dia: ${dia}`);
+        currentDayFilter = dia;
+        
+        // Filtra grupos
+        const gruposFiltrados = gruposData.filter(g => (g.dia || 8) === dia);
+        
+        // Re-renderiza apenas grupos filtrados
+        renderGrupos(gruposFiltrados);
+        
+        // Mostra/esconde tabs de dia
+        updateDayFilterCounts();
+    };
+    
+    // ========== ATUALIZA CONTADORES DAS ABAS ==========
+    function updateDayFilterCounts() {
+        if (!gruposData || gruposData.length === 0) {
+            document.getElementById('dayFilterTabs').style.display = 'none';
+            return;
+        }
+        
+        // Mostra abas de filtro
+        document.getElementById('dayFilterTabs').style.display = 'block';
+        
+        // Conta grupos por dia
+        const dia8Count = gruposData.filter(g => (g.dia || 8) === 8).length;
+        const dia16Count = gruposData.filter(g => (g.dia || 8) === 16).length;
+        
+        // Atualiza badges
+        document.getElementById('day8Count').textContent = dia8Count;
+        document.getElementById('day16Count').textContent = dia16Count;
+        
+        console.log(`📊 Grupos - Dia 8: ${dia8Count}, Dia 16: ${dia16Count}`);
     }
     
     // Renderiza grupos
@@ -986,14 +1441,34 @@
         
         // Renderiza seções de grupos
         container.innerHTML = grupos.map((grupo, index) => `
-            <div class="grupo-section ${index === 0 ? 'active' : ''}" data-grupo="${grupo.numero}">
+            <div class="grupo-section ${index === 0 ? 'active' : ''}" data-grupo="${grupo.numero}" data-dia="${grupo.dia || 8}">
                 <div class="grupo-header">
                     <div class="grupo-title">
                         <i class="fas fa-folder"></i>
                         Grupo ${grupo.numero}
+                        <span class="grupo-day-badge day-${grupo.dia || 8}">
+                            <i class="fas fa-calendar"></i>
+                            Dia ${grupo.dia || 8}
+                        </span>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <div class="grupo-badge">${grupo.cotas.length} cotas</div>
+                        <button 
+                            class="btn-automatizar-grupo" 
+                            onclick="automatizarGrupo('${grupo.numero}')"
+                            title="Automatizar lances de todas as cotas deste grupo"
+                        >
+                            <i class="fas fa-robot"></i>
+                            Automatizar Lances
+                        </button>
+                        <button 
+                            class="btn btn-sm btn-outline-secondary" 
+                            onclick="limparCheckboxesGrupo('${grupo.numero}')"
+                            title="Limpar checkboxes deste grupo"
+                            style="padding: 8px 12px; border-radius: 6px;"
+                        >
+                            <i class="fas fa-eraser"></i>
+                        </button>
                         <button 
                             class="btn-delete-grupo" 
                             onclick="deleteGrupo('${grupo.numero}')"
@@ -1017,14 +1492,38 @@
                 section.style.display = index === 0 ? 'block' : 'none';
             }
         });
+        
+        // ========== RESTAURA CHECKBOXES DO LOCALSTORAGE ==========
+        grupos.forEach(grupo => {
+            grupo.cotas.forEach(cota => {
+                // Normaliza a cota (ex: "303" -> "0303", "1212" -> "1212")
+                const cotaNormalizada = cota.cota.padStart(4, '0');
+                const savedStatus = restoreCheckboxState(grupo.numero, cotaNormalizada);
+                
+                if (savedStatus) {
+                    const card = document.querySelector(`.cota-card[data-cota="${cotaNormalizada}"]`);
+                    if (card) {
+                        card.classList.add(savedStatus);
+                        console.log(`♻️ Checkbox restaurado: ${cotaNormalizada} -> ${savedStatus}`);
+                    } else {
+                        console.warn(`⚠️ Card não encontrado ao restaurar: ${cotaNormalizada}`);
+                    }
+                }
+            });
+        });
     }
     
     // Renderiza card de cota
     function renderCotaCard(cota) {
         const statusClass = cota.status.toLowerCase() === 'ativo' ? 'ativo' : 'inativo';
+        // Normaliza cota para consistência (ex: "303" -> "0303")
+        const cotaNormalizada = String(cota.cota).padStart(4, '0');
         
         return `
-            <div class="cota-card status-${statusClass}">
+            <div class="cota-card status-${statusClass}" data-cota="${cotaNormalizada}">
+                <div class="cota-checkbox-container">
+                    <i class="fas fa-check-circle cota-checkbox"></i>
+                </div>
                 <div class="cota-info">
                     <div class="cota-field">
                         <i class="fas fa-user"></i>
@@ -1099,6 +1598,361 @@
             toastElement.remove();
         }, 5000);
     }
+    
+    // ========== FUNÇÕES DE AUTOMAÇÃO DE LANCES ==========
+    
+    let automationModal;
+    let automationRunning = false;
+    let currentAutomationGrupo = null;
+    
+    // Abre modal de automação
+    window.automatizarGrupo = async function(grupoNumero) {
+        console.log('🤖 Iniciando automação para grupo:', grupoNumero);
+        
+        // Configura modal
+        if (!automationModal) {
+            automationModal = new bootstrap.Modal(document.getElementById('modalAutomacao'));
+        }
+        
+        currentAutomationGrupo = grupoNumero;
+        document.getElementById('automacaoGrupoNumero').textContent = grupoNumero;
+        
+        // Reseta estatísticas
+        document.getElementById('statTotal').textContent = '0';
+        document.getElementById('statSuccess').textContent = '0';
+        document.getElementById('statFailed').textContent = '0';
+        
+        // Limpa log
+        const logElement = document.getElementById('automationLog');
+        logElement.innerHTML = '<div class="automation-log-item">Iniciando automação...</div>';
+        
+        // Configura botões
+        document.getElementById('btnStopAutomation').style.display = 'inline-flex';
+        document.getElementById('btnCloseAutomation').style.display = 'none';
+        
+        // Abre modal
+        automationModal.show();
+        
+        // Inicia automação
+        await startAutomation(grupoNumero);
+    };
+    
+    // Inicia automação
+    async function startAutomation(grupoNumero) {
+        automationRunning = true;
+        
+        try {
+            // Conecta listener de progresso
+            socket.on('lance_progress', handleAutomationProgress);
+            
+            addAutomationLog('🚀 Enviando requisição para servidor...', 'info');
+            
+            // Mostra botão de parar
+            document.getElementById('btnStopAutomation').style.display = 'inline-flex';
+            
+            // ========== COLETA ESTADOS DOS CHECKBOXES ==========
+            const checkboxStates = {};
+            const cards = document.querySelectorAll(`.grupo-section[data-grupo="${grupoNumero}"] .cota-card`);
+            cards.forEach(card => {
+                const cotaNumber = card.getAttribute('data-cota');
+                if (cotaNumber) {
+                    // Verifica classe do card
+                    if (card.classList.contains('completed')) {
+                        checkboxStates[cotaNumber] = 'completed';
+                    } else if (card.classList.contains('processing')) {
+                        checkboxStates[cotaNumber] = 'processing';
+                    } else if (card.classList.contains('error')) {
+                        checkboxStates[cotaNumber] = 'error';
+                    } else {
+                        checkboxStates[cotaNumber] = 'pending';
+                    }
+                }
+            });
+            
+            console.log('📊 Estados dos checkboxes:', checkboxStates);
+            
+            // Chama API com estados dos checkboxes
+            const response = await fetch(`/api/cotas/automatizar-lance/${grupoNumero}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    checkbox_states: checkboxStates
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                addAutomationLog('✅ Automação finalizada com sucesso!', 'success');
+                showToast('success', result.message);
+                
+                // Atualiza estatísticas finais
+                if (result.stats) {
+                    document.getElementById('statTotal').textContent = result.stats.total;
+                    document.getElementById('statSuccess').textContent = result.stats.completed;
+                    document.getElementById('statFailed').textContent = result.stats.failed;
+                }
+                
+                // Esconde botão de parar, mostra botão de fechar
+                document.getElementById('btnStopAutomation').style.display = 'none';
+                document.getElementById('btnCloseAutomation').style.display = 'inline-flex';
+            } else {
+                addAutomationLog(`❌ Erro: ${result.error}`, 'error');
+                showToast('error', result.error);
+                document.getElementById('btnStopAutomation').style.display = 'none';
+                document.getElementById('btnCloseAutomation').style.display = 'inline-flex';
+            }
+            
+        } catch (error) {
+            console.error('Erro na automação:', error);
+            addAutomationLog(`❌ Erro: ${error.message}`, 'error');
+            showToast('error', 'Erro ao conectar com o servidor');
+            document.getElementById('btnStopAutomation').style.display = 'none';
+            document.getElementById('btnCloseAutomation').style.display = 'inline-flex';
+        } finally {
+            automationRunning = false;
+            document.getElementById('btnStopAutomation').style.display = 'none';
+            socket.off('lance_progress', handleAutomationProgress);
+        }
+    }
+    
+    // Handler de progresso via WebSocket
+    function handleAutomationProgress(data) {
+        if (data.grupo !== currentAutomationGrupo) return;
+        
+        const message = data.message;
+        
+        // Identifica tipo de mensagem
+        let type = 'info';
+        if (message.includes('✅') || message.includes('🎉')) {
+            type = 'success';
+        } else if (message.includes('❌') || message.includes('Erro')) {
+            type = 'error';
+        }
+        
+        addAutomationLog(message, type);
+        
+        // Atualiza estatísticas se houver
+        const successMatch = message.match(/(\d+)\/(\d+) sucesso/);
+        if (successMatch) {
+            document.getElementById('statSuccess').textContent = successMatch[1];
+            document.getElementById('statTotal').textContent = successMatch[2];
+        }
+        
+        // ========== ATUALIZA CHECKBOX NO CARD ==========
+        
+        // Detecta quando está PULANDO uma cota (não deve alterar estado)
+        const skippingMatch = message.match(/⏭️\s+Pulando cota/);
+        if (skippingMatch) {
+            // Não faz nada, mantém o estado verde
+            return;
+        }
+        
+        // Detecta quando está processando uma cota específica
+        const processingMatch = message.match(/📝 Cota: (\d+)/);
+        if (processingMatch) {
+            const cotaNumber = processingMatch[1];
+            const cotaNormalizada = cotaNumber.padStart(4, '0');
+            
+            // ========== NÃO SOBRESCREVE SE JÁ ESTIVER COMPLETED ==========
+            const card = document.querySelector(`.cota-card[data-cota="${cotaNormalizada}"]`);
+            if (card && !card.classList.contains('completed')) {
+                updateCotaCheckbox(cotaNumber, 'processing');
+            } else if (card) {
+                console.log(`⏭️ Não sobrescreve checkbox verde da cota ${cotaNormalizada}`);
+            }
+        }
+        
+        // Detecta quando concluiu uma cota com sucesso
+        if (message.includes('🎉') && message.includes('concluída')) {
+            const cotaMatch = message.match(/Cota \d+\/\d+/);
+            if (cotaMatch) {
+                // Pega o número da cota do log anterior
+                const logItems = document.querySelectorAll('.automation-log-item');
+                for (let i = logItems.length - 1; i >= 0; i--) {
+                    const logText = logItems[i].textContent;
+                    const match = logText.match(/📝 Cota: (\d+)/);
+                    if (match) {
+                        updateCotaCheckbox(match[1], 'completed');
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Detecta quando uma cota teve erro
+        if (message.includes('❌ Erro na cota')) {
+            const errorMatch = message.match(/Erro na cota (\d+)/);
+            if (errorMatch) {
+                const cotaNumber = errorMatch[1];
+                updateCotaCheckbox(cotaNumber, 'error');
+            }
+        }
+        
+        // ========== DETECTA INTERRUPÇÃO E LIMPA PROCESSING ==========
+        if (message.includes('⏹️ AUTOMAÇÃO INTERROMPIDA')) {
+            // Encontra última cota em processing e marca como parada (remove processing)
+            const cards = document.querySelectorAll(`.grupo-section[data-grupo="${currentAutomationGrupo}"] .cota-card.processing`);
+            cards.forEach(card => {
+                const cotaNumber = card.getAttribute('data-cota');
+                card.classList.remove('processing');
+                // Remove do localStorage também
+                localStorage.removeItem(`checkbox_${currentAutomationGrupo}_${cotaNumber}`);
+                console.log(`🧹 Removido estado "processing" da cota ${cotaNumber}`);
+            });
+            
+            // Esconde botão "Parar" e mostra botão "Fechar"
+            document.getElementById('btnStopAutomation').style.display = 'none';
+            document.getElementById('btnCloseAutomation').style.display = 'inline-flex';
+        }
+        
+        // ========== DETECTA NAVEGADOR FECHADO E LIMPA PROCESSING ==========
+        if (message.includes('⚠️ NAVEGADOR FECHADO MANUALMENTE')) {
+            const cards = document.querySelectorAll(`.grupo-section[data-grupo="${currentAutomationGrupo}"] .cota-card.processing`);
+            cards.forEach(card => {
+                const cotaNumber = card.getAttribute('data-cota');
+                card.classList.remove('processing');
+                localStorage.removeItem(`checkbox_${currentAutomationGrupo}_${cotaNumber}`);
+                console.log(`🧹 Removido estado "processing" da cota ${cotaNumber} (navegador fechado)`);
+            });
+            
+            // Esconde botão "Parar" e mostra botão "Fechar"
+            document.getElementById('btnStopAutomation').style.display = 'none';
+            document.getElementById('btnCloseAutomation').style.display = 'inline-flex';
+        }
+    }
+    
+    // Atualiza checkbox de uma cota específica
+    function updateCotaCheckbox(cotaNumber, status) {
+        // Normaliza número da cota (ex: "303" -> "0303")
+        const cotaNormalizada = cotaNumber.padStart(4, '0');
+        
+        // Busca o card pela cota
+        const card = document.querySelector(`.cota-card[data-cota="${cotaNormalizada}"]`);
+        
+        if (card) {
+            // Remove classes anteriores
+            card.classList.remove('processing', 'completed', 'error');
+            
+            // Adiciona nova classe
+            card.classList.add(status);
+            
+            // ========== SALVA NO LOCALSTORAGE ==========
+            saveCheckboxState(currentAutomationGrupo, cotaNormalizada, status);
+            
+            console.log(`✅ Checkbox atualizado: Cota ${cotaNormalizada} -> ${status}`);
+        } else {
+            console.warn(`⚠️ Card não encontrado para cota: ${cotaNormalizada}`);
+        }
+    }
+    
+    // Salva estado do checkbox no localStorage
+    function saveCheckboxState(grupo, cota, status) {
+        try {
+            const key = `checkbox_${grupo}_${cota}`;
+            localStorage.setItem(key, status);
+        } catch (e) {
+            console.warn('Erro ao salvar checkbox no localStorage:', e);
+        }
+    }
+    
+    // Restaura estado do checkbox do localStorage
+    function restoreCheckboxState(grupo, cota) {
+        try {
+            const key = `checkbox_${grupo}_${cota}`;
+            return localStorage.getItem(key);
+        } catch (e) {
+            console.warn('Erro ao restaurar checkbox do localStorage:', e);
+            return null;
+        }
+    }
+    
+    // Limpa checkboxes de um grupo do localStorage
+    function clearGroupCheckboxes(grupo) {
+        try {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith(`checkbox_${grupo}_`)) {
+                    localStorage.removeItem(key);
+                }
+            });
+            console.log(`🗑️ Checkboxes do grupo ${grupo} limpos`);
+        } catch (e) {
+            console.warn('Erro ao limpar checkboxes:', e);
+        }
+    }
+    
+    // Função global para limpar checkboxes de um grupo
+    window.limparCheckboxesGrupo = function(grupoNumero) {
+        if (confirm(`Deseja limpar todos os checkboxes do grupo ${grupoNumero}?`)) {
+            // Limpa localStorage
+            clearGroupCheckboxes(grupoNumero);
+            
+            // Remove classes visuais dos cards
+            const cards = document.querySelectorAll(`.grupo-section[data-grupo="${grupoNumero}"] .cota-card`);
+            cards.forEach(card => {
+                card.classList.remove('processing', 'completed', 'error');
+            });
+            
+            showToast('success', `Checkboxes do grupo ${grupoNumero} limpos com sucesso!`);
+            console.log(`✅ Checkboxes do grupo ${grupoNumero} limpos visualmente`);
+        }
+    };
+    
+    // Adiciona linha ao log
+    function addAutomationLog(message, type = 'info') {
+        const logElement = document.getElementById('automationLog');
+        const item = document.createElement('div');
+        item.className = `automation-log-item ${type}`;
+        item.textContent = message;
+        logElement.appendChild(item);
+        
+        // Auto-scroll
+        logElement.scrollTop = logElement.scrollHeight;
+    }
+    
+    // Botão de parar automação
+    document.getElementById('btnStopAutomation').addEventListener('click', async function() {
+        if (!currentAutomationGrupo) return;
+        
+        if (confirm('Deseja realmente parar a automação? A cota atual será concluída antes de parar.')) {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Parando...';
+            
+            try {
+                const response = await fetch(`/api/cotas/parar-automacao/${currentAutomationGrupo}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addAutomationLog('⏹️ Solicitação de parada enviada...', 'info');
+                } else {
+                    addAutomationLog(`❌ Erro ao parar: ${result.error}`, 'error');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-stop me-2"></i>Parar Automação';
+                }
+            } catch (error) {
+                console.error('Erro ao parar automação:', error);
+                addAutomationLog('❌ Erro ao enviar solicitação de parada', 'error');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-stop me-2"></i>Parar Automação';
+            }
+        }
+    });
+    
+    // Botão de fechar modal
+    document.getElementById('btnCloseAutomation').addEventListener('click', function() {
+        if (automationModal) {
+            automationModal.hide();
+        }
+    });
+    
+    // ========== FIM FUNÇÕES DE AUTOMAÇÃO ==========
     
     // Inicialização
     if (document.readyState === 'loading') {
