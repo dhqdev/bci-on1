@@ -785,40 +785,76 @@
         </div>
     </div>
     
-    <!-- Content Grid -->
+    <!-- Gráficos e Atividades -->
     <div class="content-grid">
-        <!-- Quick Actions -->
-        <div class="card-modern" style="grid-column: 1 / -1;">
-            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Ações Rápidas</h3>
+        <!-- Progresso de Dias -->
+        <div class="card-modern">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-chart-pie" style="color: var(--accent);"></i>
+                Progresso por Dia
+            </h3>
             
-            <div class="quick-actions">
-                <a href="/boletos" class="quick-action-btn">
-                    <div class="quick-action-icon">
-                        <i class="fas fa-file-invoice"></i>
+            <div style="margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 14px; font-weight: 600; color: var(--text-secondary);">Dia 08</span>
+                    <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);" id="progressoDia08Text">0%</span>
+                </div>
+                <div style="background: var(--bg-tertiary); height: 12px; border-radius: 6px; overflow: hidden;">
+                    <div id="progressoDia08Bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transition: width 1s ease;"></div>
+                </div>
+                <div style="margin-top: 8px; display: flex; justify-content: space-between; font-size: 12px; color: var(--text-tertiary);">
+                    <span><i class="fas fa-check-circle" style="color: #10b981;"></i> <span id="dia08Completos">0</span> concluídos</span>
+                    <span><i class="fas fa-clock" style="color: #f59e0b;"></i> <span id="dia08Pendentes">0</span> pendentes</span>
+                </div>
+            </div>
+            
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 14px; font-weight: 600; color: var(--text-secondary);">Dia 16</span>
+                    <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);" id="progressoDia16Text">0%</span>
+                </div>
+                <div style="background: var(--bg-tertiary); height: 12px; border-radius: 6px; overflow: hidden;">
+                    <div id="progressoDia16Bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%); transition: width 1s ease;"></div>
+                </div>
+                <div style="margin-top: 8px; display: flex; justify-content: space-between; font-size: 12px; color: var(--text-tertiary);">
+                    <span><i class="fas fa-check-circle" style="color: #10b981;"></i> <span id="dia16Completos">0</span> concluídos</span>
+                    <span><i class="fas fa-clock" style="color: #f59e0b;"></i> <span id="dia16Pendentes">0</span> pendentes</span>
+                </div>
+            </div>
+            
+            <!-- Estatísticas Gerais -->
+            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <h4 style="font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Resumo Geral</h4>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(102, 126, 234, 0.15) 100%); padding: 12px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 800; color: #667eea;" id="totalGeralBoletos">0</div>
+                        <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">Total de Boletos</div>
                     </div>
-                    <div class="quick-action-text">Gerenciar Boletos</div>
-                </a>
-                
-                <a href="/extracao_cotas" class="quick-action-btn">
-                    <div class="quick-action-icon">
-                        <i class="fas fa-users"></i>
+                    <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.15) 100%); padding: 12px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 800; color: #10b981;" id="totalGeralCompletos">0</div>
+                        <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">Concluídos</div>
                     </div>
-                    <div class="quick-action-text">Extrair Cotas</div>
-                </a>
-                
-                <a href="/whatsapp" class="quick-action-btn">
-                    <div class="quick-action-icon">
-                        <i class="fab fa-whatsapp"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Atividade Recente -->
+        <div class="card-modern">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-history" style="color: var(--accent);"></i>
+                Atividade Recente
+            </h3>
+            
+            <div id="activityList">
+                <div class="activity-item">
+                    <div class="activity-icon info">
+                        <i class="fas fa-info-circle"></i>
                     </div>
-                    <div class="quick-action-text">Enviar WhatsApp</div>
-                </a>
-                
-                <a href="/credentials" class="quick-action-btn">
-                    <div class="quick-action-icon">
-                        <i class="fas fa-key"></i>
+                    <div class="activity-content">
+                        <div class="activity-title">Sistema inicializado</div>
+                        <div class="activity-time">Aguardando dados...</div>
                     </div>
-                    <div class="quick-action-text">Configurar Credenciais</div>
-                </a>
+                </div>
             </div>
         </div>
     </div>
@@ -831,6 +867,9 @@
             // ========== BOLETOS ==========
             const boletosResponse = await fetch('/api/boletos');
             const boletosData = await boletosResponse.json();
+            
+            let activityHTML = '';
+            let lastActivity = null;
             
             if (boletosData.success && boletosData.data) {
                 const dia08 = boletosData.data.dia08 || [];
@@ -848,6 +887,61 @@
                 document.getElementById('boletosPendentes').textContent = pendentes;
                 document.getElementById('boletos_dia08').textContent = dia08.length;
                 document.getElementById('boletos_dia16').textContent = dia16.length;
+                
+                // Calcula progresso Dia 08
+                const completos08 = dia08.filter(b => b.is_completed).length;
+                const pendentes08 = dia08.length - completos08;
+                const progresso08 = dia08.length > 0 ? Math.round((completos08 / dia08.length) * 100) : 0;
+                
+                document.getElementById('dia08Completos').textContent = completos08;
+                document.getElementById('dia08Pendentes').textContent = pendentes08;
+                document.getElementById('progressoDia08Text').textContent = progresso08 + '%';
+                document.getElementById('progressoDia08Bar').style.width = progresso08 + '%';
+                
+                // Calcula progresso Dia 16
+                const completos16 = dia16.filter(b => b.is_completed).length;
+                const pendentes16 = dia16.length - completos16;
+                const progresso16 = dia16.length > 0 ? Math.round((completos16 / dia16.length) * 100) : 0;
+                
+                document.getElementById('dia16Completos').textContent = completos16;
+                document.getElementById('dia16Pendentes').textContent = pendentes16;
+                document.getElementById('progressoDia16Text').textContent = progresso16 + '%';
+                document.getElementById('progressoDia16Bar').style.width = progresso16 + '%';
+                
+                // Totais gerais
+                document.getElementById('totalGeralBoletos').textContent = total;
+                document.getElementById('totalGeralCompletos').textContent = completos;
+                
+                // Últimos boletos para atividade
+                const allBoletos = [...dia08.map(b => ({...b, dia: '08'})), ...dia16.map(b => ({...b, dia: '16'}))];
+                const recentBoletos = allBoletos
+                    .filter(b => b.updated_at || b.created_at)
+                    .sort((a, b) => {
+                        const dateA = new Date(b.updated_at || b.created_at);
+                        const dateB = new Date(a.updated_at || a.created_at);
+                        return dateA - dateB;
+                    })
+                    .slice(0, 5);
+                
+                recentBoletos.forEach(boleto => {
+                    const isCompleted = boleto.is_completed;
+                    const icon = isCompleted ? 'check-circle' : 'clock';
+                    const iconClass = isCompleted ? 'success' : 'warning';
+                    const actionText = isCompleted ? 'Boleto concluído' : 'Boleto atualizado';
+                    const time = formatTimeAgo(boleto.updated_at || boleto.created_at);
+                    
+                    activityHTML += `
+                        <div class="activity-item">
+                            <div class="activity-icon ${iconClass}">
+                                <i class="fas fa-${icon}"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">${actionText}: ${boleto.nome || 'Sem nome'}</div>
+                                <div class="activity-time">Dia ${boleto.dia} • ${time}</div>
+                            </div>
+                        </div>
+                    `;
+                });
                 
                 console.log(`📊 Boletos: ${total} total, ${completos} completos, ${pendentes} pendentes`);
             }
@@ -885,6 +979,22 @@
                 document.getElementById('cotasComWhatsapp').textContent = cotasComWhatsapp;
                 document.getElementById('cotas_dia08').textContent = cotasDia08;
                 document.getElementById('cotas_dia16').textContent = cotasDia16;
+                
+                // Adiciona atividade de extração de cotas
+                if (grupos.length > 0) {
+                    const recentGrupo = grupos[grupos.length - 1];
+                    activityHTML += `
+                        <div class="activity-item">
+                            <div class="activity-icon info">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Cotas extraídas: Grupo ${recentGrupo.grupo}</div>
+                                <div class="activity-time">${recentGrupo.cotas ? recentGrupo.cotas.length : 0} cotas encontradas</div>
+                            </div>
+                        </div>
+                    `;
+                }
                 
                 console.log(`👥 Cotas: ${totalCotas} total, ${grupos.length} grupos, ${cotasComWhatsapp} com WhatsApp`);
             }
@@ -945,9 +1055,33 @@
             document.getElementById('mensagensPendentes').textContent = whatsappData.mensagens_pendentes;
             document.getElementById('taxaSucessoWhatsapp').textContent = taxaSucesso + '%';
             
+            // Atualiza lista de atividades
+            if (activityHTML) {
+                document.getElementById('activityList').innerHTML = activityHTML;
+            }
+            
         } catch (error) {
             console.error('❌ Erro ao carregar estatísticas:', error);
         }
+    }
+    
+    // Formata tempo relativo
+    function formatTimeAgo(dateString) {
+        if (!dateString) return 'Agora';
+        
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'Agora';
+        if (diffMins < 60) return `${diffMins} min atrás`;
+        if (diffHours < 24) return `${diffHours}h atrás`;
+        if (diffDays < 7) return `${diffDays}d atrás`;
+        
+        return date.toLocaleDateString('pt-BR');
     }
     
     // Carregar ao iniciar

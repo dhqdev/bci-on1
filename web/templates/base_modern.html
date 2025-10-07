@@ -424,6 +424,71 @@
             padding: 0 5px;
         }
         
+        /* User Profile Button */
+        .user-profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        
+        .user-profile-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.2;
+        }
+        
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .user-email {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .user-info {
+                display: none;
+            }
+            
+            .user-profile-btn {
+                padding: 6px;
+                border-radius: 50%;
+            }
+        }
+        
         /* Notification Dropdown */
         .notification-dropdown {
             background: var(--bg-primary);
@@ -1250,6 +1315,10 @@
                     <i class="fas fa-history"></i>
                     <span>Histórico</span>
                 </a>
+                <a href="/clientes" class="sidebar-menu-item {% if '/clientes' in request.path %}active{% endif %}">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </a>
                 <a href="/credentials" class="sidebar-menu-item {% if '/credentials' in request.path %}active{% endif %}">
                     <i class="fas fa-key"></i>
                     <span>Credenciais</span>
@@ -1296,6 +1365,45 @@
                             Nenhuma notificação
                         </li>
                     </div>
+                </ul>
+            </div>
+            
+            <!-- Perfil do Usuário -->
+            <div class="dropdown">
+                <button class="user-profile-btn" id="userProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="user-avatar" id="userAvatar">
+                        OX
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">OXCASH</div>
+                        <div class="user-email" id="userEmail">Sistema</div>
+                    </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userProfileDropdown" style="width: 280px;">
+                    <li class="dropdown-header text-center py-3">
+                        <div class="user-avatar mx-auto mb-2" style="width: 48px; height: 48px; font-size: 20px;" id="userAvatarLarge">
+                            OX
+                        </div>
+                        <h6 class="mb-1" id="userNameFull" style="font-weight: 700;">OXCASH</h6>
+                        <small class="text-muted" id="userEmailFull">Sistema de Automação</small>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="/profile">
+                            <i class="fas fa-user-circle me-2"></i>Meu Perfil
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="/credentials">
+                            <i class="fas fa-key me-2"></i>Credenciais
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="/logout" onclick="return confirm('Deseja realmente sair?')">
+                            <i class="fas fa-sign-out-alt me-2"></i>Sair
+                        </a>
+                    </li>
                 </ul>
             </div>
             
@@ -1527,6 +1635,59 @@
         const notificationBadge = document.getElementById('notificationBadge');
         let notifications = [];
         let unreadCount = 0;
+        
+        // ========== PERFIL DO USUÁRIO ==========
+        async function loadUserProfile() {
+            try {
+                // Tenta carregar informações do usuário das credenciais
+                const response = await fetch('/api/credentials');
+                const result = await response.json();
+                
+                let userName = 'Administrador';
+                let userEmail = 'admin@oxcash.com';
+                let userInitials = 'A';
+                
+                if (result.success && result.data && result.data.servopa) {
+                    const servopaUser = result.data.servopa.usuario;
+                    if (servopaUser && servopaUser.includes('@')) {
+                        // Se for um email válido
+                        userEmail = servopaUser;
+                        // Extrai nome do email (parte antes do @)
+                        const emailName = servopaUser.split('@')[0];
+                        userName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+                        userInitials = emailName.charAt(0).toUpperCase();
+                    } else if (servopaUser) {
+                        // Se for outro tipo de usuário (não email)
+                        userName = 'OXCASH';
+                        userEmail = 'Sistema OXCASH';
+                        userInitials = 'OX';
+                    }
+                }
+                
+                // Atualiza elementos do DOM
+                const userNameElements = document.querySelectorAll('#userName, #userNameFull');
+                const userEmailElements = document.querySelectorAll('#userEmail, #userEmailFull');
+                const userAvatarElements = document.querySelectorAll('#userAvatar, #userAvatarLarge');
+                
+                userNameElements.forEach(el => {
+                    if (el) el.textContent = userName;
+                });
+                
+                userEmailElements.forEach(el => {
+                    if (el) el.textContent = userEmail;
+                });
+                
+                userAvatarElements.forEach(el => {
+                    if (el) el.innerHTML = userInitials;
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar perfil do usuário:', error);
+            }
+        }
+        
+        // Carrega perfil ao iniciar
+        loadUserProfile();
         
         // Conecta ao WebSocket
         const socket = io();

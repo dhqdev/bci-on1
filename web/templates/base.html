@@ -53,6 +53,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if '/clientes' in request.path %}active{% endif %}" href="/clientes">
+                            <i class="fas fa-users"></i> Clientes
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if '/boletos' in request.path %}active{% endif %}" href="/boletos">
                             <i class="fas fa-file-invoice"></i> Boletos
                         </a>

@@ -1,0 +1,20 @@
+{
+  "dia08": [
+    {
+      "client_id": "exemplo-uuid-1234",
+      "nome": "Nome do Cliente",
+      "grupo": "1553",
+      "cota": "1920",
+      "contato": "5519991234567",
+      "valor_primeira_cota": "1500.00",
+      "historico_boletos": [
+        "https://www.consorcioservopa.com.br/docparser/view/...",
+        "https://www.consorcioservopa.com.br/docparser/view/..."
+      ],
+      "created_at": "2025-10-07 12:00:00",
+      "updated_at": "2025-10-07 12:00:00"
+    }
+  ],
+  "dia16": [],
+  "last_sync": "2025-10-07 12:00:00"
+}

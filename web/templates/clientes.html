@@ -1,0 +1,1049 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Clientes - OXCASH{% endblock %}
+
+{% block content %}
+<style>
+    .clientes-page {
+        padding-bottom: 48px;
+    }
+
+    .page-header {
+        margin-bottom: 28px;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+    }
+
+    .page-subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        max-width: 640px;
+    }
+
+    .status-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.12);
+        margin-bottom: 24px;
+    }
+
+    [data-theme="dark"] .status-card {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .status-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .status-card h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .status-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-action:hover {
+        background: var(--bg-tertiary);
+        transform: translateY(-1px);
+    }
+
+    .btn-action.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+
+    .btn-action.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .status-text {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-text.success {
+        color: #48bb78;
+    }
+
+    .status-text.error {
+        color: #f56565;
+    }
+
+    .search-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .search-input-wrapper i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        opacity: 0.6;
+        font-size: 0.9rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 16px 10px 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
+    }
+
+    .tabs-container {
+        margin-bottom: 24px;
+    }
+
+    .nav-tabs {
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        gap: 8px;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        padding: 12px 24px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--text-primary);
+        background: var(--bg-secondary);
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #667eea;
+        background: transparent;
+    }
+
+    .nav-tabs .nav-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .tab-badge {
+        background: rgba(102, 126, 234, 0.15);
+        color: #667eea;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .nav-tabs .nav-link.active .tab-badge {
+        background: rgba(102, 126, 234, 0.25);
+    }
+
+    .tab-content {
+        padding-top: 20px;
+    }
+
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    .cliente-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 16px;
+        width: 100%;
+    }
+
+    .cliente-card {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        background: var(--bg-secondary);
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    [data-theme="dark"] .cliente-card {
+        background: var(--bg-tertiary);
+    }
+
+    .cliente-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.18);
+        border-color: rgba(102, 126, 234, 0.35);
+    }
+
+    .cliente-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 16px;
+    }
+
+    .cliente-nome {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .cliente-info {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .cliente-info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .cliente-info-item i {
+        width: 18px;
+        color: #667eea;
+    }
+
+    .cliente-actions {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .cliente-card:hover .cliente-actions {
+        opacity: 1;
+    }
+
+    .btn-cliente-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        font-size: 0.85rem;
+    }
+
+    .btn-cliente-action:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        transform: scale(1.1);
+    }
+
+    .btn-cliente-action.relatorio:hover {
+        background: #25D366;
+        border-color: #25D366;
+    }
+
+    .btn-cliente-action.edit:hover {
+        background: #4299e1;
+        border-color: #4299e1;
+    }
+
+    .btn-cliente-action.delete:hover {
+        background: #f56565;
+        border-color: #f56565;
+    }
+
+    .historico-boletos {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .historico-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .historico-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 120px;
+        overflow-y: auto;
+    }
+
+    .historico-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .historico-item a {
+        color: #667eea;
+        text-decoration: none;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .historico-item a:hover {
+        text-decoration: underline;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+        color: var(--text-secondary);
+        border: 1px dashed var(--border-color);
+        border-radius: 12px;
+        background: var(--bg-secondary);
+        grid-column: 1 / -1;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 12px;
+        opacity: 0.4;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 550px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--text-primary);
+    }
+
+    .btn-close-modal {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: var(--text-secondary);
+        transition: color 0.2s;
+    }
+
+    .btn-close-modal:hover {
+        color: #f56565;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+    }
+
+    .btn-modal {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-modal.cancel {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .btn-modal.cancel:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .btn-modal.save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+    }
+
+    .btn-modal.save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+</style>
+
+<div class="clientes-page">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-users"></i> Gerenciamento de Clientes
+        </h1>
+        <p class="page-subtitle">
+            Gerencie seus clientes com informações detalhadas, histórico de boletos e envio de relatórios
+        </p>
+    </div>
+
+    <section class="status-card">
+        <div class="status-top">
+            <div>
+                <h2><i class="fas fa-info-circle"></i> Clientes do Sistema</h2>
+            </div>
+            <div class="status-actions">
+                <button class="btn-action primary" onclick="abrirModalCliente()">
+                    <i class="fas fa-plus"></i> Novo Cliente
+                </button>
+            </div>
+        </div>
+        <div id="statusMessage" class="status-text">
+            <i class="fas fa-spinner fa-spin"></i> <span>Carregando clientes...</span>
+        </div>
+    </section>
+
+    <div id="searchContainer" class="search-container">
+        <div class="search-input-wrapper">
+            <i class="fas fa-search"></i>
+            <input id="searchInput" class="search-input" type="search" placeholder="Buscar por nome ou contato" oninput="filterClientes()">
+        </div>
+    </div>
+
+    <div class="tabs-container">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dia08-tab" type="button" role="tab" onclick="filterClientes()">
+                    <i class="fas fa-calendar-day"></i> Dia 08
+                    <span class="tab-badge" id="badge08">0</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dia16-tab" type="button" role="tab" onclick="filterClientes()">
+                    <i class="fas fa-calendar-alt"></i> Dia 16
+                    <span class="tab-badge" id="badge16">0</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="dia08-tab" role="tabpanel">
+            <div id="clientesDia08" class="cliente-grid">
+                <!-- Cards de clientes do dia 08 serão inseridos aqui -->
+            </div>
+        </div>
+        <div class="tab-pane" id="dia16-tab" role="tabpanel">
+            <div id="clientesDia16" class="cliente-grid">
+                <!-- Cards de clientes do dia 16 serão inseridos aqui -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Criar/Editar Cliente -->
+<div id="clienteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="clienteModalTitle">Novo Cliente</h3>
+            <button class="btn-close-modal" onclick="fecharModalCliente()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="clienteForm">
+            <input type="hidden" id="clienteId" value="">
+            
+            <div class="form-group">
+                <label for="clienteNome">Nome do Cliente *</label>
+                <input type="text" id="clienteNome" placeholder="Ex: João Silva" required>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label for="clienteGrupo">Grupo</label>
+                    <input type="text" id="clienteGrupo" placeholder="Ex: 1553">
+                </div>
+                
+                <div class="form-group">
+                    <label for="clienteCota">Cota</label>
+                    <input type="text" id="clienteCota" placeholder="Ex: 1920">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="clienteContato">Contato (Celular)</label>
+                <input type="tel" id="clienteContato" placeholder="Ex: (19) 99999-9999">
+            </div>
+            
+            <div class="form-group">
+                <label for="clienteValorPrimeiraCota">Valor da Primeira Cota</label>
+                <input type="text" id="clienteValorPrimeiraCota" placeholder="Ex: 1500.00">
+            </div>
+            
+            <div class="form-group">
+                <label for="clienteDia">Dia de Vencimento *</label>
+                <select id="clienteDia" required>
+                    <option value="08">Dia 08</option>
+                    <option value="16">Dia 16</option>
+                </select>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn-modal cancel" onclick="fecharModalCliente()">Cancelar</button>
+                <button type="submit" class="btn-modal save">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let clientesData = { dia08: [], dia16: [] };
+
+document.addEventListener('DOMContentLoaded', () => {
+    initClientesPage();
+});
+
+async function initClientesPage() {
+    await refreshClientes();
+    
+    // Sincronização automática a cada 30 segundos
+    setInterval(async () => {
+        await sincronizacaoAutomatica();
+        await refreshClientes();
+    }, 30000);
+}
+
+async function refreshClientes() {
+    try {
+        setStatus('loading', 'Carregando clientes...');
+        
+        // Sincroniza automaticamente antes de carregar
+        await sincronizacaoAutomatica();
+        
+        const response = await fetch('/api/clientes');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            clientesData = result.data;
+            renderClientes(clientesData);
+            setStatus('success', `${getTotalClientes()} clientes carregados`);
+        } else {
+            throw new Error(result.error || 'Erro ao carregar clientes');
+        }
+    } catch (error) {
+        console.error('Erro ao carregar clientes:', error);
+        setStatus('error', 'Erro ao carregar clientes');
+    }
+}
+
+function renderClientes(data) {
+    const container08 = document.getElementById('clientesDia08');
+    const container16 = document.getElementById('clientesDia16');
+    
+    const clientes08 = data.dia08 || [];
+    const clientes16 = data.dia16 || [];
+    
+    // Renderiza dia 08
+    if (clientes08.length === 0) {
+        container08.innerHTML = createEmptyState('08');
+    } else {
+        container08.innerHTML = clientes08.map(cliente => createClienteCard(cliente, '08')).join('');
+    }
+    
+    // Renderiza dia 16
+    if (clientes16.length === 0) {
+        container16.innerHTML = createEmptyState('16');
+    } else {
+        container16.innerHTML = clientes16.map(cliente => createClienteCard(cliente, '16')).join('');
+    }
+    
+    // Atualiza badges
+    updateBadges(clientes08.length, clientes16.length);
+}
+
+function createClienteCard(cliente, dia) {
+    const clientId = cliente.client_id || '';
+    const nome = cliente.nome || 'Sem nome';
+    const grupo = cliente.grupo || '';
+    const cota = cliente.cota || '';
+    const cotasTexto = cliente.cotas_texto || '';
+    const contato = cliente.contato || '-';
+    const valorPrimeiraCota = cliente.valor_primeira_cota || '-';
+    const historico = cliente.historico_boletos || [];
+    
+    // Define o que mostrar para Grupo/Cota
+    let grupoText, cotaText, infoGrupoCota;
+    
+    if (grupo && cota) {
+        // Tem grupo e cota específicos
+        grupoText = grupo;
+        cotaText = cota;
+        infoGrupoCota = `Grupo: <strong>${escapeHtml(grupo)}</strong> | Cota: <strong>${escapeHtml(cota)}</strong>`;
+    } else if (cotasTexto) {
+        // Não tem grupo/cota, mas tem texto (ex: "2 cotas")
+        grupoText = '-';
+        cotaText = cotasTexto;
+        infoGrupoCota = `<strong>${escapeHtml(cotasTexto)}</strong>`;
+    } else {
+        // Não tem nada
+        grupoText = '-';
+        cotaText = '-';
+        infoGrupoCota = 'Grupo: <strong>-</strong> | Cota: <strong>-</strong>';
+    }
+    
+    let historicoHtml = '';
+    if (historico.length > 0) {
+        const itens = historico.map((link, idx) => `
+            <div class="historico-item">
+                <i class="fas fa-file-pdf"></i>
+                <a href="${escapeHtml(link)}" target="_blank" rel="noopener">Boleto ${idx + 1}</a>
+            </div>
+        `).join('');
+        
+        historicoHtml = `
+            <div class="historico-boletos">
+                <div class="historico-title">
+                    <i class="fas fa-history"></i> Histórico de Boletos (${historico.length})
+                </div>
+                <div class="historico-list">
+                    ${itens}
+                </div>
+            </div>
+        `;
+    }
+    
+    return `
+        <article class="cliente-card" data-client-id="${escapeHtml(clientId)}" data-nome="${escapeHtml(nome.toLowerCase())}">
+            <div class="cliente-header">
+                <div>
+                    <div class="cliente-nome">${escapeHtml(nome)}</div>
+                    <div class="cliente-info">
+                        <div class="cliente-info-item">
+                            <i class="fas fa-layer-group"></i>
+                            <span>${infoGrupoCota}</span>
+                        </div>
+                        <div class="cliente-info-item">
+                            <i class="fas fa-phone"></i>
+                            <span>${escapeHtml(contato)}</span>
+                        </div>
+                        <div class="cliente-info-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>1ª Cota: <strong>R$ ${escapeHtml(valorPrimeiraCota)}</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            ${historicoHtml}
+            
+            <div class="cliente-actions">
+                <button class="btn-cliente-action relatorio" onclick="enviarRelatorio('${clientId}')" title="Enviar Relatório">
+                    <i class="fab fa-whatsapp"></i>
+                </button>
+                <button class="btn-cliente-action edit" onclick="editarCliente('${clientId}', '${dia}')" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-cliente-action delete" onclick="excluirCliente('${clientId}')" title="Excluir">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </article>
+    `;
+}
+
+function createEmptyState(dia) {
+    return `
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>Nenhum cliente para o dia ${dia}</p>
+            <small>Clique em "Novo Cliente" para adicionar ou sincronize com os boletos existentes</small>
+        </div>
+    `;
+}
+
+function abrirModalCliente(clientId = null, dia = '08') {
+    const modal = document.getElementById('clienteModal');
+    const title = document.getElementById('clienteModalTitle');
+    const form = document.getElementById('clienteForm');
+    
+    form.reset();
+    
+    if (clientId) {
+        title.textContent = 'Editar Cliente';
+        document.getElementById('clienteId').value = clientId;
+        
+        // Busca dados do cliente em AMBOS os dias para garantir
+        let cliente = null;
+        let diaEncontrado = dia;
+        
+        const diaKey08 = 'dia08';
+        const diaKey16 = 'dia16';
+        
+        // Procura primeiro no dia informado
+        const diaKey = dia === '16' ? diaKey16 : diaKey08;
+        cliente = clientesData[diaKey]?.find(c => c.client_id === clientId);
+        
+        // Se não encontrar, procura no outro dia
+        if (!cliente) {
+            const outroDiaKey = dia === '16' ? diaKey08 : diaKey16;
+            cliente = clientesData[outroDiaKey]?.find(c => c.client_id === clientId);
+            if (cliente) {
+                diaEncontrado = dia === '16' ? '08' : '16';
+            }
+        }
+        
+        if (cliente) {
+            document.getElementById('clienteNome').value = cliente.nome || '';
+            document.getElementById('clienteGrupo').value = cliente.grupo || '';
+            document.getElementById('clienteCota').value = cliente.cota || '';
+            document.getElementById('clienteContato').value = cliente.contato || '';
+            document.getElementById('clienteValorPrimeiraCota').value = cliente.valor_primeira_cota || '';
+            document.getElementById('clienteDia').value = diaEncontrado;
+        } else {
+            console.error('Cliente não encontrado:', clientId);
+            document.getElementById('clienteDia').value = dia;
+        }
+    } else {
+        title.textContent = 'Novo Cliente';
+        document.getElementById('clienteId').value = '';
+        document.getElementById('clienteDia').value = dia;
+    }
+    
+    modal.classList.add('active');
+}
+
+function fecharModalCliente() {
+    const modal = document.getElementById('clienteModal');
+    modal.classList.remove('active');
+}
+
+document.getElementById('clienteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const clientId = document.getElementById('clienteId').value;
+    const nome = document.getElementById('clienteNome').value.trim();
+    const grupo = document.getElementById('clienteGrupo').value.trim();
+    const cota = document.getElementById('clienteCota').value.trim();
+    const contato = document.getElementById('clienteContato').value.trim();
+    const valorPrimeiraCota = document.getElementById('clienteValorPrimeiraCota').value.trim();
+    const dia = document.getElementById('clienteDia').value;
+    
+    if (!nome) {
+        alert('Por favor, preencha o nome do cliente');
+        return;
+    }
+    
+    const clienteData = {
+        nome,
+        grupo,
+        cota,
+        contato,
+        valor_primeira_cota: valorPrimeiraCota,
+        dia
+    };
+    
+    await salvarCliente(clientId, clienteData);
+});
+
+async function salvarCliente(clientId, clienteData) {
+    try {
+        // Log de debug
+        console.log('🔧 Salvando cliente:', {
+            clientId: clientId || 'NOVO',
+            nome: clienteData.nome,
+            dia: clienteData.dia,
+            acao: clientId ? 'ATUALIZAR' : 'CRIAR'
+        });
+        
+        setStatus('loading', clientId ? 'Atualizando cliente...' : 'Criando cliente...');
+        
+        const endpoint = clientId ? `/api/clientes/update/${clientId}` : '/api/clientes/create';
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(clienteData)
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Erro ao salvar cliente');
+        }
+        
+        console.log('✅ Cliente salvo com sucesso!');
+        
+        fecharModalCliente();
+        setStatus('success', clientId ? 'Cliente atualizado!' : 'Cliente criado!');
+        await refreshClientes();
+        
+    } catch (error) {
+        console.error('Erro ao salvar cliente:', error);
+        setStatus('error', error.message);
+        alert('Erro: ' + error.message);
+    }
+}
+
+function editarCliente(clientId, dia) {
+    abrirModalCliente(clientId, dia);
+}
+
+async function excluirCliente(clientId) {
+    if (!confirm('Tem certeza que deseja excluir este cliente?')) {
+        return;
+    }
+    
+    try {
+        setStatus('loading', 'Excluindo cliente...');
+        
+        const response = await fetch(`/api/clientes/delete/${clientId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Erro ao excluir cliente');
+        }
+        
+        setStatus('success', 'Cliente excluído!');
+        await refreshClientes();
+        
+    } catch (error) {
+        console.error('Erro ao excluir cliente:', error);
+        setStatus('error', error.message);
+        alert('Erro: ' + error.message);
+    }
+}
+
+// Sincronização automática ao carregar
+async function sincronizacaoAutomatica() {
+    try {
+        const response = await fetch('/api/clientes/sync-from-boletos', {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            console.log('✓ Sincronização automática concluída:', result.message);
+        }
+        
+    } catch (error) {
+        console.error('Erro na sincronização automática:', error);
+    }
+}
+
+async function enviarRelatorio(clientId) {
+    alert('🚧 Funcionalidade em desenvolvimento!\n\nEm breve você poderá enviar relatórios personalizados via WhatsApp para seus clientes.');
+    
+    // TODO: Implementar envio de relatório
+    // - Gerar relatório com dados do cliente
+    // - Incluir histórico de boletos
+    // - Enviar via WhatsApp usando Evolution API
+}
+
+function filterClientes() {
+    const input = document.getElementById('searchInput');
+    if (!input) return;
+    
+    const searchTerm = input.value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.cliente-card');
+    
+    cards.forEach(card => {
+        const nome = (card.dataset.nome || '').toLowerCase();
+        const matches = !searchTerm || nome.includes(searchTerm);
+        
+        card.style.display = matches ? '' : 'none';
+    });
+}
+
+function getTotalClientes() {
+    const total08 = (clientesData.dia08 || []).length;
+    const total16 = (clientesData.dia16 || []).length;
+    return total08 + total16;
+}
+
+function updateBadges(count08, count16) {
+    const badge08 = document.getElementById('badge08');
+    const badge16 = document.getElementById('badge16');
+    
+    if (badge08) badge08.textContent = count08;
+    if (badge16) badge16.textContent = count16;
+}
+
+function setStatus(state, message) {
+    const statusEl = document.getElementById('statusMessage');
+    if (!statusEl) return;
+    
+    const icons = {
+        loading: 'fas fa-spinner fa-spin',
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle'
+    };
+    
+    const classes = {
+        loading: 'status-text',
+        success: 'status-text success',
+        error: 'status-text error'
+    };
+    
+    statusEl.className = classes[state] || 'status-text';
+    statusEl.innerHTML = `<i class="${icons[state]}"></i> <span>${message}</span>`;
+}
+
+function escapeHtml(value = '') {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Fecha modal ao clicar fora
+document.getElementById('clienteModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'clienteModal') {
+        fecharModalCliente();
+    }
+});
+</script>
+
+{% endblock %}
