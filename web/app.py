@@ -1704,20 +1704,28 @@ def api_clientes_update(client_id):
                         cliente['contato'] = contato
                         cliente['valor_primeira_cota'] = valor_primeira_cota
                         
-                        # Atualiza grupos/cotas (novo formato)
-                        grupos_list = [grupo] if grupo else []
-                        cotas_list = [cota] if cota else []
-                        
-                        cliente['grupos'] = grupos_list
-                        cliente['cotas'] = cotas_list
-                        
-                        # Atualiza cotas_texto
-                        if len(cotas_list) == 1 and len(grupos_list) == 1:
-                            cliente['cotas_texto'] = f"{cotas_list[0]} - {grupos_list[0]}"
-                        elif len(cotas_list) > 1:
-                            cliente['cotas_texto'] = f"{len(cotas_list)} cotas"
+                        # ========== PRESERVA GRUPOS/COTAS EXISTENTES ==========
+                        # Só atualiza grupos/cotas se novos valores forem enviados
+                        # Caso contrário, mantém os valores existentes (arrays)
+                        if grupo or cota:
+                            # Se enviou novos valores, atualiza
+                            grupos_list = [grupo] if grupo else []
+                            cotas_list = [cota] if cota else []
+                            
+                            cliente['grupos'] = grupos_list
+                            cliente['cotas'] = cotas_list
+                            
+                            # Atualiza cotas_texto
+                            if len(cotas_list) == 1 and len(grupos_list) == 1:
+                                cliente['cotas_texto'] = f"{cotas_list[0]} - {grupos_list[0]}"
+                            elif len(cotas_list) > 1:
+                                cliente['cotas_texto'] = f"{len(cotas_list)} cotas"
+                            else:
+                                cliente['cotas_texto'] = ''
                         else:
-                            cliente['cotas_texto'] = ''
+                            # Não enviou grupo/cota = PRESERVA dados existentes
+                            print(f"🔒 Preservando grupos/cotas existentes: {len(cliente.get('grupos', []))} grupos, {len(cliente.get('cotas', []))} cotas")
+                            # Não altera cliente['grupos'] nem cliente['cotas']
                         
                         # Remove campos antigos se existirem
                         cliente.pop('grupo', None)
