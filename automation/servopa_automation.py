@@ -200,6 +200,7 @@ def navigate_to_lances(driver, progress_callback=None):
 def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
     """
     Extrai todas as cotas de um grupo específico
+    AGORA TAMBÉM extrai Total Investido e Crédito Atual de cada cota
     
     Args:
         driver: Instância do WebDriver já logado
@@ -254,7 +255,7 @@ def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
         time.sleep(4)  # Aguarda tabela carregar
         
         if progress_callback:
-            progress_callback("📋 Extraindo dados da tabela...")
+            progress_callback("📋 Extraindo dados básicos da tabela...")
         
         # Aguarda tabela aparecer
         table = wait.until(EC.presence_of_element_located(
@@ -263,17 +264,20 @@ def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
         
         # Extrai todas as linhas da tabela
         rows = table.find_elements(By.TAG_NAME, "tr")
+        total_cotas = len(rows)
         
         if progress_callback:
-            progress_callback(f"📊 Encontradas {len(rows)} cotas no grupo {grupo_number}")
+            progress_callback(f"📊 Encontradas {total_cotas} cotas no grupo {grupo_number}")
         
+        # PRIMEIRA PASSAGEM: Coleta apenas dados básicos da tabela
+        cotas_basicas = []
         for idx, row in enumerate(rows, 1):
             try:
-                # Extrai células da linha
                 cells = row.find_elements(By.TAG_NAME, "td")
                 
                 if len(cells) >= 9:
-                    cota_data = {
+                    cota_basica = {
+                        'index': idx - 1,  # Índice para clicar depois
                         'nome': cells[0].text.strip(),
                         'valor': cells[1].text.strip(),
                         'data_compra': cells[2].text.strip(),
@@ -284,19 +288,145 @@ def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
                         'dep_id': cells[7].text.strip(),
                         'status': cells[8].text.strip()
                     }
+                    cotas_basicas.append(cota_basica)
                     
-                    result['cotas'].append(cota_data)
-                    
-                    if progress_callback and idx % 5 == 0:
-                        progress_callback(f"✅ Processadas {idx}/{len(rows)} cotas...")
-                        
             except Exception as e:
                 if progress_callback:
                     progress_callback(f"⚠️ Erro ao extrair linha {idx}: {e}")
                 continue
         
         if progress_callback:
-            progress_callback(f"✅ Extração concluída! Total: {len(result['cotas'])} cotas")
+            progress_callback(f"🔄 Iniciando extração detalhada (Total Investido + Crédito Atual)...")
+        
+        # SEGUNDA PASSAGEM: Para cada cota, acessa o extrato e extrai dados financeiros
+        for idx, cota_basica in enumerate(cotas_basicas, 1):
+            nome = cota_basica['nome']
+            cota_number = cota_basica['cota']
+            
+            try:
+                if progress_callback:
+                    progress_callback(f"  📌 [{idx}/{total_cotas}] {nome} - Cota {cota_number}")
+                
+                # Re-obtém a tabela sempre (garantir que está atualizada)
+                table = wait.until(EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, ".cotas-table table tbody")
+                ))
+                rows = table.find_elements(By.TAG_NAME, "tr")
+                
+                # Procura a linha correta pelo número da cota
+                target_row = None
+                for row in rows:
+                    cells = row.find_elements(By.TAG_NAME, "td")
+                    if len(cells) >= 5:
+                        row_cota = cells[4].text.strip()
+                        if row_cota == cota_number:
+                            target_row = row
+                            break
+                
+                if not target_row:
+                    if progress_callback:
+                        progress_callback(f"      ⚠️  Linha da cota {cota_number} não encontrada, pulando...")
+                    # Adiciona sem dados financeiros
+                    result['cotas'].append(cota_basica)
+                    continue
+                
+                if progress_callback:
+                    progress_callback(f"      ➡️  Clicando na linha para acessar extrato...")
+                
+                # Clica na linha (onclick vai para o extrato)
+                driver.execute_script("arguments[0].scrollIntoView(true);", target_row)
+                time.sleep(0.5)
+                driver.execute_script("arguments[0].click();", target_row)
+                time.sleep(3)  # Aguarda página de extrato carregar
+                
+                # Extrai dados do extrato
+                total_investido = None
+                credito_atual = None
+                
+                try:
+                    # Procura "VALOR TOTAL DAS PARCELAS PAGAS"
+                    parcelas_element = driver.find_element(By.XPATH, 
+                        "//span[contains(text(), 'VALOR TOTAL DAS PARCELAS PAGAS')]/following-sibling::strong")
+                    total_investido = parcelas_element.text.strip()
+                    
+                    if progress_callback:
+                        progress_callback(f"      💰 Total Investido: {total_investido}")
+                except NoSuchElementException:
+                    if progress_callback:
+                        progress_callback(f"      ⚠️  Total Investido não encontrado")
+                
+                try:
+                    # Procura "VALOR ATUAL DO CRÉDITO"
+                    credito_element = driver.find_element(By.XPATH,
+                        "//span[contains(text(), 'VALOR ATUAL DO CRÉDITO')]/following-sibling::strong")
+                    credito_atual = credito_element.text.strip()
+                    
+                    if progress_callback:
+                        progress_callback(f"      💎 Crédito Atual: {credito_atual}")
+                except NoSuchElementException:
+                    if progress_callback:
+                        progress_callback(f"      ⚠️  Crédito Atual não encontrado")
+                
+                # Adiciona os campos extras aos dados da cota
+                cota_completa = cota_basica.copy()
+                cota_completa['total_investido'] = total_investido
+                cota_completa['credito_atual'] = credito_atual
+                
+                # Remove index antes de salvar
+                if 'index' in cota_completa:
+                    del cota_completa['index']
+                
+                result['cotas'].append(cota_completa)
+                
+                # Volta para a tabela
+                if progress_callback:
+                    progress_callback(f"      ↩️  Voltando para a tabela...")
+                
+                driver.get(SERVOPA_PAINEL_URL)
+                time.sleep(2)
+                
+                # Re-preenche grupo e busca novamente
+                grupo_input = wait.until(EC.presence_of_element_located((By.ID, "grupofrm")))
+                grupo_input.clear()
+                time.sleep(0.3)
+                
+                for char in str(grupo_number):
+                    grupo_input.send_keys(char)
+                    time.sleep(0.05)
+                
+                buscar_button = wait.until(EC.element_to_be_clickable((By.ID, "btn_representante_cota")))
+                buscar_button.click()
+                time.sleep(3)
+                
+            except Exception as e:
+                if progress_callback:
+                    progress_callback(f"      ❌ Erro ao processar cota {cota_number}: {e}")
+                
+                # Mesmo com erro, adiciona cota sem dados extras
+                cota_sem_financeiro = cota_basica.copy()
+                if 'index' in cota_sem_financeiro:
+                    del cota_sem_financeiro['index']
+                result['cotas'].append(cota_sem_financeiro)
+                
+                # Tenta voltar para a tabela
+                try:
+                    driver.get(SERVOPA_PAINEL_URL)
+                    time.sleep(2)
+                    
+                    grupo_input = wait.until(EC.presence_of_element_located((By.ID, "grupofrm")))
+                    grupo_input.clear()
+                    for char in str(grupo_number):
+                        grupo_input.send_keys(char)
+                        time.sleep(0.05)
+                    
+                    buscar_button = wait.until(EC.element_to_be_clickable((By.ID, "btn_representante_cota")))
+                    buscar_button.click()
+                    time.sleep(3)
+                except:
+                    pass
+        
+        if progress_callback:
+            progress_callback(f"✅ Extração completa concluída! Total: {len(result['cotas'])} cotas com dados detalhados")
         
         result['success'] = True
         return result
@@ -308,6 +438,9 @@ def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
     except Exception as e:
         if progress_callback:
             progress_callback(f"❌ Erro na extração: {e}")
+        import traceback
+        if progress_callback:
+            progress_callback(f"Detalhes: {traceback.format_exc()}")
         return result
 
 def complete_servopa_automation(driver, grupo_number, progress_callback=None):

@@ -192,3 +192,8 @@ Desktop.ini
 # Backup directories from update script
 .backup_*/
 .last_backup
+
+# Arquivos de dados de clientes (zerados antes de commit)
+clientes_data.json
+cotas_data.json
+calendario_lances.json

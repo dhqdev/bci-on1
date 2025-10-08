@@ -230,10 +230,11 @@
     .cliente-card {
         border: 1px solid var(--border-color);
         border-radius: 12px;
-        padding: 20px;
+        padding: 18px;
         background: var(--bg-secondary);
         transition: all 0.2s ease;
         position: relative;
+        min-height: 100px;
     }
 
     [data-theme="dark"] .cliente-card {
@@ -247,36 +248,86 @@
     }
 
     .cliente-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: start;
-        margin-bottom: 16px;
+        margin-bottom: 0;
+    }
+    
+    .cliente-info-principal {
+        flex: 1;
+        padding-right: 120px;
     }
 
     .cliente-nome {
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
 
-    .cliente-info {
+    .cliente-info-row {
         display: flex;
-        flex-direction: column;
-        gap: 10px;
+        gap: 24px;
+        flex-wrap: wrap;
         font-size: 0.9rem;
         color: var(--text-secondary);
+        margin-bottom: 8px;
     }
 
     .cliente-info-item {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }
 
     .cliente-info-item i {
-        width: 18px;
+        width: 16px;
         color: #667eea;
+        font-size: 0.85rem;
+    }
+    
+    .badge-cotas {
+        background: #667eea;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 4px;
+    }
+    
+    /* Resumo financeiro compacto no card */
+    .resumo-financeiro {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-top: 8px;
+    }
+    
+    .resumo-financeiro.lucro-positivo {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    .resumo-financeiro.lucro-negativo {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .resumo-financeiro i {
+        font-size: 0.9rem;
+    }
+    
+    .lucro-label {
+        font-weight: 600;
+    }
+    
+    .lucro-valor {
+        font-family: 'Courier New', monospace;
     }
 
     .cliente-actions {
@@ -329,6 +380,12 @@
         background: #f56565;
         border-color: #f56565;
     }
+    
+    .btn-cliente-action.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
 
     .historico-boletos {
         margin-top: 16px;
@@ -344,6 +401,97 @@
         display: flex;
         align-items: center;
         gap: 6px;
+    }
+    
+    /* ========== ESTILOS PARA DADOS FINANCEIROS ========== */
+    .dados-financeiros {
+        margin-top: 16px;
+        padding: 16px;
+        background: var(--bg-tertiary);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .financeiro-header {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .financeiro-header i {
+        color: #667eea;
+    }
+    
+    .financeiro-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+    }
+    
+    .financeiro-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .financeiro-item label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .financeiro-item .valor {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        font-family: 'Courier New', monospace;
+    }
+    
+    .financeiro-item .valor.destaque {
+        font-size: 1.15rem;
+    }
+    
+    .financeiro-item.positivo .valor {
+        color: #10b981;
+    }
+    
+    .financeiro-item.negativo .valor {
+        color: #ef4444;
+    }
+    
+    .financeiro-item.readonly {
+        background: var(--bg-secondary);
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .input-credito-inicial {
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 2px solid #667eea;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 1.05rem;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        transition: all 0.2s ease;
+    }
+    
+    .input-credito-inicial:focus {
+        outline: none;
+        border-color: #764ba2;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+    
+    .input-credito-inicial:hover {
+        border-color: #764ba2;
     }
 
     .historico-list {
@@ -417,6 +565,50 @@
         max-height: 90vh;
         overflow-y: auto;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Modal grande para edição com dados financeiros */
+    .modal-content.modal-large {
+        max-width: 1100px;
+    }
+    
+    /* Grid de 2 colunas no modal */
+    .modal-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        margin-bottom: 24px;
+    }
+    
+    @media (max-width: 900px) {
+        .modal-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .modal-content.modal-large {
+            max-width: 600px;
+        }
+    }
+    
+    .modal-col {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 16px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .section-title i {
+        color: #667eea;
     }
 
     .modal-header {
@@ -513,6 +705,129 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
+    
+    /* ========== DADOS FINANCEIROS NO MODAL ========== */
+    #modalDadosFinanceiros {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .modal-financeiro-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .modal-financeiro-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        background: var(--bg-tertiary);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .modal-financeiro-item label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    
+    .modal-financeiro-item .valor {
+        font-size: 1rem;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        color: var(--text-primary);
+    }
+    
+    .modal-financeiro-item.editable input {
+        width: auto;
+        max-width: 150px;
+        padding: 6px 10px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        border: 2px solid #667eea;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        border-radius: 6px;
+    }
+    
+    .modal-financeiro-item.positivo .valor {
+        color: #10b981;
+    }
+    
+    .modal-financeiro-item.negativo .valor {
+        color: #ef4444;
+    }
+    
+    .modal-financeiro-item.destaque {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border: 2px solid rgba(102, 126, 234, 0.3);
+    }
+    
+    /* ========== HISTÓRICO WHATSAPP NO MODAL ========== */
+    #modalHistoricoWhatsApp {
+        max-height: 300px;
+        overflow-y: auto;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .whatsapp-item {
+        padding: 12px;
+        background: var(--bg-tertiary);
+        border-radius: 8px;
+        border-left: 3px solid #25D366;
+        margin-bottom: 10px;
+    }
+    
+    .whatsapp-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .whatsapp-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .whatsapp-data {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #25D366;
+    }
+    
+    .whatsapp-celular {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        font-family: 'Courier New', monospace;
+    }
+    
+    .whatsapp-valores {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    
+    .whatsapp-valores div {
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .whatsapp-valores strong {
+        color: var(--text-primary);
+        font-family: 'Courier New', monospace;
+    }
 </style>
 
 <div class="clientes-page">
@@ -581,7 +896,7 @@
 
 <!-- Modal de Criar/Editar Cliente -->
 <div id="clienteModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content modal-large">
         <div class="modal-header">
             <h3 id="clienteModalTitle">Novo Cliente</h3>
             <button class="btn-close-modal" onclick="fecharModalCliente()">
@@ -591,46 +906,73 @@
         <form id="clienteForm">
             <input type="hidden" id="clienteId" value="">
             
-            <div class="form-group">
-                <label for="clienteNome">Nome do Cliente *</label>
-                <input type="text" id="clienteNome" placeholder="Ex: João Silva" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="clienteEmail">E-mail</label>
-                <input type="email" id="clienteEmail" placeholder="Ex: cliente@exemplo.com">
-            </div>
-            
-            <div class="form-group">
-                <label for="clienteCotasGrupos">Cotas e Grupos</label>
-                <textarea 
-                    id="clienteCotasGrupos" 
-                    placeholder="Ex: 0303 - 1545, 0480 - 1545, 0575 - 1545" 
-                    rows="3" 
-                    style="resize: vertical; font-family: inherit; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text-primary);"
-                    readonly
-                ></textarea>
-                <small style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px; display: block;">
-                    📋 Lista completa de todas as cotas e grupos deste cliente
-                </small>
-            </div>
-            
-            <div class="form-group">
-                <label for="clienteContato">Contato (Celular)</label>
-                <input type="tel" id="clienteContato" placeholder="Ex: (19) 99999-9999">
-            </div>
-            
-            <div class="form-group">
-                <label for="clienteValorPrimeiraCota">Valor da Primeira Cota</label>
-                <input type="text" id="clienteValorPrimeiraCota" placeholder="Ex: 1500.00">
-            </div>
-            
-            <div class="form-group">
-                <label for="clienteDia">Dia de Vencimento *</label>
-                <select id="clienteDia" required>
-                    <option value="08">Dia 08</option>
-                    <option value="16">Dia 16</option>
-                </select>
+            <!-- Grid de 2 colunas para aproveitar espaço -->
+            <div class="modal-grid">
+                <!-- Coluna 1: Dados básicos -->
+                <div class="modal-col">
+                    <h4 class="section-title"><i class="fas fa-user"></i> Dados Básicos</h4>
+                    
+                    <div class="form-group">
+                        <label for="clienteNome">Nome do Cliente *</label>
+                        <input type="text" id="clienteNome" placeholder="Ex: João Silva" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clienteEmail">E-mail</label>
+                        <input type="email" id="clienteEmail" placeholder="Ex: cliente@exemplo.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clienteContato">Contato (Celular)</label>
+                        <input type="tel" id="clienteContato" placeholder="Ex: (19) 99999-9999">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clienteCotasGrupos">Cotas e Grupos</label>
+                        <textarea 
+                            id="clienteCotasGrupos" 
+                            placeholder="Ex: 0303 - 1545, 0480 - 1545" 
+                            rows="2" 
+                            style="resize: vertical; font-family: 'Courier New', monospace; font-size: 0.9rem; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text-primary);"
+                            readonly
+                        ></textarea>
+                        <small style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; display: block;">
+                            📋 Todas as cotas deste cliente
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clienteValorPrimeiraCota">Valor da Primeira Cota</label>
+                        <input type="text" id="clienteValorPrimeiraCota" placeholder="Ex: 1500.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clienteDia">Dia de Vencimento *</label>
+                        <select id="clienteDia" required>
+                            <option value="08">Dia 08</option>
+                            <option value="16">Dia 16</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Coluna 2: Dados financeiros + Histórico WhatsApp -->
+                <div class="modal-col">
+                    <h4 class="section-title"><i class="fas fa-chart-line"></i> Dados Financeiros</h4>
+                    
+                    <div id="modalDadosFinanceiros">
+                        <!-- Será preenchido dinamicamente -->
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Selecione um cliente para ver os dados financeiros</p>
+                    </div>
+                    
+                    <h4 class="section-title" style="margin-top: 24px;">
+                        <i class="fab fa-whatsapp"></i> Histórico de Envios WhatsApp
+                    </h4>
+                    
+                    <div id="modalHistoricoWhatsApp">
+                        <!-- Será preenchido dinamicamente -->
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Nenhum envio registrado</p>
+                    </div>
+                </div>
             </div>
             
             <div class="modal-footer">
@@ -712,7 +1054,38 @@ function createClienteCard(cliente, dia) {
     const email = cliente.email || '-';
     const contato = cliente.contato || '-';
     const valorPrimeiraCota = cliente.valor_primeira_cota || '-';
-    const historico = cliente.historico_boletos || [];
+    
+    // ========== NOVOS CAMPOS FINANCEIROS ==========
+    const creditoInicial = parseFloat(cliente.credito_inicial || 0);
+    const totalInvestidoSoma = parseFloat(cliente.total_investido_soma || 0);
+    const creditoAtualSoma = parseFloat(cliente.credito_atual_soma || 0);
+    
+    // Cálculos
+    const valorizacaoPatrimonial = creditoAtualSoma - creditoInicial;
+    const lucroAtual = valorizacaoPatrimonial - totalInvestidoSoma;
+    
+    // Formatação de valores
+    const formatBRL = (value) => {
+        return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    
+    // Verifica histórico de WhatsApp
+    const historicoWhatsApp = cliente.historico_whatsapp || [];
+    let whatsappDisabled = false;
+    let whatsappInfo = '';
+    
+    if (historicoWhatsApp.length > 0) {
+        const ultimoEnvio = historicoWhatsApp[historicoWhatsApp.length - 1];
+        const dataEnvio = new Date(ultimoEnvio.data_envio);
+        const now = new Date();
+        const diffDays = Math.floor((now - dataEnvio) / (1000 * 60 * 60 * 24));
+        const diasRestantes = 180 - diffDays;
+        
+        if (diasRestantes > 0) {
+            whatsappDisabled = true;
+            whatsappInfo = `Último envio: ${dataEnvio.toLocaleDateString('pt-BR')}. Próximo em ${diasRestantes} dias`;
+        }
+    }
     
     // Suporta novo formato (arrays) e formato antigo (strings)
     let grupos = cliente.grupos || [];
@@ -726,81 +1099,61 @@ function createClienteCard(cliente, dia) {
         cotas = cliente.cota ? [cliente.cota] : [];
     }
     
-    // Define o que mostrar para Grupo/Cota
-    // EM CLIENTES: sempre mostra todas as cotas individualmente
+    // Define o que mostrar para Grupo/Cota - COMPACTO
     let infoGrupoCota;
     
     if (cotas.length > 0 && grupos.length > 0) {
-        // Monta string com todas as cotas e grupos
-        // Ex: "4077 - 1550, 4078 - 1551, 4079 - 1552"
-        const cotasDetalhadas = cotas.map((cota, index) => {
-            const grupo = grupos[index] || grupos[0]; // Usa mesmo grupo se não tiver correspondente
-            return `${escapeHtml(cota)} - ${escapeHtml(grupo)}`;
-        }).join(', ');
-        
-        infoGrupoCota = `<strong>${cotasDetalhadas}</strong>`;
+        // Mostra quantidade de cotas ou primeira cota se apenas uma
+        if (cotas.length === 1) {
+            infoGrupoCota = `${escapeHtml(cotas[0])} - ${escapeHtml(grupos[0])}`;
+        } else {
+            // Mostra primeira cota + contador
+            infoGrupoCota = `${escapeHtml(cotas[0])} - ${escapeHtml(grupos[0])} <span class="badge-cotas">+${cotas.length - 1}</span>`;
+        }
     } else if (cliente.cotas_texto) {
-        // Fallback: usa texto customizado
-        infoGrupoCota = `<strong>${escapeHtml(cliente.cotas_texto)}</strong>`;
+        infoGrupoCota = escapeHtml(cliente.cotas_texto);
     } else {
-        // Não tem nada
-        infoGrupoCota = '<strong>-</strong>';
+        infoGrupoCota = '-';
     }
     
-    let historicoHtml = '';
-    if (historico.length > 0) {
-        const itens = historico.map((link, idx) => `
-            <div class="historico-item">
-                <i class="fas fa-file-pdf"></i>
-                <a href="${escapeHtml(link)}" target="_blank" rel="noopener">Boleto ${idx + 1}</a>
-            </div>
-        `).join('');
-        
-        historicoHtml = `
-            <div class="historico-boletos">
-                <div class="historico-title">
-                    <i class="fas fa-history"></i> Histórico de Boletos (${historico.length})
-                </div>
-                <div class="historico-list">
-                    ${itens}
-                </div>
-            </div>
-        `;
-    }
+    // Resumo financeiro - mostrar apenas lucro atual no card
+    const resumoFinanceiroHtml = lucroAtual !== 0 ? `
+        <div class="resumo-financeiro ${lucroAtual >= 0 ? 'lucro-positivo' : 'lucro-negativo'}">
+            <i class="fas ${lucroAtual >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
+            <span class="lucro-label">Lucro:</span>
+            <span class="lucro-valor">${formatBRL(Math.abs(lucroAtual))}</span>
+        </div>
+    ` : '';
     
     return `
         <article class="cliente-card" data-client-id="${escapeHtml(clientId)}" data-nome="${escapeHtml(nome.toLowerCase())}">
             <div class="cliente-header">
-                <div>
+                <div class="cliente-info-principal">
                     <div class="cliente-nome">${escapeHtml(nome)}</div>
-                    <div class="cliente-info">
+                    <div class="cliente-info-row">
                         <div class="cliente-info-item">
                             <i class="fas fa-layer-group"></i>
                             <span>${infoGrupoCota}</span>
                         </div>
                         <div class="cliente-info-item">
-                            <i class="fas fa-envelope"></i>
-                            <span>${escapeHtml(email)}</span>
-                        </div>
-                        <div class="cliente-info-item">
                             <i class="fas fa-phone"></i>
                             <span>${escapeHtml(contato)}</span>
                         </div>
-                        <div class="cliente-info-item">
-                            <i class="fas fa-money-bill-wave"></i>
-                            <span>1ª Cota: <strong>R$ ${escapeHtml(valorPrimeiraCota)}</strong></span>
-                        </div>
                     </div>
+                    ${resumoFinanceiroHtml}
                 </div>
             </div>
             
-            ${historicoHtml}
-            
             <div class="cliente-actions">
-                <button class="btn-cliente-action relatorio" onclick="enviarRelatorio('${clientId}')" title="Enviar Relatório">
+                <button 
+                    class="btn-cliente-action relatorio ${whatsappDisabled ? 'disabled' : ''}" 
+                    onclick="enviarRelatorio('${clientId}')" 
+                    title="${whatsappDisabled ? whatsappInfo : 'Enviar Relatório via WhatsApp'}"
+                    ${whatsappDisabled ? 'disabled' : ''}
+                >
                     <i class="fab fa-whatsapp"></i>
                 </button>
-                <button class="btn-cliente-action edit" onclick="editarCliente('${clientId}', '${dia}')" title="Editar">
+                <button class="btn-cliente-action edit" onclick="editarCliente('${clientId}', '${dia}')" title="Editar Cliente">
                     <i class="fas fa-edit"></i>
                 </button>
                 <button class="btn-cliente-action delete" onclick="excluirCliente('${clientId}')" title="Excluir">
@@ -878,9 +1231,20 @@ function abrirModalCliente(clientId = null, dia = '08') {
             document.getElementById('clienteContato').value = cliente.contato || '';
             document.getElementById('clienteValorPrimeiraCota').value = cliente.valor_primeira_cota || '';
             document.getElementById('clienteDia').value = diaEncontrado;
+            
+            // ========== PREENCHE DADOS FINANCEIROS ==========
+            preencherDadosFinanceiros(cliente);
+            
+            // ========== PREENCHE HISTÓRICO WHATSAPP ==========
+            preencherHistoricoWhatsApp(cliente);
+            
         } else {
             console.error('Cliente não encontrado:', clientId);
             document.getElementById('clienteDia').value = dia;
+            
+            // Limpa dados financeiros e histórico
+            document.getElementById('modalDadosFinanceiros').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">Cliente não encontrado</p>';
+            document.getElementById('modalHistoricoWhatsApp').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">Nenhum envio registrado</p>';
         }
     } else {
         title.textContent = 'Novo Cliente';
@@ -892,9 +1256,150 @@ function abrirModalCliente(clientId = null, dia = '08') {
         if (cotasGruposTextarea) {
             cotasGruposTextarea.value = '';
         }
+        
+        // Limpa dados financeiros e histórico
+        document.getElementById('modalDadosFinanceiros').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">Novo cliente - dados serão calculados após sincronização</p>';
+        document.getElementById('modalHistoricoWhatsApp').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">Nenhum envio registrado</p>';
     }
     
     modal.classList.add('active');
+}
+
+function preencherDadosFinanceiros(cliente) {
+    const container = document.getElementById('modalDadosFinanceiros');
+    
+    const creditoInicial = parseFloat(cliente.credito_inicial || 0);
+    const totalInvestidoSoma = parseFloat(cliente.total_investido_soma || 0);
+    const creditoAtualSoma = parseFloat(cliente.credito_atual_soma || 0);
+    
+    const valorizacaoPatrimonial = creditoAtualSoma - creditoInicial;
+    const lucroAtual = valorizacaoPatrimonial - totalInvestidoSoma;
+    
+    const formatBRL = (value) => {
+        return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    
+    container.innerHTML = `
+        <div class="modal-financeiro-grid">
+            <div class="modal-financeiro-item editable">
+                <label>Crédito Inicial:</label>
+                <input 
+                    type="text" 
+                    id="inputCreditoInicialModal"
+                    value="${formatBRL(creditoInicial)}"
+                    placeholder="R$ 0,00"
+                    oninput="atualizarCalculosFinanceiros('${cliente.client_id}', ${totalInvestidoSoma}, ${creditoAtualSoma})"
+                    onblur="salvarCreditoInicial('${cliente.client_id}', this.value)"
+                    onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }"
+                />
+            </div>
+            <div class="modal-financeiro-item" id="totalInvestidoItem">
+                <label>Total Investido:</label>
+                <span class="valor">${formatBRL(totalInvestidoSoma)}</span>
+            </div>
+            <div class="modal-financeiro-item" id="creditoAtualItem">
+                <label>Crédito Atual:</label>
+                <span class="valor">${formatBRL(creditoAtualSoma)}</span>
+            </div>
+            <div class="modal-financeiro-item ${valorizacaoPatrimonial >= 0 ? 'positivo' : 'negativo'}" id="valorizacaoItem">
+                <label>Valorização Patrimonial:</label>
+                <span class="valor">${formatBRL(valorizacaoPatrimonial)}</span>
+            </div>
+            <div class="modal-financeiro-item destaque ${lucroAtual >= 0 ? 'positivo' : 'negativo'}" id="lucroItem">
+                <label>💰 Lucro Atual:</label>
+                <span class="valor">${formatBRL(lucroAtual)}</span>
+            </div>
+        </div>
+    `;
+}
+
+function atualizarCalculosFinanceiros(clientId, totalInvestidoSoma, creditoAtualSoma) {
+    const inputCreditoInicial = document.getElementById('inputCreditoInicialModal');
+    if (!inputCreditoInicial) return;
+    
+    // Parse do valor digitado (remove R$, pontos e troca vírgula por ponto)
+    const valorTexto = inputCreditoInicial.value;
+    const valorLimpo = valorTexto.replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
+    const creditoInicial = parseFloat(valorLimpo) || 0;
+    
+    // Recalcula
+    const valorizacaoPatrimonial = creditoAtualSoma - creditoInicial;
+    const lucroAtual = valorizacaoPatrimonial - totalInvestidoSoma;
+    
+    const formatBRL = (value) => {
+        return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    
+    // Atualiza valorização
+    const valorizacaoItem = document.getElementById('valorizacaoItem');
+    if (valorizacaoItem) {
+        valorizacaoItem.className = `modal-financeiro-item ${valorizacaoPatrimonial >= 0 ? 'positivo' : 'negativo'}`;
+        valorizacaoItem.querySelector('.valor').textContent = formatBRL(valorizacaoPatrimonial);
+    }
+    
+    // Atualiza lucro
+    const lucroItem = document.getElementById('lucroItem');
+    if (lucroItem) {
+        lucroItem.className = `modal-financeiro-item destaque ${lucroAtual >= 0 ? 'positivo' : 'negativo'}`;
+        lucroItem.querySelector('.valor').textContent = formatBRL(lucroAtual);
+    }
+}
+
+function preencherHistoricoWhatsApp(cliente) {
+    const container = document.getElementById('modalHistoricoWhatsApp');
+    const historico = cliente.historico_whatsapp || [];
+    
+    if (historico.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">📱 Nenhum envio de WhatsApp registrado ainda</p>';
+        return;
+    }
+    
+    const formatBRL = (value) => {
+        return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    
+    const itensHtml = historico.map((envio, index) => {
+        const dataEnvio = new Date(envio.data_envio);
+        const dataFormatada = dataEnvio.toLocaleDateString('pt-BR') + ' às ' + dataEnvio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        const valores = envio.valores || {};
+        
+        return `
+            <div class="whatsapp-item">
+                <div class="whatsapp-header">
+                    <span class="whatsapp-data">📅 ${dataFormatada}</span>
+                    <span class="whatsapp-celular">📱 ${envio.celular || '-'}</span>
+                </div>
+                <div class="whatsapp-valores">
+                    <div>
+                        <span>Crédito Inicial:</span>
+                        <strong>${formatBRL(valores.credito_inicial || 0)}</strong>
+                    </div>
+                    <div>
+                        <span>Total Investido:</span>
+                        <strong>${formatBRL(valores.total_investido || 0)}</strong>
+                    </div>
+                    <div>
+                        <span>Crédito Atual:</span>
+                        <strong>${formatBRL(valores.credito_atual || 0)}</strong>
+                    </div>
+                    <div>
+                        <span>Lucro:</span>
+                        <strong style="color: ${(valores.lucro_atual || 0) >= 0 ? '#10b981' : '#ef4444'}">
+                            ${formatBRL(valores.lucro_atual || 0)}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).reverse().join(''); // Mais recente primeiro
+    
+    container.innerHTML = `
+        <div style="margin-bottom: 8px; font-size: 0.85rem; color: var(--text-secondary);">
+            <strong>${historico.length}</strong> ${historico.length === 1 ? 'envio registrado' : 'envios registrados'}
+        </div>
+        ${itensHtml}
+    `;
 }
 
 function fecharModalCliente() {
@@ -927,6 +1432,16 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
     };
     
     await salvarCliente(clientId, clienteData);
+});
+
+// Prevenir Enter em inputs do formulário (exceto botão Salvar)
+document.getElementById('clienteForm').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') {
+        e.preventDefault();
+        // Move para o próximo campo ou faz blur
+        e.target.blur();
+        return false;
+    }
 });
 
 async function salvarCliente(clientId, clienteData) {
@@ -1030,12 +1545,59 @@ async function sincronizacaoAutomatica() {
 }
 
 async function enviarRelatorio(clientId) {
-    alert('🚧 Funcionalidade em desenvolvimento!\n\nEm breve você poderá enviar relatórios personalizados via WhatsApp para seus clientes.');
+    if (!confirm('Deseja enviar o relatório financeiro via WhatsApp para este cliente?')) {
+        return;
+    }
     
-    // TODO: Implementar envio de relatório
-    // - Gerar relatório com dados do cliente
-    // - Incluir histórico de boletos
-    // - Enviar via WhatsApp usando Evolution API
+    try {
+        setStatus('loading', 'Enviando relatório via WhatsApp...');
+        
+        const response = await fetch(`/api/clientes/enviar-whatsapp/${clientId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`✅ ${result.message}\n\nValores enviados:\n${Object.entries(result.details.valores).map(([k, v]) => `${k}: ${v}`).join('\n')}`);
+            setStatus('success', 'Relatório enviado com sucesso!');
+            
+            // Recarrega clientes para atualizar histórico
+            await refreshClientes();
+        } else {
+            alert(`❌ Erro ao enviar: ${result.error}`);
+            setStatus('error', `Erro: ${result.error}`);
+        }
+    } catch (error) {
+        console.error('Erro ao enviar relatório:', error);
+        alert(`❌ Erro ao enviar relatório: ${error.message}`);
+        setStatus('error', 'Erro ao enviar relatório');
+    }
+}
+
+async function salvarCreditoInicial(clientId, valorStr) {
+    try {
+        // Remove formatação e converte para float
+        const valor = parseFloat(valorStr.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+        
+        const response = await fetch(`/api/clientes/update-credito-inicial/${clientId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ credito_inicial: valor })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Recarrega clientes para atualizar valores calculados
+            await refreshClientes();
+        } else {
+            alert(`Erro ao salvar: ${result.error}`);
+        }
+    } catch (error) {
+        console.error('Erro ao salvar crédito inicial:', error);
+    }
 }
 
 function filterClientes() {

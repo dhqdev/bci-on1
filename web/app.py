@@ -1971,6 +1971,213 @@ def api_clientes_sync_from_boletos():
         print(f"Erro na sincronização: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/api/clientes/update-credito-inicial/<client_id>', methods=['POST'])
+def api_clientes_update_credito_inicial(client_id):
+    """Atualiza apenas o Crédito Inicial de um cliente"""
+    try:
+        data = request.json
+        credito_inicial = data.get('credito_inicial', 0.0)
+        
+        # Converte para float
+        if isinstance(credito_inicial, str):
+            credito_inicial = float(credito_inicial.replace('R$', '').replace(' ', '').replace('.', '').replace(',', '.'))
+        
+        clientes_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
+        if not os.path.exists(clientes_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo de clientes não encontrado'})
+        
+        with open(clientes_filepath, 'r', encoding='utf-8') as f:
+            clientes_data = json.load(f)
+        
+        # Busca cliente
+        found = False
+        for dia_key in ['dia08', 'dia16']:
+            if dia_key in clientes_data:
+                for cliente in clientes_data[dia_key]:
+                    if cliente.get('client_id') == client_id:
+                        cliente['credito_inicial'] = credito_inicial
+                        cliente['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        found = True
+                        break
+            if found:
+                break
+        
+        if not found:
+            return jsonify({'success': False, 'error': 'Cliente não encontrado'})
+        
+        # Salva
+        with open(clientes_filepath, 'w', encoding='utf-8') as f:
+            json.dump(clientes_data, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({'success': True, 'message': 'Crédito inicial atualizado com sucesso'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/clientes/enviar-whatsapp/<client_id>', methods=['POST'])
+def api_clientes_enviar_whatsapp(client_id):
+    """Envia mensagem personalizada via WhatsApp com os dados financeiros do cliente"""
+    try:
+        from utils.evolution_api import EvolutionAPI
+        import re
+        from datetime import datetime, timedelta
+        
+        # Carrega cliente
+        clientes_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
+        if not os.path.exists(clientes_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo de clientes não encontrado'})
+        
+        with open(clientes_filepath, 'r', encoding='utf-8') as f:
+            clientes_data = json.load(f)
+        
+        # Busca cliente
+        cliente = None
+        dia_key = None
+        for dia in ['dia08', 'dia16']:
+            for c in clientes_data.get(dia, []):
+                if c.get('client_id') == client_id:
+                    cliente = c
+                    dia_key = dia
+                    break
+            if cliente:
+                break
+        
+        if not cliente:
+            return jsonify({'success': False, 'error': 'Cliente não encontrado'})
+        
+        # Verifica histórico de envio (intervalo de 6 meses)
+        historico_whatsapp = cliente.get('historico_whatsapp', [])
+        if historico_whatsapp:
+            ultimo_envio_str = historico_whatsapp[-1].get('data_envio')
+            if ultimo_envio_str:
+                try:
+                    ultimo_envio = datetime.strptime(ultimo_envio_str, '%Y-%m-%d %H:%M:%S')
+                    intervalo_minimo = timedelta(days=180)  # 6 meses
+                    
+                    if datetime.now() - ultimo_envio < intervalo_minimo:
+                        dias_restantes = (intervalo_minimo - (datetime.now() - ultimo_envio)).days
+                        return jsonify({
+                            'success': False,
+                            'error': f'Aguarde mais {dias_restantes} dias para enviar nova mensagem (intervalo mínimo: 6 meses)'
+                        })
+                except:
+                    pass
+        
+        # Extrai e limpa celular
+        contato = cliente.get('contato', '').strip()
+        celular = re.sub(r'\D', '', contato)
+        
+        if not celular or len(celular) < 10:
+            return jsonify({
+                'success': False,
+                'error': 'Cliente não possui número de celular válido. Adicione um celular com pelo menos 10 dígitos.'
+            })
+        
+        # Extrai dados do cliente
+        nome = cliente.get('nome', 'Cliente')
+        credito_inicial = float(cliente.get('credito_inicial', 0.0))
+        total_investido_soma = float(cliente.get('total_investido_soma', 0.0))
+        credito_atual_soma = float(cliente.get('credito_atual_soma', 0.0))
+        
+        # Calcula campos derivados
+        valorizacao_patrimonial = credito_atual_soma - credito_inicial
+        lucro_atual = valorizacao_patrimonial - total_investido_soma
+        
+        # Formata valores para moeda brasileira
+        def format_brl(value):
+            return f"R$ {value:,.2f}".replace(',', '_').replace('.', ',').replace('_', '.')
+        
+        # Monta mensagem personalizada
+        mensagem = f"""Olá *{nome}*! 👋
+
+📊 *Relatório Patrimonial - Sistema OXCASH*
+
+💼 *Crédito Inicial:* {format_brl(credito_inicial)}
+
+💰 *Total Investido:* {format_brl(total_investido_soma)}
+
+💎 *Crédito Atual:* {format_brl(credito_atual_soma)}
+
+📈 *Valorização Patrimonial:* {format_brl(valorizacao_patrimonial)}
+
+{"🎉 *Lucro Atual:* " + format_brl(lucro_atual) if lucro_atual >= 0 else "⚠️ *Déficit Atual:* " + format_brl(abs(lucro_atual))}
+
+_Este é um relatório automático gerado pelo Sistema OXCASH._
+_Próximo envio em 6 meses._"""
+        
+        # Carrega configuração da Evolution API
+        evolution_config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'evolution_config.json')
+        if not os.path.exists(evolution_config_path):
+            return jsonify({'success': False, 'error': 'Configuração da Evolution API não encontrada'})
+        
+        with open(evolution_config_path, 'r', encoding='utf-8') as f:
+            evolution_config = json.load(f)
+        
+        # Cria cliente da Evolution API
+        api_config = evolution_config.get('api', {})
+        base_url = api_config.get('base_url')
+        instance_name = api_config.get('instance_name')
+        api_key = api_config.get('api_key')
+        
+        if not all([base_url, instance_name, api_key]):
+            return jsonify({'success': False, 'error': 'Configuração da Evolution API incompleta'})
+        
+        evolution_api = EvolutionAPI(base_url, instance_name, api_key)
+        
+        # Envia mensagem
+        success, response = evolution_api.send_text_message(celular, mensagem)
+        
+        if not success:
+            return jsonify({
+                'success': False,
+                'error': f"Falha ao enviar mensagem: {response.get('error', 'Erro desconhecido')}",
+                'details': response
+            })
+        
+        # Registra no histórico
+        if 'historico_whatsapp' not in cliente:
+            cliente['historico_whatsapp'] = []
+        
+        cliente['historico_whatsapp'].append({
+            'data_envio': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'mensagem_enviada': mensagem,
+            'celular': celular,
+            'valores': {
+                'credito_inicial': credito_inicial,
+                'total_investido': total_investido_soma,
+                'credito_atual': credito_atual_soma,
+                'valorizacao_patrimonial': valorizacao_patrimonial,
+                'lucro_atual': lucro_atual
+            }
+        })
+        
+        # Salva cliente atualizado
+        with open(clientes_filepath, 'w', encoding='utf-8') as f:
+            json.dump(clientes_data, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({
+            'success': True,
+            'message': f'WhatsApp enviado com sucesso para {nome}!',
+            'details': {
+                'nome': nome,
+                'celular': celular,
+                'data_envio': cliente['historico_whatsapp'][-1]['data_envio'],
+                'valores': {
+                    'credito_inicial': format_brl(credito_inicial),
+                    'total_investido': format_brl(total_investido_soma),
+                    'credito_atual': format_brl(credito_atual_soma),
+                    'valorizacao_patrimonial': format_brl(valorizacao_patrimonial),
+                    'lucro_atual': format_brl(lucro_atual)
+                }
+            }
+        })
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Erro ao enviar WhatsApp: {error_details}")
+        return jsonify({'success': False, 'error': f'Erro ao enviar WhatsApp: {str(e)}'})
+
 @app.route('/api/calendario-lances/get', methods=['GET'])
 def api_calendario_lances_get():
     """Retorna o calendário de lances"""
@@ -2059,11 +2266,12 @@ def api_calendario_lances_save():
 def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
     """
     Sincroniza cotas extraídas para a aba de clientes
+    AGORA TAMBÉM agrega e soma Total Investido e Crédito Atual de todas as cotas do mesmo cliente
     
     Para cada cota extraída:
     1. Verifica se já existe cliente com o mesmo NOME
-    2. Se existe: adiciona grupo/cota ao cliente (se ainda não tiver)
-    3. Se não existe: cria novo cliente
+    2. Se existe: adiciona grupo/cota ao cliente (se ainda não tiver) + SOMA valores
+    3. Se não existe: cria novo cliente com valores iniciais
     
     Args:
         cotas_list: Lista de cotas extraídas do grupo
@@ -2093,13 +2301,31 @@ def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
         
         print(f"\n🔄 Sincronizando {len(cotas_list)} cotas do grupo {grupo} para clientes (Dia {dia_grupo})...")
         
+        # Função auxiliar para converter valor monetário em float
+        def parse_money(value_str):
+            """Converte 'R$ 1.234,56' para float 1234.56"""
+            if not value_str or value_str == 'N/A':
+                return 0.0
+            try:
+                # Remove 'R$', espaços, pontos (milhares) e substitui vírgula por ponto
+                clean = value_str.replace('R$', '').replace(' ', '').replace('.', '').replace(',', '.')
+                return float(clean)
+            except:
+                return 0.0
+        
         for cota_info in cotas_list:
             nome = cota_info.get('nome', '').strip()
             cota = cota_info.get('cota', '').strip()
+            total_investido_str = cota_info.get('total_investido')
+            credito_atual_str = cota_info.get('credito_atual')
             
             if not nome or not cota:
                 stats['skipped'] += 1
                 continue
+            
+            # Converte valores para float
+            total_investido = parse_money(total_investido_str)
+            credito_atual = parse_money(credito_atual_str)
             
             # Busca cliente existente por NOME (case-insensitive)
             cliente_encontrado = None
@@ -2111,7 +2337,7 @@ def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
                     break
             
             if cliente_encontrado:
-                # Cliente já existe - atualizar grupos/cotas
+                # Cliente já existe - atualizar grupos/cotas E SOMAR VALORES
                 grupos_atual = cliente_encontrado.get('grupos', [])
                 cotas_atual = cliente_encontrado.get('cotas', [])
                 
@@ -2137,6 +2363,20 @@ def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
                     
                     cliente_encontrado['grupos'] = grupos_atual
                     cliente_encontrado['cotas'] = cotas_atual
+                    
+                    # ========== SOMA VALORES ==========
+                    # Total Investido
+                    total_investido_cliente = cliente_encontrado.get('total_investido_soma', 0.0)
+                    if isinstance(total_investido_cliente, str):
+                        total_investido_cliente = parse_money(total_investido_cliente)
+                    cliente_encontrado['total_investido_soma'] = total_investido_cliente + total_investido
+                    
+                    # Crédito Atual
+                    credito_atual_cliente = cliente_encontrado.get('credito_atual_soma', 0.0)
+                    if isinstance(credito_atual_cliente, str):
+                        credito_atual_cliente = parse_money(credito_atual_cliente)
+                    cliente_encontrado['credito_atual_soma'] = credito_atual_cliente + credito_atual
+                    
                     cliente_encontrado['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     
                     # Atualiza cotas_texto
@@ -2151,6 +2391,8 @@ def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
                     
                     stats['updated'] += 1
                     print(f"  ↻ Cliente atualizado: {nome} - Agora com {len(cotas_atual)} cota(s)")
+                    print(f"      💰 Total Investido: R$ {cliente_encontrado['total_investido_soma']:.2f}")
+                    print(f"      💎 Crédito Atual: R$ {cliente_encontrado['credito_atual_soma']:.2f}")
                 else:
                     stats['skipped'] += 1
                     print(f"  ⊘ Cliente já possui esta cota: {nome}")
@@ -2167,6 +2409,9 @@ def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
                     'cotas_texto': f"{cota} - {grupo}",
                     'contato': '',
                     'valor_primeira_cota': cota_info.get('valor', '').replace('R$ ', '').replace('.', '').replace(',', '.'),
+                    'total_investido_soma': total_investido,  # ========== NOVO CAMPO ==========
+                    'credito_atual_soma': credito_atual,      # ========== NOVO CAMPO ==========
+                    'credito_inicial': 0.0,  # Será preenchido manualmente pelo usuário
                     'historico_boletos': [],
                     'created_at': timestamp,
                     'updated_at': timestamp
@@ -2175,6 +2420,8 @@ def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
                 clientes_data[dia_key].append(novo_cliente)
                 stats['created'] += 1
                 print(f"  + Cliente criado: {nome}")
+                print(f"      💰 Total Investido: R$ {total_investido:.2f}")
+                print(f"      💎 Crédito Atual: R$ {credito_atual:.2f}")
         
         # Salva clientes atualizados
         with open(clientes_filepath, 'w', encoding='utf-8') as f:
