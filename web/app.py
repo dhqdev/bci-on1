@@ -307,16 +307,29 @@ def api_history(dia):
 def api_credentials():
     """Gerencia credenciais"""
     filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'credentials.json')
+    template_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'credentials.json.template')
     
     if request.method == 'GET':
         try:
-            if os.path.exists(filepath):
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                # Retorna TUDO incluindo senhas (interface web é local/confiável)
-                return jsonify({'success': True, 'data': data})
-            else:
-                return jsonify({'success': True, 'data': {}})
+            # Se não existe o arquivo, cria do template vazio
+            if not os.path.exists(filepath):
+                if os.path.exists(template_path):
+                    with open(template_path, 'r', encoding='utf-8') as template_file:
+                        template_data = json.load(template_file)
+                    with open(filepath, 'w', encoding='utf-8') as f:
+                        json.dump(template_data, f, indent=2, ensure_ascii=False)
+                    # Retorna dados vazios do template
+                    return jsonify({'success': True, 'data': template_data})
+                else:
+                    # Se nem o template existe, retorna estrutura vazia padrão
+                    default_data = {"servopa": {"usuario": "", "senha": ""}}
+                    return jsonify({'success': True, 'data': default_data})
+            
+            # Se existe, carrega e retorna
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            # Retorna TUDO incluindo senhas (interface web é local/confiável)
+            return jsonify({'success': True, 'data': data})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
     
