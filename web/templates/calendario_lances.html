@@ -1,0 +1,585 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Calendário de Lances - OXCASH{% endblock %}
+
+{% block content %}
+<style>
+    .calendario-page {
+        padding-bottom: 48px;
+    }
+
+    .page-header {
+        margin-bottom: 32px;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title i {
+        color: var(--accent);
+    }
+
+    .page-subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        max-width: 700px;
+    }
+
+    .year-selector {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        box-shadow: var(--shadow);
+    }
+
+    .year-selector-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+    }
+
+    .year-buttons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .year-btn {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .year-btn:hover {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+    }
+
+    .year-display {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--accent);
+        min-width: 80px;
+        text-align: center;
+    }
+
+    .calendario-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 24px;
+    }
+
+    .mes-card {
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        padding: 20px;
+        transition: all 0.3s;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .mes-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--accent);
+    }
+
+    [data-theme="dark"] .mes-card {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .mes-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .mes-nome {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        text-transform: capitalize;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mes-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .mes-badge {
+        background: var(--accent);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .mes-badge.empty {
+        background: var(--text-tertiary);
+    }
+
+    .grupos-lista {
+        min-height: 100px;
+        max-height: 200px;
+        overflow-y: auto;
+        margin-bottom: 12px;
+    }
+
+    .grupo-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        padding: 6px 12px;
+        border-radius: 8px;
+        margin: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        transition: all 0.2s;
+    }
+
+    .grupo-tag:hover {
+        background: var(--danger);
+        color: white;
+        border-color: var(--danger);
+    }
+
+    .grupo-tag .remove-btn {
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+    }
+
+    .grupo-tag:hover .remove-btn {
+        opacity: 1;
+    }
+
+    .empty-grupos {
+        text-align: center;
+        color: var(--text-tertiary);
+        font-size: 0.875rem;
+        padding: 40px 20px;
+    }
+
+    .empty-grupos i {
+        font-size: 2rem;
+        margin-bottom: 8px;
+        opacity: 0.5;
+    }
+
+    .add-grupo-area {
+        display: flex;
+        gap: 8px;
+    }
+
+    .add-grupo-input {
+        flex: 1;
+        padding: 10px 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .add-grupo-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: var(--bg-primary);
+    }
+
+    .add-grupo-btn {
+        padding: 10px 16px;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .add-grupo-btn:hover {
+        background: var(--accent-hover);
+        transform: scale(1.05);
+    }
+
+    .status-bar {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: var(--shadow-lg);
+        display: none;
+        align-items: center;
+        gap: 12px;
+        z-index: 1000;
+        animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .status-bar.show {
+        display: flex;
+    }
+
+    .status-bar.success {
+        border-color: var(--success);
+    }
+
+    .status-bar.error {
+        border-color: var(--danger);
+    }
+
+    .status-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+    }
+
+    .status-bar.success .status-icon {
+        background: var(--success);
+        color: white;
+    }
+
+    .status-bar.error .status-icon {
+        background: var(--danger);
+        color: white;
+    }
+
+    .status-message {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    /* Scrollbar personalizada */
+    .grupos-lista::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .grupos-lista::-webkit-scrollbar-track {
+        background: var(--bg-tertiary);
+        border-radius: 3px;
+    }
+
+    .grupos-lista::-webkit-scrollbar-thumb {
+        background: var(--accent);
+        border-radius: 3px;
+    }
+
+    .grupos-lista::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-hover);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .calendario-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .year-selector {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+
+<div class="calendario-page">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-calendar-alt"></i>
+            Calendário de Lances
+        </h1>
+        <p class="page-subtitle">
+            Configure os grupos que farão lances em cada mês do ano. Você pode adicionar múltiplos grupos por mês.
+        </p>
+    </div>
+
+    <!-- Seletor de Ano -->
+    <div class="year-selector">
+        <span class="year-selector-label">
+            <i class="fas fa-calendar"></i> Ano:
+        </span>
+        <div class="year-buttons">
+            <button class="year-btn" onclick="mudarAno(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="year-display" id="currentYear">2025</div>
+            <button class="year-btn" onclick="mudarAno(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Grid de Meses -->
+    <div class="calendario-grid" id="calendarioGrid">
+        <!-- Preenchido via JavaScript -->
+    </div>
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar" id="statusBar">
+    <div class="status-icon">
+        <i class="fas fa-check"></i>
+    </div>
+    <span class="status-message" id="statusMessage">Salvo com sucesso!</span>
+</div>
+
+<script>
+const mesesNomes = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
+const mesesChaves = [
+    'janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho',
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+];
+
+let currentYear = 2025;
+let calendarioData = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+    carregarCalendario();
+});
+
+async function carregarCalendario() {
+    try {
+        const response = await fetch('/api/calendario-lances/get');
+        const data = await response.json();
+        
+        if (data.success && data.calendario) {
+            calendarioData = data.calendario;
+            currentYear = parseInt(data.ano) || 2025;
+        } else {
+            // Inicializa calendário vazio
+            inicializarCalendarioVazio();
+        }
+        
+        document.getElementById('currentYear').textContent = currentYear;
+        renderizarCalendario();
+        
+    } catch (error) {
+        console.error('Erro ao carregar calendário:', error);
+        inicializarCalendarioVazio();
+        renderizarCalendario();
+    }
+}
+
+function inicializarCalendarioVazio() {
+    calendarioData = {};
+    mesesChaves.forEach((mesChave, index) => {
+        calendarioData[mesChave] = {
+            mes: index + 1,
+            grupos: []
+        };
+    });
+}
+
+function renderizarCalendario() {
+    const grid = document.getElementById('calendarioGrid');
+    grid.innerHTML = '';
+    
+    mesesChaves.forEach((mesChave, index) => {
+        const mesData = calendarioData[mesChave] || { mes: index + 1, grupos: [] };
+        const mesNome = mesesNomes[index];
+        const grupos = mesData.grupos || [];
+        
+        const card = document.createElement('div');
+        card.className = 'mes-card';
+        card.innerHTML = `
+            <div class="mes-header">
+                <div class="mes-nome">
+                    <div class="mes-icon">${String(index + 1).padStart(2, '0')}</div>
+                    ${mesNome}
+                </div>
+                <span class="mes-badge ${grupos.length === 0 ? 'empty' : ''}">
+                    ${grupos.length} ${grupos.length === 1 ? 'grupo' : 'grupos'}
+                </span>
+            </div>
+            
+            <div class="grupos-lista" id="grupos-${mesChave}">
+                ${grupos.length === 0 
+                    ? '<div class="empty-grupos"><i class="fas fa-inbox"></i><br>Nenhum grupo configurado</div>'
+                    : grupos.map(grupo => `
+                        <div class="grupo-tag">
+                            <i class="fas fa-layer-group"></i>
+                            Grupo ${grupo}
+                            <span class="remove-btn" onclick="removerGrupo('${mesChave}', '${grupo}')">
+                                <i class="fas fa-times"></i>
+                            </span>
+                        </div>
+                    `).join('')
+                }
+            </div>
+            
+            <div class="add-grupo-area">
+                <input 
+                    type="text" 
+                    class="add-grupo-input" 
+                    placeholder="Ex: 1550" 
+                    id="input-${mesChave}"
+                    onkeypress="if(event.key === 'Enter') adicionarGrupo('${mesChave}')"
+                >
+                <button class="add-grupo-btn" onclick="adicionarGrupo('${mesChave}')">
+                    <i class="fas fa-plus"></i>
+                    Adicionar
+                </button>
+            </div>
+        `;
+        
+        grid.appendChild(card);
+    });
+}
+
+function adicionarGrupo(mesChave) {
+    const input = document.getElementById(`input-${mesChave}`);
+    const grupo = input.value.trim();
+    
+    if (!grupo) {
+        mostrarStatus('Digite o número do grupo', 'error');
+        return;
+    }
+    
+    if (!calendarioData[mesChave]) {
+        calendarioData[mesChave] = { mes: mesesChaves.indexOf(mesChave) + 1, grupos: [] };
+    }
+    
+    if (!calendarioData[mesChave].grupos) {
+        calendarioData[mesChave].grupos = [];
+    }
+    
+    // Verifica se o grupo já existe
+    if (calendarioData[mesChave].grupos.includes(grupo)) {
+        mostrarStatus('Grupo já adicionado neste mês', 'error');
+        return;
+    }
+    
+    calendarioData[mesChave].grupos.push(grupo);
+    input.value = '';
+    
+    salvarCalendario();
+}
+
+function removerGrupo(mesChave, grupo) {
+    if (!calendarioData[mesChave] || !calendarioData[mesChave].grupos) return;
+    
+    calendarioData[mesChave].grupos = calendarioData[mesChave].grupos.filter(g => g !== grupo);
+    
+    salvarCalendario();
+}
+
+async function salvarCalendario() {
+    try {
+        const response = await fetch('/api/calendario-lances/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ano: currentYear,
+                calendario: calendarioData
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarStatus('Calendário salvo com sucesso!', 'success');
+            renderizarCalendario();
+        } else {
+            throw new Error(result.error || 'Erro ao salvar');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao salvar calendário:', error);
+        mostrarStatus('Erro ao salvar: ' + error.message, 'error');
+    }
+}
+
+function mudarAno(delta) {
+    currentYear += delta;
+    document.getElementById('currentYear').textContent = currentYear;
+    carregarCalendario();
+}
+
+function mostrarStatus(mensagem, tipo = 'success') {
+    const statusBar = document.getElementById('statusBar');
+    const statusMessage = document.getElementById('statusMessage');
+    const statusIcon = statusBar.querySelector('.status-icon i');
+    
+    statusMessage.textContent = mensagem;
+    statusBar.className = 'status-bar show ' + tipo;
+    
+    if (tipo === 'success') {
+        statusIcon.className = 'fas fa-check';
+    } else {
+        statusIcon.className = 'fas fa-exclamation-triangle';
+    }
+    
+    setTimeout(() => {
+        statusBar.classList.remove('show');
+    }, 3000);
+}
+</script>
+
+{% endblock %}

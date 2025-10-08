@@ -896,25 +896,49 @@
     <p>Extraia e visualize todas as cotas de um grupo do consórcio Servopa</p>
 </div>
 
-<!-- Seção de Importação -->
-<div class="import-section">
+<!-- ========== CALENDÁRIO DE MESES - IMPORTAÇÃO INTEGRADA ========== -->
+<div class="calendario-mes-section" style="background: var(--bg-primary); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border-color); box-shadow: var(--shadow);">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <h5 class="mb-0" style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">
+            <i class="fas fa-calendar-alt me-2" style="color: var(--accent);"></i>
+            Calendário de Importação
+        </h5>
+        <div class="d-flex gap-2 align-items-center">
+            <button class="btn btn-sm" onclick="mudarAnoCalendario(-1)" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px;">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span id="anoCalendario" style="font-size: 1rem; font-weight: 700; color: var(--accent); min-width: 50px; text-align: center;">2025</span>
+            <button class="btn btn-sm" onclick="mudarAnoCalendario(1)" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px;">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Grid de Meses -->
+    <div id="calendarioMesesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-top: 12px;">
+        <!-- Preenchido via JavaScript -->
+    </div>
+</div>
+
+<!-- Seção de Importação Individual (Opcional) -->
+<div class="import-section" style="border-top: 2px dashed var(--border-color);">
     <div class="d-flex align-items-center justify-content-between mb-3">
         <div>
-            <h5 class="mb-1" style="color: var(--text-primary); font-weight: 600;">
-                <i class="fas fa-file-import me-2" style="color: var(--accent);"></i>
-                Gerenciar Grupos
+            <h5 class="mb-1" style="color: var(--text-secondary); font-weight: 600; font-size: 0.95rem;">
+                <i class="fas fa-file-import me-2" style="color: var(--text-tertiary);"></i>
+                Importação Individual
             </h5>
-            <p class="mb-0 text-muted" style="font-size: 13px;">
-                Clique nos botões abaixo para importar ou atualizar grupos
+            <p class="mb-0 text-muted" style="font-size: 12px;">
+                Importe ou atualize um único grupo específico
             </p>
         </div>
         <div class="d-flex gap-2">
-            <button class="import-btn" id="btnAtualizarGrupo" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                <i class="fas fa-sync-alt"></i>
+            <button class="btn btn-outline-success btn-sm" id="btnAtualizarGrupo" style="border-radius: 8px; font-size: 0.85rem;">
+                <i class="fas fa-sync-alt me-1"></i>
                 Atualizar Grupo
             </button>
-            <button class="import-btn" id="btnImportarGrupo">
-                <i class="fas fa-plus"></i>
+            <button class="btn btn-outline-primary btn-sm" id="btnImportarGrupo" style="border-radius: 8px; font-size: 0.85rem;">
+                <i class="fas fa-plus me-1"></i>
                 Importar Grupo
             </button>
         </div>
@@ -1088,6 +1112,52 @@
                 <button type="button" class="btn btn-danger" id="btnConfirmarDelete">
                     <i class="fas fa-trash me-2"></i>
                     Sim, Deletar Grupo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Seleção de Dia -->
+<div class="modal fade" id="modalSelecionarDia" tabindex="-1" aria-labelledby="modalSelecionarDiaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: white; border-radius: 16px 16px 0 0; padding: 20px;">
+                <h5 class="modal-title w-100 text-center" id="modalSelecionarDiaLabel" style="font-weight: 700;">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Selecione o Dia
+                </h5>
+            </div>
+            <div class="modal-body text-center" style="padding: 30px 20px;">
+                <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.95rem;">
+                    Grupo <strong id="grupoSelecionadoDia" style="color: var(--accent);"></strong>
+                </p>
+                <p style="color: var(--text-tertiary); margin-bottom: 25px; font-size: 0.85rem;">
+                    Em qual dia este grupo realiza a assembleia?
+                </p>
+                
+                <div class="d-flex gap-3 justify-content-center">
+                    <!-- Botão Dia 8 -->
+                    <button type="button" class="btn-dia-select" onclick="confirmarDiaSelecionado(8)" style="flex: 1; max-width: 140px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 12px; padding: 20px 15px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); cursor: pointer;" onmouseenter="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(59, 130, 246, 0.4)';" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.3)';">
+                        <div style="font-size: 2rem; margin-bottom: 8px;">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 4px;">DIA 8</div>
+                        <div style="font-size: 0.75rem; opacity: 0.9;">Primeira quinzena</div>
+                    </button>
+                    
+                    <!-- Botão Dia 16 -->
+                    <button type="button" class="btn-dia-select" onclick="confirmarDiaSelecionado(16)" style="flex: 1; max-width: 140px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; border-radius: 12px; padding: 20px 15px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); cursor: pointer;" onmouseenter="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(139, 92, 246, 0.4)';" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(139, 92, 246, 0.3)';">
+                        <div style="font-size: 2rem; margin-bottom: 8px;">
+                            <i class="fas fa-calendar-week"></i>
+                        </div>
+                        <div style="font-size: 1.3rem; font-weight: 700; margin-bottom: 4px;">DIA 16</div>
+                        <div style="font-size: 0.75rem; opacity: 0.9;">Segunda quinzena</div>
+                    </button>
+                </div>
+                
+                <button type="button" class="btn btn-link mt-3" data-bs-dismiss="modal" style="color: var(--text-tertiary); text-decoration: none; font-size: 0.85rem;">
+                    <i class="fas fa-times me-1"></i>Cancelar
                 </button>
             </div>
         </div>
@@ -2184,6 +2254,597 @@
     });
     
     // ========== FIM FUNÇÕES DE AUTOMAÇÃO ==========
+    
+    // ========== CALENDÁRIO DE MESES ==========
+    const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const mesesChaves = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    let calendarioAno = 2025;
+    let calendarioData = {};
+    
+    async function carregarCalendarioMeses() {
+        try {
+            const response = await fetch('/api/calendario-lances/get');
+            const data = await response.json();
+            
+            if (data.success && data.calendario) {
+                calendarioData = data.calendario;
+                calendarioAno = parseInt(data.ano) || 2025;
+            } else {
+                inicializarCalendarioVazio();
+            }
+            
+            const anoEl = document.getElementById('anoCalendario');
+            if (anoEl) {
+                anoEl.textContent = calendarioAno;
+            }
+            renderizarCalendarioMeses();
+            
+        } catch (error) {
+            console.error('Erro ao carregar calendário:', error);
+            inicializarCalendarioVazio();
+            renderizarCalendarioMeses();
+        }
+    }
+    
+    function inicializarCalendarioVazio() {
+        calendarioData = {};
+        mesesChaves.forEach((mesChave, index) => {
+            calendarioData[mesChave] = {
+                mes: index + 1,
+                grupos: []
+            };
+        });
+    }
+    
+    function renderizarCalendarioMeses() {
+        console.log('🎨 renderizarCalendarioMeses chamada');
+        
+        const grid = document.getElementById('calendarioMesesGrid');
+        if (!grid) {
+            console.error('❌ Elemento calendarioMesesGrid não encontrado!');
+            return;
+        }
+        
+        console.log('📊 Dados do calendário:', calendarioData);
+        console.log('📅 Ano atual:', calendarioAno);
+        
+        grid.innerHTML = '';
+        
+        mesesChaves.forEach((mesChave, index) => {
+            const mesData = calendarioData[mesChave] || { mes: index + 1, grupos: [] };
+            const mesNome = mesesNomes[index];
+            const grupos = mesData.grupos || [];
+            
+            const card = document.createElement('div');
+            card.style.cssText = 'background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 10px; padding: 12px; transition: all 0.2s;';
+            card.onmouseenter = function() {
+                this.style.borderColor = 'var(--accent)';
+            };
+            card.onmouseleave = function() {
+                this.style.borderColor = 'var(--border-color)';
+            };
+            
+            card.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 700;">
+                            ${String(index + 1).padStart(2, '0')}
+                        </div>
+                        <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">${mesNome}</span>
+                    </div>
+                    <span style="background: ${grupos.length > 0 ? 'linear-gradient(135deg, #10b981, #059669)' : 'var(--text-tertiary)'}; color: white; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700;">
+                        ${grupos.length}
+                    </span>
+                </div>
+                
+                <div style="min-height: 60px; max-height: 90px; overflow-y: auto; margin-bottom: 10px; background: var(--bg-tertiary); border-radius: 6px; padding: 6px;">
+                    ${grupos.length === 0 
+                        ? '<div style="text-align: center; color: var(--text-tertiary); font-size: 0.75rem; padding: 18px 6px;"><i class="fas fa-calendar-times" style="font-size: 1.2rem; margin-bottom: 4px; opacity: 0.4;"></i><br>Vazio</div>'
+                        : grupos.map(grupoData => {
+                            // Suporte a formato antigo (string) e novo (objeto)
+                            const grupoNum = typeof grupoData === 'string' ? grupoData : grupoData.numero;
+                            const grupoDia = typeof grupoData === 'string' ? 8 : (grupoData.dia || 8);
+                            const diaColor = grupoDia === 8 ? '#3b82f6' : '#8b5cf6';
+                            const diaIcon = grupoDia === 8 ? 'calendar-day' : 'calendar-week';
+                            
+                            return `
+                            <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--bg-primary); border: 2px solid ${diaColor}; padding: 4px 10px; border-radius: 6px; margin: 3px; font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">
+                                <i class="fas fa-layer-group" style="font-size: 0.7rem; color: ${diaColor};"></i>
+                                <span>${grupoNum}</span>
+                                <span style="display: inline-flex; align-items: center; gap: 3px; background: ${diaColor}; color: white; padding: 2px 5px; border-radius: 4px; font-size: 0.65rem;">
+                                    <i class="fas fa-${diaIcon}" style="font-size: 0.6rem;"></i>
+                                    D${grupoDia}
+                                </span>
+                                <span onclick="removerGrupoMes('${mesChave}', '${grupoNum}')" style="cursor: pointer; opacity: 0.7; margin-left: 2px; transition: all 0.2s;" title="Remover grupo" onmouseenter="this.style.opacity='1'; this.style.color='#ef4444';" onmouseleave="this.style.opacity='0.7'; this.style.color='';">
+                                    <i class="fas fa-times-circle" style="font-size: 0.75rem;"></i>
+                                </span>
+                            </div>
+                        `}).join('')
+                    }
+                </div>
+                
+                <div style="display: flex; gap: 6px; margin-bottom: ${grupos.length > 0 ? '10px' : '0'};">
+                    <input 
+                        type="text" 
+                        placeholder="Ex: 1550" 
+                        id="input-${mesChave}"
+                        onkeypress="if(event.key === 'Enter') adicionarGrupoMes('${mesChave}')"
+                        style="flex: 1; padding: 8px 10px; border: 2px solid var(--border-color); border-radius: 6px; background: var(--bg-tertiary); color: var(--text-primary); font-size: 0.8rem;"
+                        onfocus="this.style.borderColor='var(--accent)';"
+                        onblur="this.style.borderColor='var(--border-color)';"
+                    >
+                    <button onclick="adicionarGrupoMes('${mesChave}')" style="padding: 8px 12px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                
+                ${grupos.length > 0 ? `
+                    <button onclick="importarMesCompleto('${mesChave}')" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);">
+                        <i class="fas fa-file-import me-2"></i>Importar Mês (${grupos.length})
+                    </button>
+                ` : ''}
+            `;
+            
+            grid.appendChild(card);
+        });
+    }
+    
+    window.adicionarGrupoMes = async function(mesChave) {
+        const input = document.getElementById(`input-${mesChave}`);
+        const grupo = input.value.trim();
+        
+        if (!grupo) {
+            showToast('error', 'Digite o número do grupo');
+            return;
+        }
+        
+        // Armazena o contexto para usar no callback
+        window.contextGrupoAtual = { mesChave, grupo, input };
+        
+        // Exibe o modal de seleção de dia
+        const grupoSelecionadoEl = document.getElementById('grupoSelecionadoDia');
+        const modalElement = document.getElementById('modalSelecionarDia');
+        
+        if (!grupoSelecionadoEl) {
+            console.error('❌ Elemento grupoSelecionadoDia não encontrado no DOM');
+            showToast('error', 'Erro: Modal não está carregado. Recarregue a página.');
+            return;
+        }
+        
+        if (!modalElement) {
+            console.error('❌ Modal modalSelecionarDia não encontrado no DOM');
+            showToast('error', 'Erro: Modal não encontrado. Recarregue a página.');
+            return;
+        }
+        
+        grupoSelecionadoEl.textContent = grupo;
+        const modalDia = new bootstrap.Modal(modalElement);
+        modalDia.show();
+    };
+    
+    // Função chamada quando o usuário confirma o dia
+    window.confirmarDiaSelecionado = async function(dia) {
+        console.log('🎯 confirmarDiaSelecionado chamada com dia:', dia);
+        console.log('📦 Contexto atual:', window.contextGrupoAtual);
+        
+        if (!window.contextGrupoAtual) {
+            console.error('❌ contextGrupoAtual não existe!');
+            showToast('error', 'Erro: Contexto perdido. Tente novamente.');
+            return;
+        }
+        
+        const { mesChave, grupo, input } = window.contextGrupoAtual;
+        
+        console.log('📝 Dados extraídos:', { mesChave, grupo, input });
+        
+        // Fecha o modal
+        try {
+            const modalElement = document.getElementById('modalSelecionarDia');
+            const modalDia = bootstrap.Modal.getInstance(modalElement);
+            if (modalDia) {
+                modalDia.hide();
+                console.log('✅ Modal fechado');
+            }
+        } catch (e) {
+            console.warn('⚠️ Erro ao fechar modal:', e);
+        }
+        
+        if (!calendarioData[mesChave]) {
+            console.log(`📅 Criando entrada para ${mesChave}`);
+            calendarioData[mesChave] = { mes: mesesChaves.indexOf(mesChave) + 1, grupos: [] };
+        }
+        
+        if (!calendarioData[mesChave].grupos) {
+            console.log(`📋 Criando array de grupos para ${mesChave}`);
+            calendarioData[mesChave].grupos = [];
+        }
+        
+        // Verifica se já existe (grupo pode estar em dia diferente)
+        const jaExiste = calendarioData[mesChave].grupos.find(g => {
+            const num = typeof g === 'string' ? g : g.numero;
+            return num === grupo;
+        });
+        
+        if (jaExiste) {
+            console.warn('⚠️ Grupo já existe:', jaExiste);
+            showToast('error', 'Grupo já adicionado neste mês');
+            return;
+        }
+        
+        // Adiciona grupo com dia
+        const novoGrupo = {
+            numero: grupo,
+            dia: dia
+        };
+        
+        console.log('➕ Adicionando grupo:', novoGrupo);
+        calendarioData[mesChave].grupos.push(novoGrupo);
+        
+        console.log('📊 Calendário atualizado:', calendarioData[mesChave]);
+        
+        input.value = '';
+        
+        try {
+            await salvarCalendarioMeses();
+            showToast('success', `✅ Grupo ${grupo} adicionado para DIA ${dia}`, 3000);
+        } catch (error) {
+            console.error('❌ Erro ao salvar:', error);
+            showToast('error', `Erro ao salvar: ${error.message}`);
+            
+            // Reverte mudança
+            calendarioData[mesChave].grupos = calendarioData[mesChave].grupos.filter(g => g.numero !== grupo);
+        }
+    };
+    
+    window.removerGrupoMes = async function(mesChave, grupoNum) {
+        if (!calendarioData[mesChave] || !calendarioData[mesChave].grupos) return;
+        
+        calendarioData[mesChave].grupos = calendarioData[mesChave].grupos.filter(g => {
+            const num = typeof g === 'string' ? g : g.numero;
+            return num !== grupoNum;
+        });
+        
+        await salvarCalendarioMeses();
+    };
+    
+    async function salvarCalendarioMeses() {
+        try {
+            console.log('💾 Salvando calendário...', { ano: calendarioAno, grupos: Object.keys(calendarioData).length });
+            
+            const response = await fetch('/api/calendario-lances/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ano: calendarioAno,
+                    calendario: calendarioData
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log('✅ Calendário salvo com sucesso!');
+                renderizarCalendarioMeses();
+            } else {
+                throw new Error(result.error || 'Erro ao salvar');
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro ao salvar calendário:', error);
+            showToast('error', 'Erro ao salvar: ' + error.message);
+        }
+    }
+    
+    window.mudarAnoCalendario = function(delta) {
+        calendarioAno += delta;
+        const anoEl = document.getElementById('anoCalendario');
+        if (anoEl) {
+            anoEl.textContent = calendarioAno;
+        }
+        carregarCalendarioMeses();
+    };
+    
+    // Função principal de importação do mês completo
+    window.importarMesCompleto = async function(mesChave) {
+        const mesData = calendarioData[mesChave];
+        if (!mesData || !mesData.grupos || mesData.grupos.length === 0) {
+            showToast('error', 'Nenhum grupo configurado para este mês');
+            return;
+        }
+        
+        const mesNome = mesesNomes[mesesChaves.indexOf(mesChave)];
+        const totalGrupos = mesData.grupos.length;
+        
+        // Prepara lista de grupos para exibir
+        const listaGrupos = mesData.grupos.map(g => {
+            const num = typeof g === 'string' ? g : g.numero;
+            const dia = typeof g === 'string' ? 8 : (g.dia || 8);
+            return `${num} (Dia ${dia})`;
+        }).join(', ');
+        
+        // Confirmação
+        const confirmMsg = `📅 Importar ${mesNome}?\n\n` +
+                          `Total de grupos: ${totalGrupos}\n` +
+                          `Grupos: ${listaGrupos}\n\n` +
+                          `Isso irá importar todas as cotas de todos os grupos deste mês.`;
+        
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        
+        // ========== ABRE MODAL DE PROGRESSO ==========
+        if (!automationModal) {
+            automationModal = new bootstrap.Modal(document.getElementById('modalAutomacao'));
+        }
+        
+        // Configura título do modal
+        document.getElementById('automacaoGrupoNumero').textContent = mesNome;
+        document.querySelector('#modalAutomacaoLabel i').className = 'fas fa-calendar-alt me-2';
+        document.querySelector('#modalAutomacaoLabel').innerHTML = `
+            <i class="fas fa-calendar-alt me-2"></i>
+            Importação do Mês - ${mesNome}
+        `;
+        
+        // Reseta estatísticas
+        document.getElementById('statTotal').textContent = totalGrupos;
+        document.getElementById('statSuccess').textContent = '0';
+        document.getElementById('statFailed').textContent = '0';
+        
+        // Limpa log
+        const logContainer = document.getElementById('automationLog');
+        logContainer.innerHTML = '';
+        
+        // Função para adicionar log no modal
+        function addLog(message, type = 'info') {
+            const logItem = document.createElement('div');
+            logItem.className = `automation-log-item ${type}`;
+            logItem.textContent = message;
+            logContainer.appendChild(logItem);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // Mostra modal
+        automationModal.show();
+        
+        addLog(`🚀 Iniciando importação de ${mesNome}...`, 'info');
+        addLog(`📊 Total de grupos a importar: ${totalGrupos}`, 'info');
+        
+        let sucessos = 0;
+        let erros = 0;
+        
+        // ========== LOOP DE IMPORTAÇÃO ==========
+        for (let i = 0; i < mesData.grupos.length; i++) {
+            const grupoData = mesData.grupos[i];
+            const grupoNum = typeof grupoData === 'string' ? grupoData : grupoData.numero;
+            const grupoDia = typeof grupoData === 'string' ? 8 : (grupoData.dia || 8);
+            const progresso = `(${i + 1}/${totalGrupos})`;
+            
+            try {
+                addLog(`📥 ${progresso} Importando grupo ${grupoNum} (Dia ${grupoDia})...`, 'info');
+                
+                // Chama a API de extração (rota correta)
+                const response = await fetch(`/api/cotas/extract/${grupoNum}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        dia: grupoDia
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    sucessos++;
+                    const qtdCotas = result.total_cotas || result.sync_stats?.total_cotas || 0;
+                    addLog(`✅ ${progresso} Grupo ${grupoNum} importado! (${qtdCotas} cotas)`, 'success');
+                    
+                    // Atualiza contador de sucesso
+                    document.getElementById('statSuccess').textContent = sucessos;
+                    
+                    // Log de sincronização
+                    if (result.sync_stats) {
+                        const stats = result.sync_stats;
+                        addLog(`   └─ Clientes: ${stats.created || 0} criados, ${stats.updated || 0} atualizados`, 'info');
+                        addLog(`   └─ Boletos: ${stats.boletos_created || 0} criados, ${stats.boletos_updated || 0} atualizados`, 'info');
+                    }
+                } else {
+                    erros++;
+                    addLog(`❌ ${progresso} Erro ao importar grupo ${grupoNum}: ${result.error}`, 'error');
+                    document.getElementById('statFailed').textContent = erros;
+                }
+                
+                // Delay entre importações para não sobrecarregar
+                if (i < mesData.grupos.length - 1) {
+                    addLog(`⏳ Aguardando 2 segundos antes do próximo grupo...`, 'info');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+                
+            } catch (error) {
+                erros++;
+                console.error(`Erro ao importar grupo ${grupoNum}:`, error);
+                addLog(`❌ ${progresso} Falha ao importar grupo ${grupoNum}: ${error.message}`, 'error');
+                document.getElementById('statFailed').textContent = erros;
+            }
+        }
+        
+        // Mensagem final
+        addLog(`━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+        if (erros === 0) {
+            addLog(`🎉 ${mesNome} importado com sucesso!`, 'success');
+            addLog(`✅ ${sucessos} grupos importados sem erros`, 'success');
+            showToast('success', `🎉 ${mesNome} importado com sucesso! (${sucessos} grupos)`, 5000);
+        } else {
+            addLog(`⚠️ Importação concluída com ${erros} erro(s)`, 'warning');
+            addLog(`✅ ${sucessos} grupos importados com sucesso`, 'success');
+            addLog(`❌ ${erros} grupos com erro`, 'error');
+            showToast('warning', `⚠️ ${mesNome} importado com ${erros} erro(s). ${sucessos} grupos importados.`, 5000);
+        }
+        
+        // Mostra botão de fechar
+        document.getElementById('btnCloseAutomation').style.display = 'block';
+        
+        // Recarrega os dados após conclusão
+        setTimeout(() => {
+            console.log('🔄 Recarregando dados após importação do mês...');
+            if (typeof carregarGrupos === 'function') {
+                carregarGrupos();
+            }
+            // Emite evento para atualizar outras abas
+            if (typeof socket !== 'undefined') {
+                socket.emit('refresh_data');
+            }
+        }, 1500);
+    };
+    
+    // Carrega calendário ao inicializar
+    carregarCalendarioMeses();
+    // ========== FIM CALENDÁRIO DE MESES ==========
+    
+    // ========== LANCES POR DIA ==========
+    function atualizarGruposPorDia() {
+        const gruposDia8 = [];
+        const gruposDia16 = [];
+        
+        // Percorre todos os meses do calendário
+        Object.values(calendarioData).forEach(mesData => {
+            if (mesData.grupos && Array.isArray(mesData.grupos)) {
+                mesData.grupos.forEach(grupoData => {
+                    const grupoNum = typeof grupoData === 'string' ? grupoData : grupoData.numero;
+                    const grupoDia = typeof grupoData === 'string' ? 8 : (grupoData.dia || 8);
+                    
+                    if (grupoDia === 8 && !gruposDia8.includes(grupoNum)) {
+                        gruposDia8.push(grupoNum);
+                    } else if (grupoDia === 16 && !gruposDia16.includes(grupoNum)) {
+                        gruposDia16.push(grupoNum);
+                    }
+                });
+            }
+        });
+        
+        // Atualiza contadores (com proteção null)
+        const countDia8El = document.getElementById('countDia8');
+        const countDia16El = document.getElementById('countDia16');
+        
+        if (countDia8El) {
+            countDia8El.textContent = gruposDia8.length;
+        }
+        if (countDia16El) {
+            countDia16El.textContent = gruposDia16.length;
+        }
+        
+        // Atualiza listas (com proteção null)
+        const listDia8 = document.getElementById('gruposDia8List');
+        const listDia16 = document.getElementById('gruposDia16List');
+        
+        if (listDia8) {
+            if (gruposDia8.length === 0) {
+                listDia8.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.7); padding: 20px; font-size: 0.85rem;">Nenhum grupo configurado para o Dia 8</div>';
+            } else {
+                listDia8.innerHTML = gruposDia8.map(grupo => `
+                    <span style="display: inline-block; background: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; margin: 4px; font-weight: 600; font-size: 0.85rem;">
+                        <i class="fas fa-layer-group me-1"></i>${grupo}
+                    </span>
+                `).join('');
+            }
+        }
+        
+        if (listDia16) {
+            if (gruposDia16.length === 0) {
+                listDia16.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.7); padding: 20px; font-size: 0.85rem;">Nenhum grupo configurado para o Dia 16</div>';
+            } else {
+                listDia16.innerHTML = gruposDia16.map(grupo => `
+                    <span style="display: inline-block; background: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; margin: 4px; font-weight: 600; font-size: 0.85rem;">
+                        <i class="fas fa-layer-group me-1"></i>${grupo}
+                    </span>
+                `).join('');
+            }
+        }
+    }
+    
+    window.darLancesPorDia = async function(dia) {
+        // Coleta todos os grupos do dia especificado
+        const gruposDoDia = [];
+        
+        Object.values(calendarioData).forEach(mesData => {
+            if (mesData.grupos && Array.isArray(mesData.grupos)) {
+                mesData.grupos.forEach(grupoData => {
+                    const grupoNum = typeof grupoData === 'string' ? grupoData : grupoData.numero;
+                    const grupoDia = typeof grupoData === 'string' ? 8 : (grupoData.dia || 8);
+                    
+                    if (grupoDia === dia && !gruposDoDia.includes(grupoNum)) {
+                        gruposDoDia.push(grupoNum);
+                    }
+                });
+            }
+        });
+        
+        if (gruposDoDia.length === 0) {
+            showToast('error', `Nenhum grupo configurado para o Dia ${dia}`);
+            return;
+        }
+        
+        // Confirmação
+        const confirmMsg = `🎯 Executar lances automáticos?\n\n` +
+                          `Dia: ${dia}\n` +
+                          `Total de grupos: ${gruposDoDia.length}\n` +
+                          `Grupos: ${gruposDoDia.join(', ')}\n\n` +
+                          `Os lances serão executados automaticamente para todos os grupos.`;
+        
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        
+        showToast('info', `🚀 Iniciando lances automáticos para Dia ${dia}...`, 3000);
+        
+        // Aqui você pode implementar a lógica de lances
+        // Por enquanto, vou mostrar um toast de exemplo
+        for (let i = 0; i < gruposDoDia.length; i++) {
+            const grupo = gruposDoDia[i];
+            const progresso = `(${i + 1}/${gruposDoDia.length})`;
+            
+            showToast('info', `🎯 ${progresso} Executando lances para grupo ${grupo}...`, 2000);
+            
+            // Aqui viria a chamada real para /api/cotas/automatizar-lance/<grupo>
+            // Por exemplo:
+            /*
+            try {
+                const response = await fetch(`/api/cotas/automatizar-lance/${grupo}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dia: dia })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('success', `✅ ${progresso} Lances executados para grupo ${grupo}!`, 2000);
+                }
+            } catch (error) {
+                showToast('error', `❌ ${progresso} Erro no grupo ${grupo}`, 2000);
+            }
+            */
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showToast('success', `🎉 Lances do Dia ${dia} concluídos! (${gruposDoDia.length} grupos)`, 5000);
+    };
+    
+    // Atualiza grupos por dia quando o calendário é carregado ou modificado
+    const originalRenderizar = renderizarCalendarioMeses;
+    renderizarCalendarioMeses = function() {
+        originalRenderizar();
+        atualizarGruposPorDia();
+    };
+    
+    const originalSalvar = salvarCalendarioMeses;
+    salvarCalendarioMeses = async function() {
+        await originalSalvar();
+        atualizarGruposPorDia();
+    };
+    // ========== FIM LANCES POR DIA ==========
     
     // Inicialização
     if (document.readyState === 'loading') {

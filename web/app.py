@@ -149,6 +149,12 @@ def whatsapp():
     """Página de envio WhatsApp"""
     return render_template('whatsapp.html')
 
+@app.route('/calendario-lances')
+@login_required
+def calendario_lances():
+    """Página de calendário de lances"""
+    return render_template('calendario_lances.html')
+
 @app.route('/history')
 @login_required
 def history():
@@ -1937,6 +1943,91 @@ def api_clientes_sync_from_boletos():
     except Exception as e:
         import traceback
         print(f"Erro na sincronização: {traceback.format_exc()}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/calendario-lances/get', methods=['GET'])
+def api_calendario_lances_get():
+    """Retorna o calendário de lances"""
+    try:
+        from datetime import datetime
+        ano_atual = datetime.now().year
+        
+        calendario_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'calendario_lances.json')
+        
+        if not os.path.exists(calendario_filepath):
+            # Cria arquivo vazio se não existir
+            calendario_inicial = {str(ano_atual): {}}
+            meses_chaves = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho',
+                           'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
+            
+            for idx, mes in enumerate(meses_chaves):
+                calendario_inicial[str(ano_atual)][mes] = {
+                    'mes': idx + 1,
+                    'grupos': []
+                }
+            
+            with open(calendario_filepath, 'w', encoding='utf-8') as f:
+                json.dump(calendario_inicial, f, indent=2, ensure_ascii=False)
+            
+            return jsonify({
+                'success': True,
+                'ano': ano_atual,
+                'calendario': calendario_inicial[str(ano_atual)]
+            })
+        
+        with open(calendario_filepath, 'r', encoding='utf-8') as f:
+            calendario_data = json.load(f)
+        
+        # Retorna calendário do ano atual ou primeiro ano disponível
+        ano_key = str(ano_atual)
+        if ano_key not in calendario_data and calendario_data:
+            ano_key = list(calendario_data.keys())[0]
+        
+        calendario = calendario_data.get(ano_key, {})
+        
+        return jsonify({
+            'success': True,
+            'ano': ano_key,
+            'calendario': calendario
+        })
+        
+    except Exception as e:
+        print(f"Erro ao carregar calendário: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/calendario-lances/save', methods=['POST'])
+def api_calendario_lances_save():
+    """Salva o calendário de lances"""
+    try:
+        data = request.json
+        ano = str(data.get('ano', datetime.now().year))
+        calendario = data.get('calendario', {})
+        
+        calendario_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'calendario_lances.json')
+        
+        # Carrega calendário existente
+        if os.path.exists(calendario_filepath):
+            with open(calendario_filepath, 'r', encoding='utf-8') as f:
+                calendario_data = json.load(f)
+        else:
+            calendario_data = {}
+        
+        # Atualiza ano específico
+        calendario_data[ano] = calendario
+        
+        # Salva
+        with open(calendario_filepath, 'w', encoding='utf-8') as f:
+            json.dump(calendario_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"✅ Calendário salvo: Ano {ano}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Calendário de {ano} salvo com sucesso'
+        })
+        
+    except Exception as e:
+        print(f"❌ Erro ao salvar calendário: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
