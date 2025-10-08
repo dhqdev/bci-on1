@@ -354,7 +354,17 @@ def api_evolution_config():
                     data = json.load(f)
                 return jsonify({'success': True, 'data': data})
             else:
-                return jsonify({'success': True, 'data': {}})
+                # Cria arquivo padrão automaticamente
+                default_config = {
+                    "api": {
+                        "base_url": "https://zap.tekvosoft.com",
+                        "instance_name": "",
+                        "api_key": ""
+                    }
+                }
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    json.dump(default_config, f, indent=2, ensure_ascii=False)
+                return jsonify({'success': True, 'data': default_config})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)})
     
@@ -981,7 +991,21 @@ def api_boletos_whatsapp(task_id):
         evolution_config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'evolution_config.json')
         
         if not os.path.exists(evolution_config_path):
-            return jsonify({'success': False, 'error': 'Configuração da Evolution API não encontrada'})
+            # Cria arquivo padrão automaticamente
+            default_config = {
+                "api": {
+                    "base_url": "https://zap.tekvosoft.com",
+                    "instance_name": "",
+                    "api_key": ""
+                }
+            }
+            with open(evolution_config_path, 'w', encoding='utf-8') as f:
+                json.dump(default_config, f, indent=2, ensure_ascii=False)
+            
+            return jsonify({
+                'success': False, 
+                'error': 'Configuração da Evolution API não encontrada. Por favor, acesse a aba "WhatsApp" no menu e configure sua instância e API Key.'
+            })
         
         with open(evolution_config_path, 'r', encoding='utf-8') as f:
             evolution_config = json.load(f)
@@ -993,7 +1017,10 @@ def api_boletos_whatsapp(task_id):
         api_key = api_config.get('api_key')
         
         if not all([base_url, instance_name, api_key]):
-            return jsonify({'success': False, 'error': 'Configuração da Evolution API incompleta'})
+            return jsonify({
+                'success': False, 
+                'error': 'Configuração da Evolution API incompleta. Por favor, acesse a aba "WhatsApp" no menu e preencha: Nome da Instância e API Key.'
+            })
         
         evolution_api = EvolutionAPI(base_url, instance_name, api_key)
         
@@ -1067,6 +1094,14 @@ _Mensagem automática - Sistema OXCASH_"""
             todoist_api.add_comment(task_id, comment_text)
         except Exception as e:
             print(f"Aviso: Não foi possível adicionar comentário no Todoist: {e}")
+        
+        # Marca boleto como enviado no arquivo local
+        boleto['whatsapp_enviado'] = True
+        boleto['data_envio_boleto'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Salva alterações no arquivo de boletos
+        with open(boletos_filepath, 'w', encoding='utf-8') as f:
+            json.dump(boletos_data, f, indent=2, ensure_ascii=False)
         
         return jsonify({
             'success': True,
@@ -1594,16 +1629,51 @@ def api_parar_automacao(grupo):
 
 @app.route('/api/clientes', methods=['GET'])
 def api_clientes():
-    """Retorna dados dos clientes"""
-    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
+    """Retorna dados dos clientes com informações de boletos associados"""
+    clientes_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
+    boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
     
     try:
-        if os.path.exists(filepath):
-            with open(filepath, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            return jsonify({'success': True, 'data': data})
+        # Carrega clientes
+        if os.path.exists(clientes_filepath):
+            with open(clientes_filepath, 'r', encoding='utf-8') as f:
+                clientes_data = json.load(f)
         else:
-            return jsonify({'success': True, 'data': {'dia08': [], 'dia16': []}})
+            clientes_data = {'dia08': [], 'dia16': []}
+        
+        # Carrega boletos
+        boletos_data = {'dia08': [], 'dia16': []}
+        if os.path.exists(boletos_filepath):
+            with open(boletos_filepath, 'r', encoding='utf-8') as f:
+                boletos_data = json.load(f)
+        
+        # Associa boletos aos clientes
+        for dia_key in ['dia08', 'dia16']:
+            if dia_key in clientes_data:
+                for cliente in clientes_data[dia_key]:
+                    client_id = cliente.get('client_id')
+                    
+                    # Busca boleto correspondente
+                    boleto_encontrado = None
+                    if dia_key in boletos_data:
+                        for boleto in boletos_data[dia_key]:
+                            if boleto.get('client_id') == client_id or boleto.get('task_id') == client_id:
+                                boleto_encontrado = boleto
+                                break
+                    
+                    # Adiciona informações do boleto ao cliente
+                    if boleto_encontrado:
+                        cliente['boleto'] = {
+                            'task_id': boleto_encontrado.get('task_id'),
+                            'link': boleto_encontrado.get('link', ''),
+                            'short_link': boleto_encontrado.get('short_link', ''),
+                            'whatsapp_enviado': boleto_encontrado.get('whatsapp_enviado', False),
+                            'data_envio_boleto': boleto_encontrado.get('data_envio_boleto', None)
+                        }
+                    else:
+                        cliente['boleto'] = None
+        
+        return jsonify({'success': True, 'data': clientes_data})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
@@ -1655,6 +1725,12 @@ def api_clientes_create():
         else:
             cotas_texto = ''
         
+        # Define mes_relatorio como mês atual se fornecido, senão usa mês atual
+        mes_relatorio = data.get('mes_relatorio')
+        if not mes_relatorio:
+            hoje = datetime.now()
+            mes_relatorio = f"{hoje.year}-{str(hoje.month).zfill(2)}"
+        
         new_cliente = {
             'client_id': client_id,
             'nome': nome,
@@ -1664,6 +1740,7 @@ def api_clientes_create():
             'cotas_texto': cotas_texto,
             'contato': contato,
             'valor_primeira_cota': valor_primeira_cota,
+            'mes_relatorio': mes_relatorio,
             'historico_boletos': [],
             'created_at': timestamp,
             'updated_at': timestamp
@@ -1922,8 +1999,24 @@ def api_clientes_sync_from_boletos():
                 
                 if cliente_existente:
                     # Atualiza cliente existente
-                    cliente_existente['grupo'] = grupo or cliente_existente.get('grupo', '')
-                    cliente_existente['cota'] = cota or cliente_existente.get('cota', '')
+                    # Converte para arrays se necessário
+                    if 'grupos' not in cliente_existente:
+                        cliente_existente['grupos'] = []
+                    if 'cotas' not in cliente_existente:
+                        cliente_existente['cotas'] = []
+                    
+                    # Adiciona grupo/cota se não existirem nos arrays
+                    if grupo and grupo not in cliente_existente['grupos']:
+                        cliente_existente['grupos'].append(grupo)
+                    if cota and cota not in cliente_existente['cotas']:
+                        cliente_existente['cotas'].append(cota)
+                    
+                    # Atualiza cotas_texto
+                    if len(cliente_existente['cotas']) == 1 and len(cliente_existente['grupos']) == 1:
+                        cliente_existente['cotas_texto'] = f"{cliente_existente['cotas'][0]} - {cliente_existente['grupos'][0]}"
+                    elif len(cliente_existente['cotas']) > 1:
+                        cliente_existente['cotas_texto'] = f"{cliente_existente['cotas'][0]} - {cliente_existente['grupos'][0]} +{len(cliente_existente['cotas']) - 1}"
+                    
                     cliente_existente['contato'] = contato or cliente_existente.get('contato', '')
                     cliente_existente['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     
@@ -1937,14 +2030,31 @@ def api_clientes_sync_from_boletos():
                 else:
                     # Cria novo cliente
                     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    hoje = datetime.now()
+                    mes_relatorio_atual = f"{hoje.year}-{str(hoje.month).zfill(2)}"
+                    
+                    # Novo formato: usa listas para grupos e cotas
+                    grupos_list = [grupo] if grupo else []
+                    cotas_list = [cota] if cota else []
+                    
+                    # Define cotas_texto
+                    if len(cotas_list) == 1 and len(grupos_list) == 1:
+                        cotas_texto = f"{cotas_list[0]} - {grupos_list[0]}"
+                    elif len(cotas_list) > 1:
+                        cotas_texto = f"{len(cotas_list)} cotas"
+                    else:
+                        cotas_texto = ''
+                    
                     novo_cliente = {
                         'client_id': str(uuid.uuid4()),
                         'nome': nome,
                         'email': '',
-                        'grupo': grupo,
-                        'cota': cota,
+                        'grupos': grupos_list,
+                        'cotas': cotas_list,
+                        'cotas_texto': cotas_texto,
                         'contato': contato,
                         'valor_primeira_cota': '',
+                        'mes_relatorio': mes_relatorio_atual,
                         'historico_boletos': [boleto_link] if boleto_link else [],
                         'created_at': timestamp,
                         'updated_at': timestamp
@@ -2010,6 +2120,53 @@ def api_clientes_update_credito_inicial(client_id):
             json.dump(clientes_data, f, indent=2, ensure_ascii=False)
         
         return jsonify({'success': True, 'message': 'Crédito inicial atualizado com sucesso'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/clientes/<client_id>/mes-relatorio', methods=['PUT'])
+def api_clientes_update_mes_relatorio(client_id):
+    """Atualiza o mês do relatório de um cliente (para Kanban drag-and-drop)"""
+    try:
+        data = request.json
+        mes_relatorio = data.get('mes_relatorio')  # Formato: "YYYY-MM"
+        dia = data.get('dia', '08')
+        
+        if not mes_relatorio:
+            return jsonify({'success': False, 'error': 'Mês do relatório é obrigatório'})
+        
+        clientes_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
+        if not os.path.exists(clientes_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo de clientes não encontrado'})
+        
+        with open(clientes_filepath, 'r', encoding='utf-8') as f:
+            clientes_data = json.load(f)
+        
+        # Busca cliente
+        found = False
+        for dia_key in ['dia08', 'dia16']:
+            if dia_key in clientes_data:
+                for cliente in clientes_data[dia_key]:
+                    if cliente.get('client_id') == client_id:
+                        cliente['mes_relatorio'] = mes_relatorio
+                        cliente['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        found = True
+                        break
+            if found:
+                break
+        
+        if not found:
+            return jsonify({'success': False, 'error': 'Cliente não encontrado'})
+        
+        # Salva
+        with open(clientes_filepath, 'w', encoding='utf-8') as f:
+            json.dump(clientes_data, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Mês do relatório atualizado com sucesso',
+            'mes_relatorio': mes_relatorio
+        })
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
@@ -2177,6 +2334,130 @@ _Próximo envio em 6 meses._"""
         error_details = traceback.format_exc()
         print(f"Erro ao enviar WhatsApp: {error_details}")
         return jsonify({'success': False, 'error': f'Erro ao enviar WhatsApp: {str(e)}'})
+
+@app.route('/api/clientes/enviar-boleto/<client_id>', methods=['POST'])
+def api_clientes_enviar_boleto(client_id):
+    """Envia boleto via WhatsApp sem mover o card de mês"""
+    try:
+        from utils.evolution_api import EvolutionAPI
+        import re
+        
+        # Carrega cliente
+        clientes_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
+        if not os.path.exists(clientes_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo de clientes não encontrado'})
+        
+        with open(clientes_filepath, 'r', encoding='utf-8') as f:
+            clientes_data = json.load(f)
+        
+        # Busca cliente
+        cliente = None
+        dia_key = None
+        for dia in ['dia08', 'dia16']:
+            for c in clientes_data.get(dia, []):
+                if c.get('client_id') == client_id:
+                    cliente = c
+                    dia_key = dia
+                    break
+            if cliente:
+                break
+        
+        if not cliente:
+            return jsonify({'success': False, 'error': 'Cliente não encontrado'})
+        
+        # Carrega boleto
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        if not os.path.exists(boletos_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo de boletos não encontrado'})
+        
+        with open(boletos_filepath, 'r', encoding='utf-8') as f:
+            boletos_data = json.load(f)
+        
+        # Busca boleto correspondente
+        boleto = None
+        for b in boletos_data.get(dia_key, []):
+            if b.get('client_id') == client_id or b.get('task_id') == client_id:
+                boleto = b
+                break
+        
+        if not boleto:
+            return jsonify({'success': False, 'error': 'Boleto não encontrado para este cliente'})
+        
+        link_boleto = boleto.get('short_link') or boleto.get('link', '')
+        if not link_boleto:
+            return jsonify({'success': False, 'error': 'Boleto sem link disponível'})
+        
+        # Prepara mensagem
+        nome = cliente.get('nome', 'Cliente')
+        celular = cliente.get('contato', '')
+        
+        if not celular:
+            return jsonify({'success': False, 'error': 'Cliente sem número de WhatsApp cadastrado'})
+        
+        # Limpa número de telefone
+        celular = re.sub(r'\D', '', celular)
+        if not celular.startswith('55'):
+            celular = '55' + celular
+        
+        mensagem = f"""Olá {nome}! 👋
+
+Seu boleto está disponível! 📄💰
+
+🔗 Acesse aqui: {link_boleto}
+
+Qualquer dúvida, estamos à disposição!"""
+        
+        # Envia via Evolution API
+        evolution_config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'evolution_config.json')
+        if not os.path.exists(evolution_config_path):
+            return jsonify({'success': False, 'error': 'Configuração da Evolution API não encontrada. Configure em WhatsApp.'})
+        
+        with open(evolution_config_path, 'r', encoding='utf-8') as f:
+            evolution_config = json.load(f)
+        
+        api_config = evolution_config.get('api', {})
+        if not api_config.get('instance_name') or not api_config.get('api_key'):
+            return jsonify({'success': False, 'error': 'Evolution API não configurada. Configure instance_name e api_key em WhatsApp.'})
+        
+        evolution_api = EvolutionAPI(
+            base_url=api_config.get('base_url', 'https://zap.tekvosoft.com'),
+            instance_name=api_config['instance_name'],
+            api_key=api_config['api_key']
+        )
+        
+        success, response = evolution_api.send_text_message(celular, mensagem)
+        
+        if not success:
+            return jsonify({
+                'success': False,
+                'error': f"Falha ao enviar mensagem: {response.get('error', 'Erro desconhecido')}",
+                'details': response
+            })
+        
+        # Marca boleto como enviado
+        boleto['whatsapp_enviado'] = True
+        boleto['data_envio_boleto'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Salva boletos atualizado
+        with open(boletos_filepath, 'w', encoding='utf-8') as f:
+            json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Boleto enviado via WhatsApp para {nome}!',
+            'details': {
+                'nome': nome,
+                'celular': celular,
+                'link_boleto': link_boleto,
+                'data_envio': boleto['data_envio_boleto']
+            }
+        })
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Erro ao enviar boleto: {error_details}")
+        return jsonify({'success': False, 'error': f'Erro ao enviar boleto: {str(e)}'})
 
 @app.route('/api/calendario-lances/get', methods=['GET'])
 def api_calendario_lances_get():
@@ -2400,6 +2681,8 @@ def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
             else:
                 # Cliente não existe - criar novo
                 timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                hoje = datetime.now()
+                mes_relatorio_atual = f"{hoje.year}-{str(hoje.month).zfill(2)}"
                 
                 novo_cliente = {
                     'client_id': str(uuid.uuid4()),
@@ -2412,6 +2695,7 @@ def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
                     'total_investido_soma': total_investido,  # ========== NOVO CAMPO ==========
                     'credito_atual_soma': credito_atual,      # ========== NOVO CAMPO ==========
                     'credito_inicial': 0.0,  # Será preenchido manualmente pelo usuário
+                    'mes_relatorio': mes_relatorio_atual,     # ========== DEFINE MÊS ATUAL ==========
                     'historico_boletos': [],
                     'created_at': timestamp,
                     'updated_at': timestamp
@@ -2419,7 +2703,7 @@ def _sync_cotas_to_clientes(cotas_list, grupo, dia_grupo):
                 
                 clientes_data[dia_key].append(novo_cliente)
                 stats['created'] += 1
-                print(f"  + Cliente criado: {nome}")
+                print(f"  + Cliente criado: {nome} (Mês: {mes_relatorio_atual})")
                 print(f"      💰 Total Investido: R$ {total_investido:.2f}")
                 print(f"      💎 Crédito Atual: R$ {credito_atual:.2f}")
         
@@ -2613,13 +2897,15 @@ def _sync_cliente_to_boleto(cliente, dia_key):
             if contato:
                 boleto_encontrado['celular'] = contato
             
-            # Atualiza campo cotas
-            if cotas_texto:
-                boleto_encontrado['cotas'] = cotas_texto
-            elif len(cotas) == 1 and len(grupos) == 1:
+            # Atualiza campo cotas - FORMATO ESPECÍFICO PARA BOLETOS
+            # Boletos mostram "2 cotas", "3 cotas", etc. quando há múltiplas
+            # Clientes mostram "1065 - 1550 +1" (detalhado)
+            if len(cotas) == 1 and len(grupos) == 1:
                 boleto_encontrado['cotas'] = f"{cotas[0]} - {grupos[0]}"
             elif len(cotas) > 1:
                 boleto_encontrado['cotas'] = f"{len(cotas)} cotas"
+            elif cotas_texto:
+                boleto_encontrado['cotas'] = cotas_texto
             
             print(f"✅ Boleto atualizado: Nome='{nome}', Cotas='{boleto_encontrado.get('cotas')}'")
         else:
@@ -2719,12 +3005,13 @@ def _sync_boleto_to_cliente(boleto, dia_key):
             # ATUALIZA cliente existente
             print(f"📝 ATUALIZANDO cliente existente (método: {metodo_busca}): {cliente_encontrado.get('client_id')}")
             
-            # Converte formato antigo (string) para novo (listas) se necessário
+            # Obtém listas atuais de grupos e cotas
             grupos_atual = cliente_encontrado.get('grupos', [])
             cotas_atual = cliente_encontrado.get('cotas', [])
             
-            # Migração de formato antigo
-            if isinstance(cliente_encontrado.get('grupo'), str):
+            # Migração de formato antigo APENAS se não tem arrays ainda
+            if not isinstance(grupos_atual, list):
+                # Se ainda usa formato antigo (string), converte para lista
                 grupo_antigo = cliente_encontrado.get('grupo', '').strip()
                 cota_antiga = cliente_encontrado.get('cota', '').strip()
                 
@@ -2744,6 +3031,8 @@ def _sync_boleto_to_cliente(boleto, dia_key):
                     grupos_atual.append(grupo)
                     cotas_atual.append(cota)
                     print(f"  ↻ Adicionando nova cota: {cota} - {grupo}")
+                else:
+                    print(f"  ⊘ Cota já existe: {cota} - {grupo}")
             
             # Atualiza cliente
             cliente_encontrado['nome'] = nome
@@ -2756,7 +3045,7 @@ def _sync_boleto_to_cliente(boleto, dia_key):
             if len(cotas_atual) == 1:
                 cliente_encontrado['cotas_texto'] = f"{cotas_atual[0]} - {grupos_atual[0]}"
             elif len(cotas_atual) > 1:
-                cliente_encontrado['cotas_texto'] = f"{len(cotas_atual)} cotas"
+                cliente_encontrado['cotas_texto'] = f"{cotas_atual[0]} - {grupos_atual[0]} +{len(cotas_atual) - 1}"
             else:
                 cliente_encontrado['cotas_texto'] = cotas_texto
             
@@ -2779,6 +3068,8 @@ def _sync_boleto_to_cliente(boleto, dia_key):
             print(f"📋 Clientes existentes em {dia_key}: {[(c.get('nome'), c.get('grupos', c.get('grupo')), c.get('cotas', c.get('cota'))) for c in clientes_data.get(dia_key, [])]}")
             
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            hoje = datetime.now()
+            mes_relatorio_atual = f"{hoje.year}-{str(hoje.month).zfill(2)}"
             
             # Inicia listas vazias
             grupos_list = []
@@ -2801,6 +3092,7 @@ def _sync_boleto_to_cliente(boleto, dia_key):
                 'contato': contato,
                 'task_id': task_id,
                 'valor_primeira_cota': '',
+                'mes_relatorio': mes_relatorio_atual,
                 'historico_boletos': [boleto_link] if boleto_link else [],
                 'created_at': timestamp,
                 'updated_at': timestamp
@@ -2809,11 +3101,15 @@ def _sync_boleto_to_cliente(boleto, dia_key):
             if dia_key not in clientes_data:
                 clientes_data[dia_key] = []
             clientes_data[dia_key].append(novo_cliente)
-            print(f"✅ Novo cliente criado: {nome} - {cotas_texto_calc}")
+            print(f"✅ Novo cliente criado: {nome} - {cotas_texto_calc} (Mês: {mes_relatorio_atual})")
         
         # Salva clientes atualizados
         with open(clientes_filepath, 'w', encoding='utf-8') as f:
             json.dump(clientes_data, f, indent=2, ensure_ascii=False)
+        
+        # Sincroniza de volta para o boleto (atualiza formato de cotas)
+        if cliente_encontrado:
+            _sync_cliente_to_boleto(cliente_encontrado, dia_key)
     
     except Exception as e:
         print(f"❌ Erro ao sincronizar boleto para cliente: {e}")

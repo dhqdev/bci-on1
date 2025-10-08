@@ -828,6 +828,276 @@
         color: var(--text-primary);
         font-family: 'Courier New', monospace;
     }
+
+    /* ========== KANBAN DE 6 MESES ========== */
+    .kanban-container {
+        margin-top: 24px;
+        padding-bottom: 16px;
+    }
+
+    .kanban-columns {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+    }
+
+    /* Cada fileira tem 3 colunas */
+    .kanban-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .kanban-column {
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        min-height: 400px;
+        max-height: 600px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .kanban-column-header {
+        padding: 16px;
+        border-bottom: 2px solid var(--border-color);
+        background: var(--bg-secondary);
+        border-radius: 10px 10px 0 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .kanban-month-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .kanban-month-subtitle {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .kanban-count {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-left: auto;
+    }
+
+    .kanban-column-body {
+        padding: 12px;
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .kanban-column-body.drag-over {
+        background: rgba(102, 126, 234, 0.1);
+        border: 2px dashed #667eea;
+        border-radius: 8px;
+    }
+
+    /* Cards de Cliente Compactos */
+    .cliente-card-compact {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px;
+        cursor: grab;
+        transition: all 0.2s ease;
+        margin-bottom: 12px;
+    }
+
+    .cliente-card-compact:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-color: #667eea;
+    }
+
+    .cliente-card-compact.dragging {
+        opacity: 0.5;
+        cursor: grabbing;
+    }
+
+    .card-compact-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .card-compact-nome {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        flex: 1;
+    }
+
+    .badge-dia {
+        font-size: 0.65rem;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+
+    .badge-dia-08 {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+
+    .badge-dia-16 {
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        color: white;
+    }
+
+    .card-compact-info {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .card-compact-info .info-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 4px 0;
+    }
+
+    .card-compact-info .info-row i {
+        width: 14px;
+        font-size: 0.7rem;
+        color: var(--text-tertiary);
+    }
+
+    .card-compact-info .lucro-indicator {
+        font-weight: 600;
+        margin-top: 6px;
+    }
+
+    .card-compact-info .lucro-indicator.positivo {
+        color: #10b981;
+    }
+
+    .card-compact-info .lucro-indicator.negativo {
+        color: #ef4444;
+    }
+
+    .card-compact-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-compact {
+        flex: 1;
+        padding: 6px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-compact:hover {
+        transform: scale(1.08);
+        border-color: #667eea;
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-compact:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-compact:disabled:hover {
+        transform: none;
+        border-color: var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+
+    .btn-compact.btn-delete:hover {
+        background: #ef4444;
+        border-color: #ef4444;
+    }
+
+    .btn-compact.btn-boleto {
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        color: white;
+        border: none;
+    }
+
+    .btn-compact.btn-boleto:hover {
+        background: linear-gradient(135deg, #f5576c, #f093fb);
+        transform: scale(1.08);
+    }
+
+    /* Status do Boleto */
+    .boleto-status-badge {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        margin: 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 600;
+    }
+
+    .boleto-status-badge.enviado {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .boleto-status-badge.pendente {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* Borda especial para cards com boleto enviado */
+    .cliente-card-compact.boleto-enviado {
+        border-left: 4px solid #10b981;
+    }
+
+    .cliente-card-compact.boleto-pendente {
+        border-left: 4px solid #ef4444;
+    }
+
+    @media (max-width: 1400px) {
+        .kanban-columns {
+            grid-template-columns: repeat(3, minmax(280px, 1fr));
+        }
+    }
+
+    @media (max-width: 900px) {
+        .kanban-columns {
+            grid-template-columns: repeat(2, minmax(280px, 1fr));
+        }
+    }
+
+    @media (max-width: 600px) {
+        .kanban-columns {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <div class="clientes-page">
@@ -863,33 +1133,10 @@
         </div>
     </div>
 
-    <div class="tabs-container">
-        <ul class="nav nav-tabs" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dia08-tab" type="button" role="tab" onclick="filterClientes()">
-                    <i class="fas fa-calendar-day"></i> Dia 08
-                    <span class="tab-badge" id="badge08">0</span>
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dia16-tab" type="button" role="tab" onclick="filterClientes()">
-                    <i class="fas fa-calendar-alt"></i> Dia 16
-                    <span class="tab-badge" id="badge16">0</span>
-                </button>
-            </li>
-        </ul>
-    </div>
-
-    <div class="tab-content">
-        <div class="tab-pane active" id="dia08-tab" role="tabpanel">
-            <div id="clientesDia08" class="cliente-grid">
-                <!-- Cards de clientes do dia 08 serão inseridos aqui -->
-            </div>
-        </div>
-        <div class="tab-pane" id="dia16-tab" role="tabpanel">
-            <div id="clientesDia16" class="cliente-grid">
-                <!-- Cards de clientes do dia 16 serão inseridos aqui -->
-            </div>
+    <!-- Kanban de 6 Meses -->
+    <div class="kanban-container">
+        <div class="kanban-columns" id="kanbanColumns">
+            <!-- Colunas de meses serão inseridas aqui -->
         </div>
     </div>
 </div>
@@ -1024,30 +1271,342 @@ async function refreshClientes() {
 }
 
 function renderClientes(data) {
-    const container08 = document.getElementById('clientesDia08');
-    const container16 = document.getElementById('clientesDia16');
+    const kanbanContainer = document.getElementById('kanbanColumns');
     
+    // Nomes dos meses em português
+    const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    // Cria apenas os 12 meses do ano atual (ciclo anual)
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = hoje.getMonth(); // 0-11
+    const mesesKanban = [];
+    
+    // Cria 12 meses do ano atual
+    for (let mesIndex = 0; mesIndex < 12; mesIndex++) {
+        mesesKanban.push({
+            index: mesIndex,
+            mesIndex: mesIndex,
+            ano: anoAtual,
+            nome: mesesNomes[mesIndex],
+            chave: `${anoAtual}-${String(mesIndex + 1).padStart(2, '0')}`
+        });
+    }
+    
+    // Organiza clientes por mês de relatório
+    const clientesPorMes = {};
+    mesesKanban.forEach(mes => {
+        clientesPorMes[mes.chave] = [];
+    });
+    
+    // Processa clientes do dia 08
     const clientes08 = data.dia08 || [];
+    clientes08.forEach(cliente => {
+        const mesRelatorio = cliente.mes_relatorio || mesesKanban[0].chave;
+        if (!clientesPorMes[mesRelatorio]) {
+            clientesPorMes[mesRelatorio] = [];
+        }
+        clientesPorMes[mesRelatorio].push({...cliente, dia: '08'});
+    });
+    
+    // Processa clientes do dia 16
     const clientes16 = data.dia16 || [];
+    clientes16.forEach(cliente => {
+        const mesRelatorio = cliente.mes_relatorio || mesesKanban[0].chave;
+        if (!clientesPorMes[mesRelatorio]) {
+            clientesPorMes[mesRelatorio] = [];
+        }
+        clientesPorMes[mesRelatorio].push({...cliente, dia: '16'});
+    });
     
-    // Renderiza dia 08
-    if (clientes08.length === 0) {
-        container08.innerHTML = createEmptyState('08');
-    } else {
-        container08.innerHTML = clientes08.map(cliente => createClienteCard(cliente, '08')).join('');
+    // Renderiza em FILEIRAS de 3 colunas (12 meses = 4 fileiras)
+    const mesesPorFileira = 3;
+    const numFileiras = Math.ceil(mesesKanban.length / mesesPorFileira);
+    
+    let html = '';
+    
+    for (let fileira = 0; fileira < numFileiras; fileira++) {
+        const inicioIndex = fileira * mesesPorFileira;
+        const fimIndex = Math.min(inicioIndex + mesesPorFileira, mesesKanban.length);
+        const mesesDaFileira = mesesKanban.slice(inicioIndex, fimIndex);
+        
+        html += '<div class="kanban-row">';
+        
+        mesesDaFileira.forEach(mes => {
+            const clientesMes = clientesPorMes[mes.chave] || [];
+            const mesAtualCompleto = new Date();
+            const isCurrentMonth = mes.mesIndex === mesAtualCompleto.getMonth() && mes.ano === mesAtualCompleto.getFullYear();
+            
+            html += `
+                <div class="kanban-column" data-mes="${mes.chave}">
+                    <div class="kanban-column-header">
+                        <div class="kanban-month-title">
+                            <i class="fas fa-calendar-alt"></i>
+                            ${mes.nome}
+                            <span class="kanban-count">${clientesMes.length}</span>
+                        </div>
+                        ${isCurrentMonth ? `
+                        <div class="kanban-month-subtitle">
+                            Mês Atual
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="kanban-column-body" 
+                         ondrop="dropCliente(event, '${mes.chave}')" 
+                         ondragover="allowDrop(event)"
+                         ondragleave="removeDragOver(event)">
+                        ${clientesMes.length === 0 
+                            ? '<div style="text-align: center; color: var(--text-tertiary); padding: 20px; font-size: 0.85rem;">Nenhum cliente</div>'
+                            : clientesMes.map(cliente => createClienteCardCompact(cliente)).join('')
+                        }
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
     }
     
-    // Renderiza dia 16
-    if (clientes16.length === 0) {
-        container16.innerHTML = createEmptyState('16');
-    } else {
-        container16.innerHTML = clientes16.map(cliente => createClienteCard(cliente, '16')).join('');
-    }
-    
-    // Atualiza badges
-    updateBadges(clientes08.length, clientes16.length);
+    kanbanContainer.innerHTML = html;
 }
 
+// ============== FUNÇÃO PARA CARDS COMPACTOS DO KANBAN ==============
+function createClienteCardCompact(cliente) {
+    const clientId = cliente.client_id || '';
+    const nome = cliente.nome || 'Sem nome';
+    const contato = cliente.contato || '-';
+    const dia = cliente.dia || '08';
+    
+    // Suporta novo formato (arrays) e formato antigo (strings)
+    let grupos = cliente.grupos || [];
+    let cotas = cliente.cotas || [];
+    
+    // Migração: se ainda usa formato antigo, converte
+    if (!Array.isArray(grupos) && cliente.grupo) {
+        grupos = cliente.grupo ? [cliente.grupo] : [];
+    }
+    if (!Array.isArray(cotas) && cliente.cota) {
+        cotas = cliente.cota ? [cliente.cota] : [];
+    }
+    
+    // Define o que mostrar para Grupo/Cota - COMPACTO
+    let infoGrupoCota;
+    if (cotas.length > 0 && grupos.length > 0) {
+        if (cotas.length === 1) {
+            infoGrupoCota = `${escapeHtml(cotas[0])} - ${escapeHtml(grupos[0])}`;
+        } else {
+            infoGrupoCota = `${escapeHtml(cotas[0])} - ${escapeHtml(grupos[0])} <span class="badge bg-primary" style="font-size: 0.7rem;">+${cotas.length - 1}</span>`;
+        }
+    } else if (cliente.cotas_texto) {
+        infoGrupoCota = escapeHtml(cliente.cotas_texto);
+    } else {
+        infoGrupoCota = '-';
+    }
+    
+    // Calcula lucro para mostrar indicador
+    const creditoInicial = parseFloat(cliente.credito_inicial || 0);
+    const totalInvestidoSoma = parseFloat(cliente.total_investido_soma || 0);
+    const creditoAtualSoma = parseFloat(cliente.credito_atual_soma || 0);
+    const valorizacaoPatrimonial = creditoAtualSoma - creditoInicial;
+    const lucroAtual = valorizacaoPatrimonial - totalInvestidoSoma;
+    
+    // Verifica histórico de WhatsApp para RELATÓRIO
+    const historicoWhatsApp = cliente.historico_whatsapp || [];
+    let whatsappRelatorioDisabled = false;
+    
+    if (historicoWhatsApp.length > 0) {
+        const ultimoEnvio = historicoWhatsApp[historicoWhatsApp.length - 1];
+        const dataEnvio = new Date(ultimoEnvio.data_envio);
+        const now = new Date();
+        const diffDays = Math.floor((now - dataEnvio) / (1000 * 60 * 60 * 24));
+        const diasRestantes = 180 - diffDays;
+        
+        if (diasRestantes > 0) {
+            whatsappRelatorioDisabled = true;
+        }
+    }
+    
+    // Busca informações do boleto correspondente
+    const boleto = cliente.boleto || null;
+    const boletoEnviado = boleto && boleto.whatsapp_enviado === true;
+    const linkBoleto = boleto ? (boleto.short_link || boleto.link || '') : '';
+    
+    // Define classe de status do boleto
+    const statusBoletoClass = boletoEnviado ? 'boleto-enviado' : 'boleto-pendente';
+    
+    return `
+        <article class="cliente-card-compact ${statusBoletoClass}" 
+                 draggable="true"
+                 ondragstart="dragStartCliente(event)"
+                 data-client-id="${escapeHtml(clientId)}" 
+                 data-dia="${dia}"
+                 data-nome="${escapeHtml(nome)}"
+                 data-contato="${escapeHtml(contato)}">
+            <div class="card-compact-header">
+                <div class="card-compact-nome">${escapeHtml(nome)}</div>
+                <span class="badge badge-dia badge-dia-${dia}">Dia ${dia}</span>
+            </div>
+            
+            ${boletoEnviado ? `
+            <div class="boleto-status-badge enviado">
+                <i class="fas fa-check-circle"></i> Boleto Enviado
+            </div>
+            ` : (linkBoleto ? `
+            <div class="boleto-status-badge pendente">
+                <i class="fas fa-exclamation-circle"></i> Boleto Não Enviado
+            </div>
+            ` : '')}
+            
+            <div class="card-compact-info">
+                <div class="info-row">
+                    <i class="fas fa-layer-group"></i>
+                    <span>${infoGrupoCota}</span>
+                </div>
+                <div class="info-row">
+                    <i class="fas fa-phone"></i>
+                    <span>${escapeHtml(contato)}</span>
+                </div>
+                ${linkBoleto ? `
+                <div class="info-row">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <a href="${escapeHtml(linkBoleto)}" target="_blank" onclick="event.stopPropagation()" style="color: #667eea; text-decoration: none; font-size: 0.75rem;">
+                        Ver Boleto
+                    </a>
+                </div>
+                ` : ''}
+                ${lucroAtual !== 0 ? `
+                <div class="info-row lucro-indicator ${lucroAtual >= 0 ? 'positivo' : 'negativo'}">
+                    <i class="fas ${lucroAtual >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
+                    <span>R$ ${Math.abs(lucroAtual).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                </div>
+                ` : ''}
+            </div>
+            <div class="card-compact-actions">
+                ${linkBoleto && !boletoEnviado ? `
+                <button 
+                    class="btn-compact btn-boleto" 
+                    onclick="event.stopPropagation(); enviarBoleto('${clientId}')" 
+                    onmousedown="event.stopPropagation()"
+                    title="Enviar Boleto">
+                    <i class="fas fa-file-invoice"></i>
+                </button>
+                ` : ''}
+                <button 
+                    class="btn-compact ${whatsappRelatorioDisabled ? 'disabled' : ''}" 
+                    onclick="event.stopPropagation(); enviarRelatorio('${clientId}')" 
+                    onmousedown="event.stopPropagation()"
+                    title="Enviar Relatório"
+                    ${whatsappRelatorioDisabled ? 'disabled' : ''}
+                >
+                    <i class="fab fa-whatsapp"></i>
+                </button>
+                <button 
+                    class="btn-compact" 
+                    onclick="event.stopPropagation(); editarCliente('${clientId}', '${dia}')" 
+                    onmousedown="event.stopPropagation()"
+                    title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button 
+                    class="btn-compact btn-delete" 
+                    onclick="event.stopPropagation(); excluirCliente('${clientId}')" 
+                    onmousedown="event.stopPropagation()"
+                    title="Excluir">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </article>
+    `;
+}
+
+// ============== FUNÇÕES DE DRAG AND DROP ==============
+let draggedClientData = null;
+
+function dragStartCliente(event) {
+    const card = event.target.closest('.cliente-card-compact');
+    if (!card) return;
+    
+    card.classList.add('dragging');
+    
+    // Armazena dados do cliente que está sendo arrastado
+    draggedClientData = {
+        clientId: card.dataset.clientId,
+        dia: card.dataset.dia
+    };
+    
+    // Define dados para transferência
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/html', card.innerHTML);
+}
+
+function allowDrop(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    
+    // Adiciona classe visual de hover
+    const column = event.target.closest('.kanban-column-body');
+    if (column && !column.classList.contains('drag-over')) {
+        column.classList.add('drag-over');
+    }
+}
+
+function removeDragOver(event) {
+    const column = event.target.closest('.kanban-column-body');
+    if (column) {
+        column.classList.remove('drag-over');
+    }
+}
+
+async function dropCliente(event, mesChave) {
+    event.preventDefault();
+    
+    const column = event.target.closest('.kanban-column-body');
+    if (column) {
+        column.classList.remove('drag-over');
+    }
+    
+    if (!draggedClientData) return;
+    
+    const { clientId, dia } = draggedClientData;
+    
+    try {
+        // Remove classe dragging do card
+        const draggedCard = document.querySelector('.cliente-card-compact.dragging');
+        if (draggedCard) {
+            draggedCard.classList.remove('dragging');
+        }
+        
+        // Atualiza o mês do relatório no backend
+        const response = await fetch(`/api/clientes/${clientId}/mes-relatorio`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                mes_relatorio: mesChave,
+                dia: dia
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao atualizar mês do relatório');
+        }
+        
+        // Recarrega a visualização
+        await refreshClientes();
+        
+        setStatus('success', 'Cliente movido com sucesso!');
+        
+    } catch (error) {
+        console.error('Erro ao mover cliente:', error);
+        setStatus('error', 'Erro ao mover cliente: ' + error.message);
+    } finally {
+        draggedClientData = null;
+    }
+}
+
+// ============== FUNÇÕES ORIGINAIS (mantidas para compatibilidade) ==============
 function createClienteCard(cliente, dia) {
     const clientId = cliente.client_id || '';
     const nome = cliente.nome || 'Sem nome';
@@ -1431,6 +1990,14 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
         dia
     };
     
+    // Se for novo cliente, adiciona mes_relatorio com o mês atual
+    if (!clientId) {
+        const hoje = new Date();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const ano = hoje.getFullYear();
+        clienteData.mes_relatorio = `${ano}-${mes}`;
+    }
+    
     await salvarCliente(clientId, clienteData);
 });
 
@@ -1484,6 +2051,38 @@ async function salvarCliente(clientId, clienteData) {
 
 function editarCliente(clientId, dia) {
     abrirModalCliente(clientId, dia);
+}
+
+async function enviarBoleto(clientId) {
+    if (!confirm('Deseja enviar o boleto via WhatsApp para este cliente?')) {
+        return;
+    }
+    
+    try {
+        setStatus('loading', 'Enviando boleto via WhatsApp...');
+        
+        const response = await fetch(`/api/clientes/enviar-boleto/${clientId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`✅ ${result.message || 'Boleto enviado com sucesso!'}`);
+            setStatus('success', 'Boleto enviado!');
+            
+            // Recarrega clientes para atualizar o status visual (SEM mover o card)
+            await refreshClientes();
+        } else {
+            alert(`❌ Erro ao enviar: ${result.error}`);
+            setStatus('error', `Erro: ${result.error}`);
+        }
+    } catch (error) {
+        console.error('Erro ao enviar boleto:', error);
+        alert(`❌ Erro ao enviar boleto: ${error.message}`);
+        setStatus('error', 'Erro ao enviar boleto');
+    }
 }
 
 async function excluirCliente(clientId) {
@@ -1563,6 +2162,9 @@ async function enviarRelatorio(clientId) {
             alert(`✅ ${result.message}\n\nValores enviados:\n${Object.entries(result.details.valores).map(([k, v]) => `${k}: ${v}`).join('\n')}`);
             setStatus('success', 'Relatório enviado com sucesso!');
             
+            // Move o cliente para +6 meses automaticamente
+            await moverClienteParaMaisSeisMeses(clientId);
+            
             // Recarrega clientes para atualizar histórico
             await refreshClientes();
         } else {
@@ -1573,6 +2175,83 @@ async function enviarRelatorio(clientId) {
         console.error('Erro ao enviar relatório:', error);
         alert(`❌ Erro ao enviar relatório: ${error.message}`);
         setStatus('error', 'Erro ao enviar relatório');
+    }
+}
+
+async function moverClienteParaMaisSeisMeses(clientId) {
+    try {
+        // Busca o cliente atual para saber seu mes_relatorio
+        let clienteAtual = null;
+        let diaCliente = '08';
+        
+        for (const cliente of clientesData.dia08 || []) {
+            if (cliente.client_id === clientId) {
+                clienteAtual = cliente;
+                diaCliente = '08';
+                break;
+            }
+        }
+        
+        if (!clienteAtual) {
+            for (const cliente of clientesData.dia16 || []) {
+                if (cliente.client_id === clientId) {
+                    clienteAtual = cliente;
+                    diaCliente = '16';
+                    break;
+                }
+            }
+        }
+        
+        if (!clienteAtual) {
+            console.warn('Cliente não encontrado para mover +6 meses');
+            return;
+        }
+        
+        // IMPORTANTE: Calcula +6 meses a partir do mes_relatorio ATUAL DO CARD
+        // Ciclo de 12 meses: sempre mantém dentro do ano atual (2025)
+        let mesAtualNumero;
+        if (clienteAtual.mes_relatorio) {
+            const [ano, mes] = clienteAtual.mes_relatorio.split('-').map(Number);
+            mesAtualNumero = mes;
+            console.log(`📅 Card está em: ${clienteAtual.mes_relatorio}`);
+        } else {
+            // Se não tem mes_relatorio definido, usa mês atual como base
+            mesAtualNumero = new Date().getMonth() + 1;
+            console.log(`📅 Card sem mês definido, usando mês atual: ${mesAtualNumero}`);
+        }
+        
+        // Adiciona 6 meses e faz ciclo circular (1-12)
+        let novoMesNumero = mesAtualNumero + 6;
+        if (novoMesNumero > 12) {
+            novoMesNumero = novoMesNumero - 12; // Volta para o início do ciclo
+        }
+        
+        const anoAtual = new Date().getFullYear();
+        const novoMes = String(novoMesNumero).padStart(2, '0');
+        const novoMesRelatorio = `${anoAtual}-${novoMes}`;
+        
+        console.log(`➡️ Movendo para: ${novoMesRelatorio} (+6 meses)`);
+        
+        // Atualiza no backend
+        const response = await fetch(`/api/clientes/${clientId}/mes-relatorio`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                mes_relatorio: novoMesRelatorio,
+                dia: diaCliente
+            })
+        });
+        
+        if (!response.ok) {
+            console.error('Erro ao mover cliente para +6 meses');
+        } else {
+            console.log(`Cliente movido para ${novoMesRelatorio}`);
+        }
+        
+    } catch (error) {
+        console.error('Erro ao mover cliente para +6 meses:', error);
     }
 }
 
@@ -1605,13 +2284,29 @@ function filterClientes() {
     if (!input) return;
     
     const searchTerm = input.value.toLowerCase().trim();
-    const cards = document.querySelectorAll('.cliente-card');
+    
+    // Busca por cards compactos do Kanban
+    const cards = document.querySelectorAll('.cliente-card-compact');
     
     cards.forEach(card => {
         const nome = (card.dataset.nome || '').toLowerCase();
-        const matches = !searchTerm || nome.includes(searchTerm);
+        const contato = (card.dataset.contato || '').toLowerCase();
+        
+        // Procura no nome OU no contato
+        const matches = !searchTerm || 
+                       nome.includes(searchTerm) || 
+                       contato.includes(searchTerm);
         
         card.style.display = matches ? '' : 'none';
+    });
+    
+    // Atualiza contadores de cada coluna
+    document.querySelectorAll('.kanban-column').forEach(column => {
+        const visibleCards = column.querySelectorAll('.cliente-card-compact:not([style*="display: none"])');
+        const countBadge = column.querySelector('.kanban-count');
+        if (countBadge) {
+            countBadge.textContent = visibleCards.length;
+        }
     });
 }
 
@@ -1656,6 +2351,24 @@ function escapeHtml(value = '') {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+function showNotification(message, type = 'info') {
+    // Usa o sistema de status existente
+    const typeMap = {
+        'success': 'success',
+        'error': 'error',
+        'info': 'loading'
+    };
+    
+    setStatus(typeMap[type] || 'loading', message);
+    
+    // Remove notificação após 3 segundos se for sucesso
+    if (type === 'success') {
+        setTimeout(() => {
+            setStatus('loading', 'Aguardando ações...');
+        }, 3000);
+    }
 }
 
 // Fecha modal ao clicar fora

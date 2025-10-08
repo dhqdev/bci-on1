@@ -1,3 +1,53 @@
 {
+  "dia08": [
+    {
+      "numero": "1550",
+      "dia": 8,
+      "cotas": [
+        {
+          "nome": "ANA PAULA MENEGHETTI ZANOBIA",
+          "valor": "R$ 332.586,00",
+          "data_compra": "15/09/2023",
+          "grupo": "1550",
+          "cota": "1065",
+          "digito": "4",
+          "contrato": "46462I07",
+          "dep_id": "1550106546",
+          "status": "ATIVO",
+          "total_investido": "R$ 20.142,77",
+          "credito_atual": "R$ 332.586,00"
+        },
+        {
+          "nome": "JOSUE APARECIDO LEME",
+          "valor": "R$ 310.413,00",
+          "data_compra": "31/08/2023",
+          "grupo": "1550",
+          "cota": "1123",
+          "digito": "5",
+          "contrato": "47610I07",
+          "dep_id": "1550112350",
+          "status": "ATIVO",
+          "total_investido": "R$ 19.510,45",
+          "credito_atual": "R$ 310.413,00"
+        },
+        {
+          "nome": "ANA PAULA MENEGHETTI ZANOBIA",
+          "valor": "R$ 332.586,00",
+          "data_compra": "15/09/2023",
+          "grupo": "1550",
+          "cota": "1874",
+          "digito": "4",
+          "contrato": "47037I07",
+          "dep_id": "1550187449",
+          "status": "ATIVO",
+          "total_investido": "R$ 20.142,77",
+          "credito_atual": "R$ 332.586,00"
+        }
+      ],
+      "extracted_at": "2025-10-08 18:00:20"
+    }
+  ],
+  "dia16": [],
+  "last_update": "2025-10-08 18:00:20",
   "grupos": []
 }

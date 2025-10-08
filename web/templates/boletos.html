@@ -281,6 +281,49 @@
         background: rgba(72, 187, 120, 0.18);
     }
 
+    /* Status de envio do boleto via WhatsApp */
+    .boleto-card.boleto-enviado {
+        border-left: 4px solid #10b981;
+    }
+
+    .boleto-card.boleto-pendente-envio {
+        border-left: 4px solid #ef4444;
+    }
+
+    .boleto-envio-badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .boleto-envio-badge.enviado {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .boleto-envio-badge.pendente {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-card-action.whatsapp.enviado {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+
+    .btn-card-action.whatsapp.enviado:hover {
+        background: #059669;
+        border-color: #059669;
+    }
+
     .boleto-checkbox {
         width: 20px;
         height: 20px;
@@ -1040,22 +1083,37 @@ function createBoletoCard(boleto, dia) {
     // Verifica se tem link de boleto disponível
     const boletoLink = getBestBoletoLink(boleto);
     const hasLink = Boolean(boletoLink);
+    
+    // Verifica se boleto foi enviado via WhatsApp
+    const boletoEnviado = Boolean(boleto?.whatsapp_enviado);
+    const dataEnvioBoleto = boleto?.data_envio_boleto ? escapeHtml(String(boleto.data_envio_boleto)) : '';
+    const statusEnvioClass = boletoEnviado ? 'boleto-enviado' : 'boleto-pendente-envio';
 
     return `
-        <article class="boleto-card ${isCompleted ? 'completed' : ''}" data-task-id="${taskIdAttr}" data-dia="${dia}" data-celular="${encodeHtmlAttr(String(rawCelular).toLowerCase())}" data-title="${encodeHtmlAttr(String(rawNome).toLowerCase())}">
+        <article class="boleto-card ${isCompleted ? 'completed' : ''} ${statusEnvioClass}" data-task-id="${taskIdAttr}" data-dia="${dia}" data-celular="${encodeHtmlAttr(String(rawCelular).toLowerCase())}" data-title="${encodeHtmlAttr(String(rawNome).toLowerCase())}">
             <input type="checkbox" class="boleto-checkbox" ${isCompleted ? 'checked' : ''} aria-label="Marcar boleto ${nomeDisplay} como ${isCompleted ? 'pendente' : 'concluído'}">
             <div class="boleto-info">
                 <div class="boleto-nome">${nomeDisplay}</div>
                 <span class="boleto-status ${isCompleted ? 'concluido' : 'pendente'}">
                     ${rawCotas ? `<i class="fas fa-layer-group"></i> ${cotasDisplay}` : '<i class="fas fa-layer-group"></i> Sem cotas'}
                 </span>
+                ${boletoEnviado ? `
+                <div class="boleto-envio-badge enviado">
+                    <i class="fas fa-check-circle"></i> Enviado via WhatsApp
+                    ${dataEnvioBoleto ? `<span style="font-size: 0.7rem; opacity: 0.8;"> • ${dataEnvioBoleto}</span>` : ''}
+                </div>
+                ` : (hasLink ? `
+                <div class="boleto-envio-badge pendente">
+                    <i class="fas fa-exclamation-circle"></i> Não enviado
+                </div>
+                ` : '')}
                 ${lastGeneratedHtml ? `<div class="boleto-meta">${lastGeneratedHtml}</div>` : ''}
             </div>
             <div class="card-actions">
                 ${hasLink ? `<button class="btn-card-action view" onclick="visualizarBoleto('${taskIdAttr}', '${dia}')" title="Visualizar Boleto">
                     <i class="fas fa-eye"></i>
                 </button>` : ''}
-                <button class="btn-card-action whatsapp" onclick="enviarWhatsAppBoleto('${taskIdAttr}', '${dia}')" title="Enviar WhatsApp">
+                <button class="btn-card-action whatsapp ${boletoEnviado ? 'enviado' : ''}" onclick="enviarWhatsAppBoleto('${taskIdAttr}', '${dia}')" title="${boletoEnviado ? 'WhatsApp já enviado' : 'Enviar WhatsApp'}">
                     <i class="fab fa-whatsapp"></i>
                 </button>
                 <button class="btn-card-action extract" onclick="extrairBoleto('${taskIdAttr}', '${dia}')" title="Extrair Boleto">
@@ -1571,6 +1629,9 @@ async function enviarWhatsAppBoleto(taskId, dia) {
         }
         
         setSectionStatus('boletos', 'success', `✅ WhatsApp enviado com sucesso para ${nome}!`);
+        
+        // Recarrega boletos para atualizar status visual
+        await loadBoletosFromCache();
         
     } catch (error) {
         console.error('Erro ao enviar WhatsApp:', error);
