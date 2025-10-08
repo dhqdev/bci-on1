@@ -3,6 +3,7 @@
     {
       "client_id": "exemplo-uuid-1234",
       "nome": "Nome do Cliente",
+      "email": "cliente@exemplo.com",
       "grupo": "1553",
       "cota": "1920",
       "contato": "5519991234567",

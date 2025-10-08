@@ -1613,13 +1613,14 @@ def api_clientes_create():
     try:
         data = request.json
         nome = data.get('nome', '')
+        email = data.get('email', '')
         grupo = data.get('grupo', '')
         cota = data.get('cota', '')
         contato = data.get('contato', '')
         valor_primeira_cota = data.get('valor_primeira_cota', '')
         dia = data.get('dia', '08')
         
-        print(f"🆕 CREATE Cliente: Nome={nome}, Dia={dia}")
+        print(f"🆕 CREATE Cliente: Nome={nome}, Email={email}, Dia={dia}")
         
         if not nome:
             return jsonify({'success': False, 'error': 'Nome é obrigatório'})
@@ -1657,6 +1658,7 @@ def api_clientes_create():
         new_cliente = {
             'client_id': client_id,
             'nome': nome,
+            'email': email,
             'grupos': grupos_list,
             'cotas': cotas_list,
             'cotas_texto': cotas_texto,
@@ -1689,12 +1691,13 @@ def api_clientes_update(client_id):
     try:
         data = request.json
         nome = data.get('nome', '')
+        email = data.get('email', '')
         grupo = data.get('grupo', '')
         cota = data.get('cota', '')
         contato = data.get('contato', '')
         valor_primeira_cota = data.get('valor_primeira_cota', '')
         
-        print(f"🔧 UPDATE Cliente: ID={client_id}, Nome={nome}")
+        print(f"🔧 UPDATE Cliente: ID={client_id}, Nome={nome}, Email={email}")
         
         # Carrega dados
         clientes_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
@@ -1712,8 +1715,9 @@ def api_clientes_update(client_id):
                     if cliente.get('client_id') == client_id:
                         print(f"✅ Cliente encontrado em {dia_key}: {cliente.get('nome')}")
                         
-                        # Atualiza nome
+                        # Atualiza nome, email e outros dados
                         cliente['nome'] = nome
+                        cliente['email'] = email
                         cliente['contato'] = contato
                         cliente['valor_primeira_cota'] = valor_primeira_cota
                         
@@ -1936,6 +1940,7 @@ def api_clientes_sync_from_boletos():
                     novo_cliente = {
                         'client_id': str(uuid.uuid4()),
                         'nome': nome,
+                        'email': '',
                         'grupo': grupo,
                         'cota': cota,
                         'contato': contato,

@@ -597,6 +597,11 @@
             </div>
             
             <div class="form-group">
+                <label for="clienteEmail">E-mail</label>
+                <input type="email" id="clienteEmail" placeholder="Ex: cliente@exemplo.com">
+            </div>
+            
+            <div class="form-group">
                 <label for="clienteCotasGrupos">Cotas e Grupos</label>
                 <textarea 
                     id="clienteCotasGrupos" 
@@ -704,6 +709,7 @@ function renderClientes(data) {
 function createClienteCard(cliente, dia) {
     const clientId = cliente.client_id || '';
     const nome = cliente.nome || 'Sem nome';
+    const email = cliente.email || '-';
     const contato = cliente.contato || '-';
     const valorPrimeiraCota = cliente.valor_primeira_cota || '-';
     const historico = cliente.historico_boletos || [];
@@ -771,6 +777,10 @@ function createClienteCard(cliente, dia) {
                         <div class="cliente-info-item">
                             <i class="fas fa-layer-group"></i>
                             <span>${infoGrupoCota}</span>
+                        </div>
+                        <div class="cliente-info-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>${escapeHtml(email)}</span>
                         </div>
                         <div class="cliente-info-item">
                             <i class="fas fa-phone"></i>
@@ -844,6 +854,7 @@ function abrirModalCliente(clientId = null, dia = '08') {
         
         if (cliente) {
             document.getElementById('clienteNome').value = cliente.nome || '';
+            document.getElementById('clienteEmail').value = cliente.email || '';
             
             // Suporta novo formato (arrays) e antigo (strings)
             const grupos = cliente.grupos || (cliente.grupo ? [cliente.grupo] : []);
@@ -896,6 +907,7 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
     
     const clientId = document.getElementById('clienteId').value;
     const nome = document.getElementById('clienteNome').value.trim();
+    const email = document.getElementById('clienteEmail').value.trim();
     const contato = document.getElementById('clienteContato').value.trim();
     const valorPrimeiraCota = document.getElementById('clienteValorPrimeiraCota').value.trim();
     const dia = document.getElementById('clienteDia').value;
@@ -908,6 +920,7 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
     // Como não temos mais campos editáveis de grupo/cota, apenas atualizamos os outros campos
     const clienteData = {
         nome,
+        email,
         contato,
         valor_primeira_cota: valorPrimeiraCota,
         dia
