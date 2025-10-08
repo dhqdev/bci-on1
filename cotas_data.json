@@ -15,7 +15,12 @@
           "dep_id": "1550106546",
           "status": "ATIVO",
           "total_investido": "R$ 20.142,77",
-          "credito_atual": "R$ 332.586,00"
+          "credito_atual": "R$ 332.586,00",
+          "lance_registrado": {
+            "valor": "15",
+            "modalidade": "FIDELIDADE",
+            "data_registro": "2025-10-08 19:30:00"
+          }
         },
         {
           "nome": "JOSUE APARECIDO LEME",
@@ -28,7 +33,12 @@
           "dep_id": "1550112350",
           "status": "ATIVO",
           "total_investido": "R$ 19.510,45",
-          "credito_atual": "R$ 310.413,00"
+          "credito_atual": "R$ 310.413,00",
+          "lance_registrado": {
+            "valor": "30",
+            "modalidade": "LIVRE",
+            "data_registro": "2025-10-08 19:31:00"
+          }
         },
         {
           "nome": "ANA PAULA MENEGHETTI ZANOBIA",

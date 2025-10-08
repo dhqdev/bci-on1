@@ -20,6 +20,80 @@ SERVOPA_PAINEL_URL = "https://www.consorcioservopa.com.br/vendas/painel"
 SERVOPA_LANCES_URL = "https://www.consorcioservopa.com.br/vendas/lances"
 
 
+def _atualizar_cota_com_lance(grupo, cota, valor_lance, modalidade, progress_callback=None):
+    """
+    Atualiza o arquivo cotas_data.json com informações do lance registrado
+    
+    Args:
+        grupo: Número do grupo
+        cota: Número da cota
+        valor_lance: Valor do lance (ex: "30" ou "15")
+        modalidade: Tipo de modalidade (FIXO, FIDELIDADE, LIVRE)
+        progress_callback: Função para logs
+    """
+    try:
+        import json
+        import os
+        from datetime import datetime
+        
+        # Remove % se existir (garantia extra)
+        valor_limpo = str(valor_lance).replace('%', '').strip()
+        
+        # Caminho para o arquivo de cotas
+        filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'cotas_data.json')
+        
+        if not os.path.exists(filepath):
+            if progress_callback:
+                progress_callback("⚠️ Arquivo cotas_data.json não encontrado")
+            return
+        
+        # Carrega dados
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        # Procura pelo grupo e cota
+        atualizado = False
+        for dia_key in ['dia08', 'dia16']:
+            if dia_key not in data:
+                continue
+            
+            # Procura o grupo
+            for grupo_obj in data[dia_key]:
+                if str(grupo_obj.get('numero', '')) == str(grupo):
+                    # Procura a cota dentro do grupo
+                    for cota_obj in grupo_obj.get('cotas', []):
+                        if str(cota_obj.get('cota', '')) == str(cota):
+                            # Atualiza com informações do lance
+                            cota_obj['lance_registrado'] = {
+                                'valor': valor_limpo,
+                                'modalidade': modalidade,
+                                'data_registro': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            }
+                            atualizado = True
+                            
+                            if progress_callback:
+                                progress_callback(f"✅ Cota {cota} atualizada com lance {modalidade} de {valor_limpo}%")
+                            break
+                    
+                    if atualizado:
+                        break
+            
+            if atualizado:
+                break
+        
+        if atualizado:
+            # Salva arquivo atualizado
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        else:
+            if progress_callback:
+                progress_callback(f"⚠️ Cota {cota} do grupo {grupo} não encontrada para atualizar")
+    
+    except Exception as e:
+        if progress_callback:
+            progress_callback(f"⚠️ Erro ao atualizar cota com lance: {e}")
+
+
 def _resolve_docparser_candidate(url: Optional[str]) -> Optional[str]:
     """Retorna a string apropriada para o extrator de protocolo."""
     if not url:
@@ -384,11 +458,20 @@ def navegar_para_lances(driver, progress_callback=None):
 
 def executar_lance(driver, progress_callback=None):
     """
-    Executa o lance completo:
-    1. Copia valor de tx_lanfix para tx_lanfix_emb
-    2. Clica em 'Simular Lance'
-    3. Clica em 'Registrar'
-    4. Verifica se aparece popup "Número do Protocolo Anterior é obrigatório"
+    Executa o lance completo com detecção automática de modalidade:
+    
+    MODALIDADES (por ordem de prioridade):
+    1. FIDELIDADE - Se existir aba "Fidelidade", usa ela (PRIORIDADE MÁXIMA)
+    2. FIXO - Se existir "Fixo" e "Livre", usa Fixo (comportamento atual)
+    3. LIVRE - Se existir APENAS "Livre", usa valor 30 com embutido
+    
+    Fluxo:
+    1. Detecta qual modalidade está disponível
+    2. Clica na aba correta (se necessário)
+    3. Preenche os campos apropriados
+    4. Clica em 'Simular Lance'
+    5. Clica em 'Registrar'
+    6. Verifica se aparece popup "Número do Protocolo Anterior é obrigatório"
        - Se aparecer = lance já existe = sucesso!
        - Se não aparecer = lance registrado = sucesso!
     
@@ -397,35 +480,170 @@ def executar_lance(driver, progress_callback=None):
         progress_callback: Função para atualizar progresso na UI
         
     Returns:
-        dict: {'success': bool, 'already_exists': bool, 'message': str, 'valor_lance': str}
+        dict: {'success': bool, 'already_exists': bool, 'message': str, 'valor_lance': str, 'modalidade': str}
     """
     try:
         wait = WebDriverWait(driver, TIMEOUT)
         
-        # Passo 1: Copiar valor de tx_lanfix
+        # ========== PASSO 1: DETECTAR MODALIDADE DISPONÍVEL ==========
         if progress_callback:
-            progress_callback("📋 Copiando valor do lance fixo...")
+            progress_callback("🔍 Detectando modalidade de lance disponível...")
         
-        tx_lanfix = wait.until(EC.presence_of_element_located((By.ID, "tx_lanfix")))
-        valor_lanfix = tx_lanfix.get_attribute('value')
+        time.sleep(2)  # Aguarda página carregar completamente
         
-        if progress_callback:
-            progress_callback(f"📋 Valor do lance fixo: {valor_lanfix}%")
+        # Procura pela div tab-switcher
+        tab_switcher = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "tab-switcher")))
+        abas_disponiveis = tab_switcher.find_elements(By.TAG_NAME, "a")
         
-        # Passo 2: Colar valor em tx_lanfix_emb
-        tx_lanfix_emb = wait.until(EC.presence_of_element_located((By.ID, "tx_lanfix_emb")))
-        tx_lanfix_emb.clear()
-        time.sleep(0.5)
-        
-        # Digita com delay natural
-        for char in valor_lanfix:
-            tx_lanfix_emb.send_keys(char)
-            time.sleep(0.1)
-        
-        time.sleep(1)
+        # Mapeia as abas disponíveis
+        abas_map = {}
+        for aba in abas_disponiveis:
+            tipo_lance = aba.get_attribute('data-lance')
+            texto_aba = aba.text.strip()
+            abas_map[tipo_lance] = {'element': aba, 'texto': texto_aba}
         
         if progress_callback:
-            progress_callback(f"✅ Valor {valor_lanfix}% preenchido no campo embutido")
+            abas_texto = ', '.join([f"{v['texto']} ({k})" for k, v in abas_map.items()])
+            progress_callback(f"📋 Abas disponíveis: {abas_texto}")
+        
+        # ========== DECISÃO DE MODALIDADE (POR ORDEM DE PRIORIDADE) ==========
+        modalidade = None
+        aba_para_clicar = None
+        
+        # PRIORIDADE 1: FIDELIDADE (data-lance="D")
+        if 'D' in abas_map:
+            modalidade = 'FIDELIDADE'
+            aba_para_clicar = abas_map['D']['element']
+            if progress_callback:
+                progress_callback("✨ Modalidade FIDELIDADE detectada (PRIORIDADE)")
+        
+        # PRIORIDADE 2: FIXO (data-lance="F") - se não tem Fidelidade
+        elif 'F' in abas_map:
+            modalidade = 'FIXO'
+            aba_para_clicar = abas_map['F']['element']
+            if progress_callback:
+                progress_callback("📌 Modalidade FIXO detectada")
+        
+        # PRIORIDADE 3: LIVRE (data-lance="L") - se é a única opção
+        elif 'L' in abas_map and len(abas_map) == 1:
+            modalidade = 'LIVRE'
+            aba_para_clicar = abas_map['L']['element']
+            if progress_callback:
+                progress_callback("🆓 Modalidade LIVRE detectada (única opção)")
+        
+        else:
+            raise Exception(f"Nenhuma modalidade válida detectada. Abas: {list(abas_map.keys())}")
+        
+        # ========== PASSO 2: CLICAR NA ABA CORRETA ==========
+        if aba_para_clicar and 'active' not in aba_para_clicar.get_attribute('class'):
+            if progress_callback:
+                progress_callback(f"👆 Clicando na aba {modalidade}...")
+            aba_para_clicar.click()
+            time.sleep(1.5)
+        
+        # ========== PASSO 3: PREENCHER CAMPOS CONFORME MODALIDADE ==========
+        valor_lance = None
+        
+        if modalidade == 'FIDELIDADE':
+            # Fidelidade: Tenta preencher tx_lanfix_emb, se não existir, clica direto em Simular
+            if progress_callback:
+                progress_callback("📋 Processando lance fidelidade...")
+            
+            tx_lanfix = wait.until(EC.presence_of_element_located((By.ID, "tx_lanfix")))
+            valor_lance_raw = tx_lanfix.get_attribute('value')
+            # Remove % se existir e mantém apenas o número
+            valor_lance = valor_lance_raw.replace('%', '').strip()
+            
+            if progress_callback:
+                progress_callback(f"📋 Valor do lance fidelidade: {valor_lance}%")
+            
+            # Verifica se existe o campo tx_lanfix_emb
+            try:
+                tx_lanfix_emb = driver.find_element(By.ID, "tx_lanfix_emb")
+                
+                # Se existe, preenche normalmente
+                if progress_callback:
+                    progress_callback("📝 Preenchendo campo embutido...")
+                
+                tx_lanfix_emb.clear()
+                time.sleep(0.5)
+                
+                for char in valor_lance:
+                    tx_lanfix_emb.send_keys(char)
+                    time.sleep(0.1)
+                
+                time.sleep(1)
+                if progress_callback:
+                    progress_callback(f"✅ Valor {valor_lance}% preenchido (Fidelidade com embutido)")
+                    
+            except:
+                # Se não existe o campo, apenas lê o valor e segue direto para simular
+                if progress_callback:
+                    progress_callback(f"✅ Fidelidade sem campo embutido - valor {valor_lance}% detectado")
+                time.sleep(0.5)
+        
+        elif modalidade == 'FIXO':
+            # Fixo (comportamento atual)
+            if progress_callback:
+                progress_callback("📋 Copiando valor do lance fixo...")
+            
+            tx_lanfix = wait.until(EC.presence_of_element_located((By.ID, "tx_lanfix")))
+            valor_lance_raw = tx_lanfix.get_attribute('value')
+            # Remove % se existir e mantém apenas o número
+            valor_lance = valor_lance_raw.replace('%', '').strip()
+            
+            if progress_callback:
+                progress_callback(f"📋 Valor do lance fixo: {valor_lance}%")
+            
+            tx_lanfix_emb = wait.until(EC.presence_of_element_located((By.ID, "tx_lanfix_emb")))
+            tx_lanfix_emb.clear()
+            time.sleep(0.5)
+            
+            for char in valor_lance:
+                tx_lanfix_emb.send_keys(char)
+                time.sleep(0.1)
+            
+            time.sleep(1)
+            if progress_callback:
+                progress_callback(f"✅ Valor {valor_lance}% preenchido (Fixo)")
+        
+        elif modalidade == 'LIVRE':
+            # Livre usa valor fixo 30 em ambos os campos + marca checkbox embutido
+            valor_lance = "30"
+            
+            if progress_callback:
+                progress_callback("📋 Preenchendo lance livre com valor 30%...")
+            
+            # Campo 1: tx_Lanliv
+            tx_lanliv = wait.until(EC.presence_of_element_located((By.ID, "tx_Lanliv")))
+            tx_lanliv.clear()
+            time.sleep(0.3)
+            for char in valor_lance:
+                tx_lanliv.send_keys(char)
+                time.sleep(0.1)
+            
+            # Campo 2: tx_lanliv_emb
+            tx_lanliv_emb = wait.until(EC.presence_of_element_located((By.ID, "tx_lanliv_emb")))
+            tx_lanliv_emb.clear()
+            time.sleep(0.3)
+            for char in valor_lance:
+                tx_lanliv_emb.send_keys(char)
+                time.sleep(0.1)
+            
+            time.sleep(0.5)
+            
+            # Marca checkbox "OFERTAR LANCE COM EMBUTIDO" (value="N")
+            if progress_callback:
+                progress_callback("✅ Marcando opção 'OFERTAR LANCE COM EMBUTIDO'...")
+            
+            checkbox_embutido = wait.until(EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, "input[type='radio'][name='st_lanse'][value='N']")
+            ))
+            driver.execute_script("arguments[0].click();", checkbox_embutido)
+            time.sleep(0.5)
+            
+            if progress_callback:
+                progress_callback(f"✅ Valor {valor_lance}% preenchido com embutido (Livre)")
         
         # Passo 3: Clicar em 'Simular Lance'
         if progress_callback:
@@ -497,7 +715,8 @@ def executar_lance(driver, progress_callback=None):
                             'success': True,
                             'already_exists': True,
                             'message': 'Lance já foi registrado anteriormente',
-                            'valor_lance': valor_lanfix,
+                            'valor_lance': valor_lance,
+                            'modalidade': modalidade,
                             'protocol_number': None,
                             'docparser_url': None,
                             'documento_url': None,
@@ -518,7 +737,8 @@ def executar_lance(driver, progress_callback=None):
                     'success': True,
                     'already_exists': False,
                     'message': 'Lance registrado com sucesso',
-                    'valor_lance': valor_lanfix,
+                    'valor_lance': valor_lance,
+                    'modalidade': modalidade,
                     'protocol_number': protocol_number,
                     'docparser_url': docparser_url,
                     'documento_url': documento_url,
@@ -541,7 +761,8 @@ def executar_lance(driver, progress_callback=None):
                 'success': True,
                 'already_exists': False,
                 'message': 'Lance registrado',
-                'valor_lance': valor_lanfix,
+                'valor_lance': valor_lance,
+                'modalidade': modalidade,
                 'protocol_number': protocol_number,
                 'docparser_url': docparser_url,
                 'documento_url': documento_url,
@@ -555,6 +776,7 @@ def executar_lance(driver, progress_callback=None):
             'already_exists': False,
             'message': f'Erro: {e}',
             'valor_lance': 'N/A',
+            'modalidade': 'N/A',
             'protocol_number': None,
             'docparser_url': None,
             'documento_url': None,
@@ -617,6 +839,11 @@ def processar_lance_completo(driver, grupo, cota, progress_callback=None):
         result['protocol_number'] = lance_result.get('protocol_number')
         result['docparser_url'] = lance_result.get('docparser_url')
         result['documento_url'] = lance_result.get('documento_url')
+        result['valor_lance'] = lance_result.get('valor_lance', 'N/A')  # Adiciona valor do lance
+        result['modalidade'] = lance_result.get('modalidade', 'N/A')  # Adiciona modalidade
+        
+        # Atualiza arquivo de cotas com informações do lance
+        _atualizar_cota_com_lance(grupo, cota, result['valor_lance'], result['modalidade'], progress_callback)
         
         # Sucesso!
         result['success'] = True

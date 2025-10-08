@@ -1368,6 +1368,7 @@ def api_cotas_automatizar_lance(grupo):
                 protocolo_valor = kwargs.get('protocolo')
                 documento_url = kwargs.get('documento_url')
                 docparser_url = kwargs.get('docparser_url')
+                modalidade = kwargs.get('modalidade', 'N/A')  # FIXO, FIDELIDADE, LIVRE
 
                 entry = {
                     'hora': datetime.now().strftime('%H:%M:%S'),
@@ -1376,6 +1377,7 @@ def api_cotas_automatizar_lance(grupo):
                     'cota': str(cota) if cota else '-',
                     'nome': str(nome) if nome else '-',
                     'valor_lance': str(valor) if valor else '-',
+                    'modalidade': str(modalidade) if modalidade else 'N/A',  # NOVO CAMPO
                     'protocolo': str(protocolo_valor) if protocolo_valor else '',
                     'documento_url': str(documento_url) if documento_url else '',
                     'docparser_url': str(docparser_url) if docparser_url else '',
@@ -1497,6 +1499,7 @@ def api_cotas_automatizar_lance(grupo):
                             protocolo=result.get('protocol_number'),
                             documento_url=result.get('documento_url'),
                             docparser_url=result.get('docparser_url'),
+                            modalidade=result.get('modalidade', 'N/A'),  # Adiciona modalidade
                         )
                         
                         emit_progress(f"🎉 Cota {index}/{len(cotas_list)} concluída!")
@@ -4011,6 +4014,7 @@ def run_automation_thread(dia):
                 protocolo_valor = kwargs.get('protocolo')
                 documento_url = kwargs.get('documento_url')
                 docparser_url = kwargs.get('docparser_url')
+                modalidade = kwargs.get('modalidade', 'N/A')  # FIXO, FIDELIDADE, LIVRE
 
                 entry = {
                     'hora': datetime.now().strftime('%H:%M:%S'),
@@ -4019,6 +4023,7 @@ def run_automation_thread(dia):
                     'cota': str(cota) if cota else '-',
                     'nome': str(nome) if nome else '-',
                     'valor_lance': str(valor) if valor else '-',
+                    'modalidade': str(modalidade) if modalidade else 'N/A',  # NOVO CAMPO
                     'protocolo': str(protocolo_valor) if protocolo_valor else '',
                     'documento_url': str(documento_url) if documento_url else '',
                     'docparser_url': str(docparser_url) if docparser_url else '',

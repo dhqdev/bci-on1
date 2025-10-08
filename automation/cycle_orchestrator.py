@@ -259,6 +259,7 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
                                 protocolo=lance_result.get('protocol_number'),
                                 documento_url=lance_result.get('documento_url'),
                                 docparser_url=lance_result.get('docparser_url'),
+                                modalidade=lance_result.get('modalidade', 'N/A'),  # Adiciona modalidade
                             )
                                 
                         except Exception as hist_error:

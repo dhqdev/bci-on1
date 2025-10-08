@@ -479,6 +479,22 @@
         opacity: 1;
     }
     
+    /* Classes de modalidade para as bolinhas - PRIORIDADE SOBRE STATUS */
+    .cota-card.lance-fidelidade .cota-checkbox {
+        color: #10b981 !important;
+        opacity: 1;
+    }
+    
+    .cota-card.lance-fixo .cota-checkbox {
+        color: #3b82f6 !important;
+        opacity: 1;
+    }
+    
+    .cota-card.lance-livre .cota-checkbox {
+        color: #f59e0b !important;
+        opacity: 1;
+    }
+    
     @keyframes pulse {
         0%, 100% { transform: scale(1); opacity: 1; }
         50% { transform: scale(1.2); opacity: 0.7; }
@@ -561,6 +577,51 @@
     
     .status-badge i {
         font-size: 10px;
+    }
+    
+    /* Badges de modalidade de lance */
+    .lance-info {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+        border: 2px solid rgba(99, 102, 241, 0.3);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .badge-fidelidade {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+    
+    .badge-fixo {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+    
+    .badge-livre {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
     }
     
     .empty-state {
@@ -1777,7 +1838,10 @@
                 const cotaNormalizada = cota.cota.padStart(4, '0');
                 const savedStatus = restoreCheckboxState(grupo.numero, cotaNormalizada);
                 
-                if (savedStatus) {
+                // ========== NÃO RESTAURA STATUS SE JÁ TEM LANCE REGISTRADO ==========
+                const temLance = cota.lance_registrado && cota.lance_registrado.valor && cota.lance_registrado.modalidade;
+                
+                if (savedStatus && !temLance) {
                     const card = document.querySelector(`.cota-card[data-cota="${cotaNormalizada}"]`);
                     if (card) {
                         card.classList.add(savedStatus);
@@ -1796,12 +1860,40 @@
         // Normaliza cota para consistência (ex: "303" -> "0303")
         const cotaNormalizada = String(cota.cota).padStart(4, '0');
         
+        // Informações do lance (se houver)
+        const lanceInfo = cota.lance_registrado || null;
+        const temLance = lanceInfo && lanceInfo.valor && lanceInfo.modalidade;
+        
+        // Define cor do badge de modalidade
+        const modalidadeCor = {
+            'FIDELIDADE': 'badge-fidelidade',
+            'FIXO': 'badge-fixo',
+            'LIVRE': 'badge-livre'
+        };
+        const badgeClass = temLance ? (modalidadeCor[lanceInfo.modalidade] || 'badge-secondary') : '';
+        
+        // Define classe de modalidade para a bolinha
+        const lanceClass = temLance ? `lance-${lanceInfo.modalidade.toLowerCase()}` : '';
+        
         return `
-            <div class="cota-card status-${statusClass}" data-cota="${cotaNormalizada}">
+            <div class="cota-card status-${statusClass} ${lanceClass}" data-cota="${cotaNormalizada}">
                 <div class="cota-checkbox-container">
                     <i class="fas fa-check-circle cota-checkbox"></i>
                 </div>
                 <div class="cota-info">
+                    ${temLance ? `
+                    <div class="cota-field lance-info">
+                        <i class="fas fa-gavel"></i>
+                        <div class="cota-field-content">
+                            <div class="cota-field-label">Lance Registrado</div>
+                            <div class="cota-field-value">
+                                <span class="badge ${badgeClass} me-2">${lanceInfo.modalidade}</span>
+                                <strong>${lanceInfo.valor}%</strong>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
                     <div class="cota-field">
                         <i class="fas fa-user"></i>
                         <div class="cota-field-content">
