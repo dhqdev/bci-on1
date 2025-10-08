@@ -411,6 +411,12 @@ echo ""
 # 8. Verificar estrutura de arquivos necessários
 print_status "Verificando estrutura de arquivos..."
 
+# Cria credentials.json a partir do template se não existir
+if [ ! -f "credentials.json" ] && [ -f "credentials.json.template" ]; then
+    cp credentials.json.template credentials.json
+    print_success "Arquivo credentials.json criado a partir do template"
+fi
+
 required_files=(
     "main_gui.py"
     "requirements.txt"

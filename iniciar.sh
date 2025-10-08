@@ -69,8 +69,11 @@ check_system_status() {
         echo -e "   ${RED}❌${NC} Ambiente Virtual: Não encontrado"
     fi
     
-    # Verifica credenciais
-    if [ -f "credentials.json" ]; then
+    # Verifica e cria credenciais se necessário
+    if [ ! -f "credentials.json" ] && [ -f "credentials.json.template" ]; then
+        cp credentials.json.template credentials.json
+        echo -e "   ${YELLOW}⚠️${NC}  Credenciais: Arquivo criado (precisa configurar)"
+    elif [ -f "credentials.json" ]; then
         echo -e "   ${GREEN}✅${NC} Credenciais: Configuradas"
     else
         echo -e "   ${YELLOW}⚠️${NC}  Credenciais: Não configuradas"

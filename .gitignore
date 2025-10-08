@@ -145,6 +145,7 @@ cython_debug/
 *.code-workspace
 
 # Credentials and sensitive files
+# Note: credentials.json.template é versionado, mas credentials.json não
 credentials.json
 *.credentials
 *.secret

@@ -169,9 +169,15 @@ if not exist requirements.txt (
     set files_ok=0
 )
 
+REM Cria credentials.json a partir do template se não existir
 if not exist credentials.json (
-    echo [⚠] credentials.json não encontrado
-    set files_ok=0
+    if exist credentials.json.template (
+        copy credentials.json.template credentials.json >nul 2>&1
+        echo [OK] credentials.json criado a partir do template
+    ) else (
+        echo [⚠] credentials.json não encontrado
+        set files_ok=0
+    )
 )
 
 if not exist auth\servopa_auth.py (
