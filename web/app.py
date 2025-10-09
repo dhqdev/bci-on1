@@ -1029,8 +1029,6 @@ def api_boletos_whatsapp(task_id):
         cotas = boleto.get('cotas', 'N/A')
         link_boleto = _best_boleto_link(boleto)
 
-        link_bloco = f"🔗 *Link do boleto:* {link_boleto}\n\n" if link_boleto else "📄 *Acesse o portal Servopa para visualizar o boleto.*\n\n"
-
         mensagem = f"""Olá *{nome}*! 👋
 
 📋 *Lembrete de Boleto - Sistema OXCASH*
@@ -1046,32 +1044,23 @@ Qualquer dúvida, estamos à disposição!
 
 _Mensagem automática - Sistema OXCASH_"""
 
-        success_text, response_text = evolution_api.send_text_message(celular, mensagem)
-
-        if not success_text:
-            return jsonify({
-                'success': False,
-                'error': f"Falha ao enviar mensagem: {response_text.get('error', 'Erro desconhecido')}",
-                'details': response_text
-            })
-
         details = {
             'nome': nome,
             'celular': celular,
             'dia': dia,
-            'text_sent': True,
+            'text_sent': False,  # Não envia texto separado mais
             'link': link_boleto,
             'pdf_sent': False,
             'pdf_path': None,
         }
 
-        # ========== NOVO: BAIXA E ENVIA PDF DO BOLETO ==========
-        import time
+        # ========== NOVO: BAIXA E ENVIA PDF DO BOLETO COM MENSAGEM UNIFICADA ==========
         from utils.boleto_downloader import download_boleto_pdf, get_cached_boleto
         
         pdf_path = None
         pdf_sent = False
         pdf_response = None
+        text_only_sent = False  # Flag para fallback se PDF falhar
         
         if link_boleto:
             # 1. Verifica se já está em cache
@@ -1088,44 +1077,56 @@ _Mensagem automática - Sistema OXCASH_"""
                 else:
                     print(f"✅ PDF baixado: {pdf_path}")
             
-            # 3. Se conseguiu o PDF (cache ou download), envia pelo WhatsApp
+            # 3. Se conseguiu o PDF (cache ou download), envia COM A MENSAGEM JUNTO
             if pdf_path and os.path.exists(pdf_path):
-                time.sleep(2)  # Delay para não sobrecarregar
-                
                 # Monta nome do arquivo bonito para o WhatsApp
                 nome_arquivo = f"Boleto_{nome.replace(' ', '_')}.pdf"
                 
-                print(f"📤 Enviando PDF pelo WhatsApp: {nome_arquivo}")
+                print(f"📤 Enviando PDF + mensagem pelo WhatsApp: {nome_arquivo}")
                 
+                # ENVIA PDF COM CAPTION (mensagem + arquivo juntos!)
                 success_pdf, pdf_response = evolution_api.send_document(
                     celular,
                     pdf_path,
-                    caption=f"📄 Boleto - {nome}",
+                    caption=mensagem,  # Usa a mensagem completa como caption
                     filename=nome_arquivo
                 )
                 
                 pdf_sent = success_pdf
                 
                 if success_pdf:
-                    print(f"✅ PDF enviado com sucesso para {celular}")
+                    print(f"✅ PDF + mensagem enviados com sucesso para {celular}")
+                    details['pdf_sent'] = True
+                    details['pdf_path'] = pdf_path
+                    details['pdf_response'] = pdf_response
                 else:
                     print(f"❌ Falha ao enviar PDF: {pdf_response}")
-                
-                details['pdf_sent'] = pdf_sent
-                details['pdf_path'] = pdf_path
-                details['pdf_response'] = pdf_response
+                    # Fallback: se falhou enviar PDF, envia só texto
+                    success_text, response_text = evolution_api.send_text_message(celular, mensagem)
+                    text_only_sent = success_text
+                    details['text_sent'] = success_text
             else:
-                print(f"⚠️ PDF não disponível para envio (path: {pdf_path})")
+                print(f"⚠️ PDF não disponível, enviando apenas mensagem de texto")
+                # Fallback: envia só a mensagem se não conseguir o PDF
+                success_text, response_text = evolution_api.send_text_message(celular, mensagem)
+                text_only_sent = success_text
+                details['text_sent'] = success_text
+                
+                if not success_text:
+                    return jsonify({
+                        'success': False,
+                        'error': f"Falha ao enviar mensagem: {response_text.get('error', 'Erro desconhecido')}",
+                        'details': response_text
+                    })
         
         # Se não há link, tenta enviar imagem remota como fallback (mantém compatibilidade)
         elif not link_boleto:
             fallback_image = boleto.get('png_base64', '')
             if isinstance(fallback_image, str) and fallback_image.lower().startswith(('http://', 'https://')):
-                time.sleep(2)
                 success_media, response_media = evolution_api.send_media_message(
                     celular,
                     fallback_image,
-                    f"📄 Boleto - {nome}"
+                    mensagem  # Usa mensagem completa como caption também
                 )
                 details['media_sent'] = success_media
                 details['media_response'] = response_media
@@ -1175,12 +1176,11 @@ _Mensagem automática - Sistema OXCASH_"""
                 'nome': nome,
                 'celular': celular,
                 'dia': dia,
-                'text_sent': True,
+                'text_sent': details.get('text_sent', False),
                 'pdf_sent': details.get('pdf_sent', False),
                 'pdf_path': details.get('pdf_path'),
                 'media_sent': details.get('media_sent', False),
                 'link': link_boleto,
-                'text_response': response_text,
                 'pdf_response': details.get('pdf_response'),
                 'media_response': details.get('media_response')
             }
@@ -2454,11 +2454,14 @@ def api_clientes_enviar_boleto(client_id):
         if not boleto:
             return jsonify({'success': False, 'error': 'Boleto não encontrado para este cliente'})
         
+        # Extrai dados do boleto
+        task_id = boleto.get('task_id', client_id)
         link_boleto = boleto.get('short_link') or boleto.get('link', '')
+        
         if not link_boleto:
             return jsonify({'success': False, 'error': 'Boleto sem link disponível'})
         
-        # Prepara mensagem
+        # Prepara dados do cliente
         nome = cliente.get('nome', 'Cliente')
         celular = cliente.get('contato', '')
         
@@ -2470,15 +2473,26 @@ def api_clientes_enviar_boleto(client_id):
         if not celular.startswith('55'):
             celular = '55' + celular
         
-        mensagem = f"""Olá {nome}! 👋
-
-Seu boleto está disponível! 📄💰
-
-🔗 Acesse aqui: {link_boleto}
-
-Qualquer dúvida, estamos à disposição!"""
+        # Monta mensagem
+        cotas = boleto.get('cotas', 'N/A')
+        dia = '08' if dia_key == 'dia08' else '16'
         
-        # Envia via Evolution API
+        mensagem = f"""Olá *{nome}*! 👋
+
+📋 *Lembrete de Boleto - Sistema OXCASH*
+
+Segue as informações do seu boleto:
+
+🎯 *Cotas:* {cotas}
+📅 *Vencimento:* Dia {dia}
+
+O boleto está anexado abaixo! 👇
+
+Qualquer dúvida, estamos à disposição!
+
+_Mensagem automática - Sistema OXCASH_"""
+        
+        # Carrega Evolution API
         evolution_config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'evolution_config.json')
         if not os.path.exists(evolution_config_path):
             return jsonify({'success': False, 'error': 'Configuração da Evolution API não encontrada. Configure em WhatsApp.'})
@@ -2496,7 +2510,57 @@ Qualquer dúvida, estamos à disposição!"""
             api_key=api_config['api_key']
         )
         
-        success, response = evolution_api.send_text_message(celular, mensagem)
+        # ========== BAIXA E ENVIA PDF DO BOLETO COM MENSAGEM UNIFICADA ==========
+        from utils.boleto_downloader import download_boleto_pdf, get_cached_boleto
+        
+        pdf_path = None
+        pdf_sent = False
+        
+        # 1. Verifica se já está em cache
+        pdf_path = get_cached_boleto(task_id)
+        
+        # 2. Se não está em cache, baixa do Servopa
+        if not pdf_path:
+            print(f"📥 Baixando PDF do boleto: {link_boleto}")
+            sucesso, pdf_path, erro = download_boleto_pdf(link_boleto, task_id)
+            
+            if not sucesso:
+                print(f"⚠️ Falha ao baixar PDF: {erro}")
+                pdf_path = None
+            else:
+                print(f"✅ PDF baixado: {pdf_path}")
+        
+        # 3. Se conseguiu o PDF (cache ou download), envia COM A MENSAGEM JUNTO
+        if pdf_path and os.path.exists(pdf_path):
+            # Monta nome do arquivo bonito para o WhatsApp
+            nome_arquivo = f"Boleto_{nome.replace(' ', '_')}.pdf"
+            
+            print(f"📤 Enviando PDF + mensagem pelo WhatsApp: {nome_arquivo}")
+            
+            # ENVIA PDF COM CAPTION (mensagem + arquivo juntos!)
+            success, response = evolution_api.send_document(
+                celular,
+                pdf_path,
+                caption=mensagem,  # Usa a mensagem completa como caption
+                filename=nome_arquivo
+            )
+            
+            pdf_sent = success
+            
+            if not success:
+                print(f"❌ Falha ao enviar PDF: {response}")
+                # Fallback: se falhou enviar PDF, envia só texto
+                success, response = evolution_api.send_text_message(celular, mensagem)
+                if not success:
+                    return jsonify({
+                        'success': False,
+                        'error': f"Falha ao enviar mensagem: {response.get('error', 'Erro desconhecido')}",
+                        'details': response
+                    })
+        else:
+            print(f"⚠️ PDF não disponível, enviando apenas mensagem de texto")
+            # Fallback: envia só a mensagem se não conseguir o PDF
+            success, response = evolution_api.send_text_message(celular, mensagem)
         
         if not success:
             return jsonify({
@@ -2513,13 +2577,21 @@ Qualquer dúvida, estamos à disposição!"""
         with open(boletos_filepath, 'w', encoding='utf-8') as f:
             json.dump(boletos_data, f, indent=2, ensure_ascii=False)
         
+        # Monta mensagem de sucesso baseada no que foi enviado
+        if pdf_sent:
+            mensagem_sucesso = f'Boleto PDF enviado via WhatsApp para {nome}! ✅'
+        else:
+            mensagem_sucesso = f'Mensagem de boleto enviada via WhatsApp para {nome} (PDF indisponível)'
+        
         return jsonify({
             'success': True,
-            'message': f'Boleto enviado via WhatsApp para {nome}!',
+            'message': mensagem_sucesso,
             'details': {
                 'nome': nome,
                 'celular': celular,
                 'link_boleto': link_boleto,
+                'pdf_sent': pdf_sent,
+                'pdf_path': pdf_path if pdf_sent else None,
                 'data_envio': boleto['data_envio_boleto']
             }
         })
