@@ -3,7 +3,8 @@
 Sistema completo de automação para gerenciamento de lances no Servopa, integrado com Todoist e WhatsApp via Evolution API. **Interface Web Moderna** (Flask + Bootstrap 5).
 
 ---
-<img width="1909" height="956" alt="image" src="https://github.com/user-attachments/assets/8f7a3ae2-6ded-4dd6-bfa3-848e8591474d" />
+<img width="1901" height="992" alt="image" src="https://github.com/user-attachments/assets/fb633c4b-4501-4c5d-8645-ee665bf9bf95" />
+
 
 ## 📋 Sobre o Projeto
 
