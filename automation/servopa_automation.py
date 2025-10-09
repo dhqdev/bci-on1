@@ -382,21 +382,57 @@ def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
                 if progress_callback:
                     progress_callback(f"      ↩️  Voltando para a tabela...")
                 
+                # ========== CORREÇÃO BUG #1: NAVEGAÇÃO MELHORADA ==========
                 driver.get(SERVOPA_PAINEL_URL)
-                time.sleep(2)
+                time.sleep(3)  # Aumentado para garantir carregamento completo
                 
-                # Re-preenche grupo e busca novamente
-                grupo_input = wait.until(EC.presence_of_element_located((By.ID, "grupofrm")))
-                grupo_input.clear()
-                time.sleep(0.3)
+                # Re-preenche grupo e busca novamente COM RETRY
+                tentativas = 0
+                max_tentativas = 3
+                busca_sucesso = False
                 
-                for char in str(grupo_number):
-                    grupo_input.send_keys(char)
-                    time.sleep(0.05)
-                
-                buscar_button = wait.until(EC.element_to_be_clickable((By.ID, "btn_representante_cota")))
-                buscar_button.click()
-                time.sleep(3)
+                while tentativas < max_tentativas and not busca_sucesso:
+                    try:
+                        # Re-preenche grupo
+                        grupo_input = wait.until(EC.presence_of_element_located((By.ID, "grupofrm")))
+                        grupo_input.clear()
+                        time.sleep(0.5)
+                        
+                        for char in str(grupo_number):
+                            grupo_input.send_keys(char)
+                            time.sleep(0.05)
+                        
+                        time.sleep(0.5)
+                        
+                        # Clica em buscar
+                        buscar_button = wait.until(EC.element_to_be_clickable((By.ID, "btn_representante_cota")))
+                        buscar_button.click()
+                        time.sleep(4)  # Aumentado para garantir carregamento da tabela
+                        
+                        # Verifica se tabela carregou
+                        table_check = driver.find_element(By.CSS_SELECTOR, ".cotas-table table tbody")
+                        rows_check = table_check.find_elements(By.TAG_NAME, "tr")
+                        
+                        if len(rows_check) > 0:
+                            busca_sucesso = True
+                            if progress_callback and tentativas > 0:
+                                progress_callback(f"      ✅ Tabela recarregada com sucesso (tentativa {tentativas + 1})")
+                        else:
+                            tentativas += 1
+                            if tentativas < max_tentativas:
+                                if progress_callback:
+                                    progress_callback(f"      ⚠️  Tabela vazia, tentando novamente... ({tentativas}/{max_tentativas})")
+                                time.sleep(2)
+                    except Exception as retry_error:
+                        tentativas += 1
+                        if tentativas < max_tentativas:
+                            if progress_callback:
+                                progress_callback(f"      ⚠️  Erro ao recarregar tabela, tentando novamente... ({tentativas}/{max_tentativas})")
+                            time.sleep(2)
+                        else:
+                            if progress_callback:
+                                progress_callback(f"      ❌ Falha ao recarregar tabela após {max_tentativas} tentativas")
+                            raise retry_error
                 
             except Exception as e:
                 if progress_callback:

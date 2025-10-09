@@ -78,7 +78,14 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
     if progress_callback:
         progress_callback("=" * 60)
         progress_callback(f"🚀 INICIANDO CICLO COMPLETO")
-        progress_callback(f"📊 {stats['total_sections']} colunas, {stats['total_tasks']} tarefas")
+        progress_callback(f"📊 {stats['total_sections']} colunas, {stats['total_tasks']} tarefas TOTAIS no board")
+        
+        # ========== LOG DETALHADO: Mostra resumo de cada grupo ==========
+        for idx, section in enumerate(board_data['sections'], 1):
+            pending = [t for t in section['tasks'] if not t.get('is_completed', False)]
+            completed = [t for t in section['tasks'] if t.get('is_completed', False)]
+            progress_callback(f"   {idx}. {section['title']}: {len(pending)} pendentes, {len(completed)} flegadas")
+        
         progress_callback("=" * 60)
     
     # Percorre cada coluna (seção)
@@ -108,7 +115,10 @@ def executar_ciclo_completo(driver, board_data, progress_callback=None, history_
         # Se TODAS as tarefas estão flegadas, pula a coluna inteira
         if len(pending_tasks) == 0:
             if progress_callback:
-                progress_callback(f"✅ Coluna '{section_title}' totalmente flegada - PULANDO para próxima coluna")
+                progress_callback(f"")
+                progress_callback(f"⏭️  PULANDO COLUNA '{section_title}':")
+                progress_callback(f"   Motivo: Todas as {len(completed_tasks)} tarefas já estão flegadas (concluídas)")
+                progress_callback(f"   Esta coluna foi processada anteriormente ou já estava concluída.")
             stats['skipped'] += len(completed_tasks)
             continue
         
