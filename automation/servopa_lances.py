@@ -51,8 +51,15 @@ def _atualizar_cota_com_lance(grupo, cota, valor_lance, modalidade, progress_cal
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        # Procura pelo grupo e cota
+        # Procura pelo grupo e cota em TODOS os arrays (dia08, dia16 E grupos)
         atualizado = False
+        lance_info = {
+            'valor': valor_limpo,
+            'modalidade': modalidade,
+            'data_registro': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        # Atualiza em dia08 e dia16
         for dia_key in ['dia08', 'dia16']:
             if dia_key not in data:
                 continue
@@ -64,22 +71,27 @@ def _atualizar_cota_com_lance(grupo, cota, valor_lance, modalidade, progress_cal
                     for cota_obj in grupo_obj.get('cotas', []):
                         if str(cota_obj.get('cota', '')) == str(cota):
                             # Atualiza com informações do lance
-                            cota_obj['lance_registrado'] = {
-                                'valor': valor_limpo,
-                                'modalidade': modalidade,
-                                'data_registro': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                            }
+                            cota_obj['lance_registrado'] = lance_info.copy()
                             atualizado = True
                             
                             if progress_callback:
-                                progress_callback(f"✅ Cota {cota} atualizada com lance {modalidade} de {valor_limpo}%")
+                                progress_callback(f"✅ Cota {cota} atualizada em {dia_key} com lance {modalidade} de {valor_limpo}%")
                             break
-                    
-                    if atualizado:
-                        break
-            
-            if atualizado:
-                break
+        
+        # TAMBÉM atualiza no array 'grupos' (usado pelo frontend)
+        if 'grupos' in data:
+            for grupo_obj in data['grupos']:
+                if str(grupo_obj.get('numero', '')) == str(grupo):
+                    # Procura a cota dentro do grupo
+                    for cota_obj in grupo_obj.get('cotas', []):
+                        if str(cota_obj.get('cota', '')) == str(cota):
+                            # Atualiza com informações do lance
+                            cota_obj['lance_registrado'] = lance_info.copy()
+                            atualizado = True
+                            
+                            if progress_callback:
+                                progress_callback(f"✅ Cota {cota} atualizada em 'grupos' com lance {modalidade} de {valor_limpo}%")
+                            break
         
         if atualizado:
             # Salva arquivo atualizado
@@ -545,23 +557,45 @@ def executar_lance(driver, progress_callback=None):
         valor_lance = None
         
         if modalidade == 'FIDELIDADE':
-            # Fidelidade: Tenta preencher tx_lanfix_emb, se não existir, clica direto em Simular
+            # Fidelidade: Tenta pegar valor do campo txLanfid (correto para fidelidade)
             if progress_callback:
                 progress_callback("📋 Processando lance fidelidade...")
             
-            tx_lanfix = wait.until(EC.presence_of_element_located((By.ID, "tx_lanfix")))
-            valor_lance_raw = tx_lanfix.get_attribute('value')
-            # Remove % se existir e mantém apenas o número
-            valor_lance = valor_lance_raw.replace('%', '').strip()
+            # Primeiro tenta pegar do campo específico de fidelidade (txLanfid)
+            try:
+                tx_lanfid = driver.find_element(By.ID, "txLanfid")
+                valor_lance_raw = tx_lanfid.get_attribute('value')
+                # Remove % se existir e mantém apenas o número
+                valor_lance = valor_lance_raw.replace('%', '').strip()
+                
+                if progress_callback:
+                    progress_callback(f"📋 Valor do lance fidelidade (txLanfid): {valor_lance}%")
+                
+                # Se o valor estiver vazio, usa 15 como padrão
+                if not valor_lance or valor_lance == '':
+                    valor_lance = "15"
+                    if progress_callback:
+                        progress_callback("⚠️ Campo txLanfid vazio, usando valor padrão 15%")
+            except:
+                # Se não encontrar txLanfid, tenta tx_lanfix como fallback
+                try:
+                    tx_lanfix = driver.find_element(By.ID, "tx_lanfix")
+                    valor_lance_raw = tx_lanfix.get_attribute('value')
+                    valor_lance = valor_lance_raw.replace('%', '').strip()
+                    
+                    if progress_callback:
+                        progress_callback(f"📋 Valor do lance fidelidade (tx_lanfix fallback): {valor_lance}%")
+                except:
+                    # Se nada funcionar, usa 15 como padrão para fidelidade
+                    valor_lance = "15"
+                    if progress_callback:
+                        progress_callback("⚠️ Nenhum campo de valor encontrado, usando padrão 15%")
             
-            if progress_callback:
-                progress_callback(f"📋 Valor do lance fidelidade: {valor_lance}%")
-            
-            # Verifica se existe o campo tx_lanfix_emb
+            # Verifica se existe o campo tx_lanfix_emb para preencher
             try:
                 tx_lanfix_emb = driver.find_element(By.ID, "tx_lanfix_emb")
                 
-                # Se existe, preenche normalmente
+                # Se existe, preenche com o valor capturado
                 if progress_callback:
                     progress_callback("📝 Preenchendo campo embutido...")
                 
@@ -577,7 +611,7 @@ def executar_lance(driver, progress_callback=None):
                     progress_callback(f"✅ Valor {valor_lance}% preenchido (Fidelidade com embutido)")
                     
             except:
-                # Se não existe o campo, apenas lê o valor e segue direto para simular
+                # Se não existe o campo embutido, apenas mantém o valor capturado
                 if progress_callback:
                     progress_callback(f"✅ Fidelidade sem campo embutido - valor {valor_lance}% detectado")
                 time.sleep(0.5)

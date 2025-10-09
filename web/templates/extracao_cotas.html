@@ -2202,16 +2202,16 @@
         const card = document.querySelector(`.cota-card[data-cota="${cotaNormalizada}"]`);
         
         if (card) {
-            // Remove classes anteriores
+            // Remove APENAS classes de status (preserva classes de modalidade lance-*)
             card.classList.remove('processing', 'completed', 'error');
             
-            // Adiciona nova classe
+            // Adiciona nova classe de status
             card.classList.add(status);
             
             // ========== SALVA NO LOCALSTORAGE ==========
             saveCheckboxState(currentAutomationGrupo, cotaNormalizada, status);
             
-            console.log(`✅ Checkbox atualizado: Cota ${cotaNormalizada} -> ${status}`);
+            console.log(`✅ Checkbox atualizado: Cota ${cotaNormalizada} -> ${status} (preservando modalidade)`);
         } else {
             console.warn(`⚠️ Card não encontrado para cota: ${cotaNormalizada}`);
         }

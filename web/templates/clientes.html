@@ -1189,11 +1189,6 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="clienteValorPrimeiraCota">Valor da Primeira Cota</label>
-                        <input type="text" id="clienteValorPrimeiraCota" placeholder="Ex: 1500.00">
-                    </div>
-                    
-                    <div class="form-group">
                         <label for="clienteDia">Dia de Vencimento *</label>
                         <select id="clienteDia" required>
                             <option value="08">Dia 08</option>
@@ -1612,7 +1607,6 @@ function createClienteCard(cliente, dia) {
     const nome = cliente.nome || 'Sem nome';
     const email = cliente.email || '-';
     const contato = cliente.contato || '-';
-    const valorPrimeiraCota = cliente.valor_primeira_cota || '-';
     
     // ========== NOVOS CAMPOS FINANCEIROS ==========
     const creditoInicial = parseFloat(cliente.credito_inicial || 0);
@@ -1788,7 +1782,6 @@ function abrirModalCliente(clientId = null, dia = '08') {
             }
             
             document.getElementById('clienteContato').value = cliente.contato || '';
-            document.getElementById('clienteValorPrimeiraCota').value = cliente.valor_primeira_cota || '';
             document.getElementById('clienteDia').value = diaEncontrado;
             
             // ========== PREENCHE DADOS FINANCEIROS ==========
@@ -1973,7 +1966,6 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
     const nome = document.getElementById('clienteNome').value.trim();
     const email = document.getElementById('clienteEmail').value.trim();
     const contato = document.getElementById('clienteContato').value.trim();
-    const valorPrimeiraCota = document.getElementById('clienteValorPrimeiraCota').value.trim();
     const dia = document.getElementById('clienteDia').value;
     
     if (!nome) {
@@ -1986,7 +1978,6 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
         nome,
         email,
         contato,
-        valor_primeira_cota: valorPrimeiraCota,
         dia
     };
     
