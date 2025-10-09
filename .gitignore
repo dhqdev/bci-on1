@@ -169,6 +169,7 @@ evolution_config.json
 
 # Cache directories (PDFs e dados temporários)
 data/boletos_cache/
+data/boletos_pdf/
 data/short_links.json
 
 # Backup files

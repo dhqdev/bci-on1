@@ -208,6 +208,172 @@ class EvolutionAPI:
         except Exception as e:
             return False, {'error': str(e)}
     
+    def send_document(
+        self,
+        phone: str,
+        file_path: str,
+        caption: str = "",
+        filename: str = None
+    ) -> Tuple[bool, Dict]:
+        """
+        Envia documento (PDF, DOC, XLSX, etc) para um número via WhatsApp
+        
+        Args:
+            phone: Número de telefone (+5519999999999 ou 5519999999999)
+            file_path: Caminho do arquivo local OU URL pública
+            caption: Legenda do documento (opcional)
+            filename: Nome do arquivo que aparecerá no WhatsApp (opcional)
+            
+        Returns:
+            Tuple[bool, Dict]: (sucesso, resposta_da_api)
+            
+        Examples:
+            >>> api = EvolutionAPI(...)
+            >>> # Com arquivo local
+            >>> success, response = api.send_document(
+            ...     phone="5519999999999",
+            ...     file_path="/path/to/boleto.pdf",
+            ...     caption="Seu boleto",
+            ...     filename="Boleto_Janeiro.pdf"
+            ... )
+            >>> # Com URL pública
+            >>> success, response = api.send_document(
+            ...     phone="5519999999999",
+            ...     file_path="https://example.com/arquivo.pdf",
+            ...     filename="documento.pdf"
+            ... )
+        """
+        try:
+            import os
+            import base64
+            
+            url = f"{self.base_url}/message/sendMedia/{self.instance_name}"
+            formatted_phone = self.format_phone_number(phone).replace('@c.us', '')
+            
+            # Determina tipo de arquivo e converte se necessário
+            file_data = None
+            
+            # Se é arquivo local, converte para base64
+            if os.path.exists(file_path):
+                print(f"📄 Lendo arquivo local: {file_path}")
+                
+                with open(file_path, 'rb') as f:
+                    file_content = base64.b64encode(f.read()).decode('utf-8')
+                
+                # Detecta mimetype baseado na extensão
+                ext = os.path.splitext(file_path)[1].lower()
+                mimetype_map = {
+                    '.pdf': 'application/pdf',
+                    '.doc': 'application/msword',
+                    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    '.xls': 'application/vnd.ms-excel',
+                    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    '.txt': 'text/plain',
+                    '.zip': 'application/zip',
+                    '.rar': 'application/x-rar-compressed',
+                }
+                mimetype = mimetype_map.get(ext, 'application/octet-stream')
+                
+                file_data = f"data:{mimetype};base64,{file_content}"
+                
+                if not filename:
+                    filename = os.path.basename(file_path)
+                
+                file_size = len(file_content)
+                print(f"📦 Arquivo codificado: {file_size:,} bytes base64")
+            
+            # Se é URL, usa direto (Evolution API baixa automaticamente)
+            elif file_path.startswith(('http://', 'https://')):
+                print(f"🌐 Usando URL pública: {file_path}")
+                file_data = file_path
+                
+                if not filename:
+                    filename = file_path.split('/')[-1] or "documento.pdf"
+            
+            else:
+                raise ValueError(f"Arquivo não encontrado e não é URL válida: {file_path}")
+            
+            # Mont payload para Evolution API - FORMATO CORRETO PARA DOCUMENTOS
+            # A Evolution API espera base64 SEM o prefixo "data:..."
+            payload = {
+                "number": formatted_phone,
+                "mediatype": "document",  # IMPORTANTE: tipo 'document' para PDFs/docs
+                "fileName": filename,  # Nome que aparece no WhatsApp
+            }
+            
+            # Para base64, remove o prefixo "data:..."
+            if file_data.startswith('data:'):
+                # Extrai apenas o base64 puro
+                base64_only = file_data.split(',', 1)[1] if ',' in file_data else file_data
+                payload["media"] = base64_only
+            else:
+                # É URL pública
+                payload["media"] = file_data
+            
+            # Adiciona caption se fornecido
+            if caption:
+                payload["caption"] = caption
+            
+            print(f"📤 Enviando documento: {filename}")
+            print(f"   📞 Para: {formatted_phone}")
+            print(f"   📝 Caption: {caption if caption else '(sem legenda)'}")
+            print(f"   🔗 URL: {url}")
+            
+            # Envia requisição
+            response = requests.post(
+                url,
+                headers=self.headers,
+                json=payload,
+                timeout=60  # Timeout maior para upload de arquivos
+            )
+            
+            print(f"📨 Status Code: {response.status_code}")
+            
+            # Processa resposta
+            if response.status_code in [200, 201]:
+                try:
+                    response_data = response.json()
+                    print(f"✅ Documento enviado com sucesso!")
+                    print(f"   Response: {response_data}")
+                    return True, response_data
+                except ValueError:
+                    # Se não é JSON, considera sucesso mesmo assim
+                    print(f"✅ Documento enviado (resposta não-JSON)")
+                    return True, {'message': 'Documento enviado com sucesso', 'raw_response': response.text}
+            else:
+                error_msg = f'Status {response.status_code}'
+                try:
+                    error_data = response.json()
+                    error_msg = error_data.get('message', error_msg)
+                except:
+                    error_msg = response.text
+                
+                print(f"❌ Falha ao enviar: {error_msg}")
+                return False, {
+                    'error': error_msg,
+                    'status_code': response.status_code,
+                    'response': response.text
+                }
+                
+        except FileNotFoundError as e:
+            error_msg = f'Arquivo não encontrado: {file_path}'
+            print(f"❌ {error_msg}")
+            return False, {'error': error_msg}
+        except requests.exceptions.Timeout:
+            error_msg = 'Timeout ao enviar documento (mais de 60 segundos)'
+            print(f"❌ {error_msg}")
+            return False, {'error': error_msg}
+        except requests.exceptions.ConnectionError:
+            error_msg = f'Erro de conexão com {self.base_url}'
+            print(f"❌ {error_msg}")
+            return False, {'error': error_msg}
+        except Exception as e:
+            error_msg = f'Erro inesperado: {str(e)}'
+            print(f"❌ {error_msg}")
+            import traceback
+            traceback.print_exc()
+            return False, {'error': error_msg}
+    
     def send_bulk_messages(
         self,
         contacts: List[Dict[str, str]],

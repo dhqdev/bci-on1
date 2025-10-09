@@ -1040,7 +1040,9 @@ Segue as informações do seu boleto:
 🎯 *Cotas:* {cotas}
 📅 *Vencimento:* Dia {dia}
 
-{link_bloco}Qualquer dúvida, estamos à disposição!
+O boleto está anexado abaixo! 👇
+
+Qualquer dúvida, estamos à disposição!
 
 _Mensagem automática - Sistema OXCASH_"""
 
@@ -1059,12 +1061,64 @@ _Mensagem automática - Sistema OXCASH_"""
             'dia': dia,
             'text_sent': True,
             'link': link_boleto,
-            'media_sent': False,
+            'pdf_sent': False,
+            'pdf_path': None,
         }
 
-        # Se não há link, tenta enviar imagem remota como fallback
-        if not link_boleto:
-            import time
+        # ========== NOVO: BAIXA E ENVIA PDF DO BOLETO ==========
+        import time
+        from utils.boleto_downloader import download_boleto_pdf, get_cached_boleto
+        
+        pdf_path = None
+        pdf_sent = False
+        pdf_response = None
+        
+        if link_boleto:
+            # 1. Verifica se já está em cache
+            pdf_path = get_cached_boleto(task_id)
+            
+            # 2. Se não está em cache, baixa do Servopa
+            if not pdf_path:
+                print(f"📥 Baixando PDF do boleto: {link_boleto}")
+                sucesso, pdf_path, erro = download_boleto_pdf(link_boleto, task_id)
+                
+                if not sucesso:
+                    print(f"⚠️ Falha ao baixar PDF: {erro}")
+                    pdf_path = None
+                else:
+                    print(f"✅ PDF baixado: {pdf_path}")
+            
+            # 3. Se conseguiu o PDF (cache ou download), envia pelo WhatsApp
+            if pdf_path and os.path.exists(pdf_path):
+                time.sleep(2)  # Delay para não sobrecarregar
+                
+                # Monta nome do arquivo bonito para o WhatsApp
+                nome_arquivo = f"Boleto_{nome.replace(' ', '_')}.pdf"
+                
+                print(f"📤 Enviando PDF pelo WhatsApp: {nome_arquivo}")
+                
+                success_pdf, pdf_response = evolution_api.send_document(
+                    celular,
+                    pdf_path,
+                    caption=f"📄 Boleto - {nome}",
+                    filename=nome_arquivo
+                )
+                
+                pdf_sent = success_pdf
+                
+                if success_pdf:
+                    print(f"✅ PDF enviado com sucesso para {celular}")
+                else:
+                    print(f"❌ Falha ao enviar PDF: {pdf_response}")
+                
+                details['pdf_sent'] = pdf_sent
+                details['pdf_path'] = pdf_path
+                details['pdf_response'] = pdf_response
+            else:
+                print(f"⚠️ PDF não disponível para envio (path: {pdf_path})")
+        
+        # Se não há link, tenta enviar imagem remota como fallback (mantém compatibilidade)
+        elif not link_boleto:
             fallback_image = boleto.get('png_base64', '')
             if isinstance(fallback_image, str) and fallback_image.lower().startswith(('http://', 'https://')):
                 time.sleep(2)
@@ -1084,12 +1138,16 @@ _Mensagem automática - Sistema OXCASH_"""
             
             # Adiciona comentário na task do Todoist
             comment_text = f"📱 WhatsApp enviado em {datetime.now().strftime('%d/%m/%Y %H:%M')} para {celular}"
-            if link_boleto:
-                comment_text += "\n✅ Texto com link enviado"
+            
+            # Status baseado no que foi enviado
+            if details.get('pdf_sent'):
+                comment_text += "\n✅ Texto + PDF enviados"
+            elif link_boleto:
+                comment_text += "\n⚠️ Texto enviado, mas falha ao enviar PDF"
             elif details.get('media_sent'):
-                comment_text += "\n✅ Texto + Imagem enviados"
+                comment_text += "\n✅ Texto + Imagem enviados (fallback)"
             else:
-                comment_text += "\n⚠️ Texto enviado, mas link/imagem indisponível"
+                comment_text += "\n⚠️ Texto enviado, mas boleto indisponível"
             
             todoist_api.add_comment(task_id, comment_text)
         except Exception as e:
@@ -1103,17 +1161,27 @@ _Mensagem automática - Sistema OXCASH_"""
         with open(boletos_filepath, 'w', encoding='utf-8') as f:
             json.dump(boletos_data, f, indent=2, ensure_ascii=False)
         
+        # Monta mensagem de sucesso
+        mensagem_sucesso = f'WhatsApp enviado com sucesso para {nome}!'
+        if details.get('pdf_sent'):
+            mensagem_sucesso += ' (PDF anexado)'
+        elif link_boleto:
+            mensagem_sucesso += ' (PDF não enviado - verifique logs)'
+        
         return jsonify({
             'success': True,
-            'message': f'WhatsApp enviado com sucesso para {nome}!',
+            'message': mensagem_sucesso,
             'details': {
                 'nome': nome,
                 'celular': celular,
                 'dia': dia,
                 'text_sent': True,
+                'pdf_sent': details.get('pdf_sent', False),
+                'pdf_path': details.get('pdf_path'),
                 'media_sent': details.get('media_sent', False),
                 'link': link_boleto,
                 'text_response': response_text,
+                'pdf_response': details.get('pdf_response'),
                 'media_response': details.get('media_response')
             }
         })
