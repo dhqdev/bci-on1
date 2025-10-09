@@ -110,6 +110,27 @@
         color: var(--text-secondary);
     }
     
+    /* ========== BOTÕES DE AUTOMATIZAR TODOS ========== */
+    #btnAutomatizarDia8:hover,
+    #btnAutomatizarDia16:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+        filter: brightness(1.1);
+    }
+    
+    #btnAutomatizarDia8:active,
+    #btnAutomatizarDia16:active {
+        transform: translateY(0px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    #btnAutomatizarDia8:disabled,
+    #btnAutomatizarDia16:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+    
     /* Badge de dia no grupo */
     .grupo-day-badge {
         display: inline-flex;
@@ -479,26 +500,52 @@
         opacity: 1;
     }
     
-    /* Classes de modalidade para as bolinhas - PRIORIDADE SOBRE STATUS */
+    /* ========== CORES POR TIPO DE LANCE - MÁXIMA PRIORIDADE ========== */
+    /* Verde para Lance Fidelidade */
     .cota-card.lance-fidelidade .cota-checkbox {
         color: #10b981 !important;
-        opacity: 1;
+        opacity: 1 !important;
     }
     
+    /* Azul para Lance Fixo */
     .cota-card.lance-fixo .cota-checkbox {
         color: #3b82f6 !important;
-        opacity: 1;
+        opacity: 1 !important;
     }
     
+    /* Laranja para Lance Livre */
     .cota-card.lance-livre .cota-checkbox {
         color: #f59e0b !important;
-        opacity: 1;
+        opacity: 1 !important;
+    }
+    
+    /* Sobrescreve cores de tipo de lance quando completado com sucesso */
+    .cota-card.completed.lance-fidelidade .cota-checkbox,
+    .cota-card.completed.lance-fixo .cota-checkbox,
+    .cota-card.completed.lance-livre .cota-checkbox {
+        color: var(--success) !important;
+        animation: checkmark 0.5s ease-out;
+    }
+    
+    /* Sobrescreve cores de tipo de lance quando em processamento */
+    .cota-card.processing.lance-fidelidade .cota-checkbox,
+    .cota-card.processing.lance-fixo .cota-checkbox,
+    .cota-card.processing.lance-livre .cota-checkbox {
+        color: #f59e0b !important;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    /* Sobrescreve cores de tipo de lance quando erro */
+    .cota-card.error.lance-fidelidade .cota-checkbox,
+    .cota-card.error.lance-fixo .cota-checkbox,
+    .cota-card.error.lance-livre .cota-checkbox {
+        color: var(--danger) !important;
+        animation: none;
     }
 
     /* Estado visual para cards pendentes com lance registrado */
     .cota-card.pending .cota-checkbox {
         opacity: 1 !important;
-        color: inherit !important;
         animation: none !important;
     }
     
@@ -991,7 +1038,7 @@
 
 <!-- Filtro por Dia -->
 <div class="day-filter-tabs" id="dayFilterTabs" style="display: none;">
-    <ul class="nav nav-pills justify-content-center" id="dayFilterNav" role="tablist">
+    <ul class="nav nav-pills justify-content-center" id="dayFilterNav" role="tablist" style="gap: 12px; align-items: center;">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="day-8-tab" data-bs-toggle="pill" data-bs-target="#day-8-content" 
                     type="button" role="tab" onclick="filterByDay(8)">
@@ -1000,12 +1047,31 @@
                 <span class="badge" id="day8Count">0</span>
             </button>
         </li>
+        
+        <!-- Botão Automatizar Todos do Dia 8 -->
+        <li class="nav-item" role="presentation">
+            <button class="btn" id="btnAutomatizarDia8" onclick="automatizarTodosDia8()" 
+                    style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-weight: 600; border-radius: 8px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                <i class="fas fa-rocket"></i>
+                <span>Automatizar Todos Do Dia 8</span>
+            </button>
+        </li>
+        
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="day-16-tab" data-bs-toggle="pill" data-bs-target="#day-16-content" 
                     type="button" role="tab" onclick="filterByDay(16)">
                 <i class="fas fa-calendar-day"></i>
                 <span>Dia 16</span>
                 <span class="badge" id="day16Count">0</span>
+            </button>
+        </li>
+        
+        <!-- Botão Automatizar Todos do Dia 16 -->
+        <li class="nav-item" role="presentation">
+            <button class="btn" id="btnAutomatizarDia16" onclick="automatizarTodosDia16()" 
+                    style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-weight: 600; border-radius: 8px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: all 0.3s ease;">
+                <i class="fas fa-rocket"></i>
+                <span>Automatizar Todos Do dia 16</span>
             </button>
         </li>
     </ul>
@@ -1048,13 +1114,11 @@
                         type="text" 
                         class="form-control" 
                         id="grupoNumber" 
-                        placeholder="Ex: 1550"
-                        maxlength="4"
-                        pattern="\d{1,4}"
+                        placeholder="Ex: 1550 ou 1550, 1556, 1557"
                         style="font-size: 16px; padding: 12px;"
                     >
                     <small class="form-text text-muted">
-                        Digite o número do grupo (até 4 dígitos)
+                        Digite um ou mais números de grupo separados por vírgula (ex: 1550, 1556)
                     </small>
                 </div>
                 
@@ -1629,15 +1693,26 @@
     // Inicia extração
     async function startExtraction() {
         console.log('🚀 startExtraction() chamada');
-        const grupoNumber = document.getElementById('grupoNumber').value.trim();
+        const grupoInput = document.getElementById('grupoNumber').value.trim();
         
-        if (!grupoNumber) {
+        if (!grupoInput) {
             alert('Por favor, digite o número do grupo');
             return;
         }
         
-        if (!/^\d{1,4}$/.test(grupoNumber)) {
-            alert('Número do grupo inválido (deve conter até 4 dígitos)');
+        // Separa por vírgula e remove espaços em branco
+        const gruposArray = grupoInput.split(',').map(g => g.trim()).filter(g => g);
+        
+        // Valida cada número de grupo
+        for (const grupo of gruposArray) {
+            if (!/^\d{1,4}$/.test(grupo)) {
+                alert(`Número do grupo inválido: "${grupo}" (deve conter até 4 dígitos)`);
+                return;
+            }
+        }
+        
+        if (gruposArray.length === 0) {
+            alert('Por favor, digite pelo menos um número de grupo válido');
             return;
         }
         
@@ -1652,6 +1727,7 @@
         }
         
         console.log(`📅 Dia selecionado: ${diaSelecionado}`);
+        console.log(`📊 Grupos a importar: ${gruposArray.join(', ')}`);
         
         // Fecha modal
         if (currentModal) {
@@ -1660,37 +1736,73 @@
         
         // Mostra loading
         document.getElementById('loadingOverlay').classList.add('active');
-        document.getElementById('loadingSubtext').textContent = `Extraindo grupo ${grupoNumber} (Dia ${diaSelecionado})...`;
+        document.getElementById('loadingSubtext').textContent = `Importando ${gruposArray.length} grupo(s) no Dia ${diaSelecionado}...`;
         document.getElementById('progressLog').innerHTML = '';
         
+        // Variáveis para controle
+        let sucessos = 0;
+        let falhas = 0;
+        let totalCotas = 0;
+        
         try {
-            const response = await fetch(`/api/cotas/extract/${grupoNumber}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    dia: diaSelecionado
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                // Recarrega grupos
-                await loadGrupos();
+            // Processa cada grupo sequencialmente
+            for (let i = 0; i < gruposArray.length; i++) {
+                const grupoNumber = gruposArray[i];
+                updateProgress(`📦 [${i + 1}/${gruposArray.length}] Extraindo grupo ${grupoNumber}...`);
                 
-                // Mostra sucesso
-                showToast('success', `Grupo ${grupoNumber} (Dia ${diaSelecionado}) importado com sucesso! ${data.total_cotas} cotas encontradas.`);
-            } else {
-                showToast('error', `Erro ao importar: ${data.error}`);
+                try {
+                    const response = await fetch(`/api/cotas/extract/${grupoNumber}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            dia: diaSelecionado
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        sucessos++;
+                        totalCotas += data.total_cotas || 0;
+                        updateProgress(`✅ Grupo ${grupoNumber}: ${data.total_cotas} cotas importadas`);
+                    } else {
+                        falhas++;
+                        updateProgress(`❌ Grupo ${grupoNumber}: ${data.error}`);
+                    }
+                } catch (error) {
+                    falhas++;
+                    updateProgress(`❌ Grupo ${grupoNumber}: Erro de conexão`);
+                    console.error(`Erro no grupo ${grupoNumber}:`, error);
+                }
+                
+                // Pequeno delay entre grupos para não sobrecarregar
+                if (i < gruposArray.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
             }
+            
+            // Recarrega grupos após todas as extrações
+            await loadGrupos();
+            
+            // Mostra resultado final
+            if (sucessos > 0 && falhas === 0) {
+                showToast('success', `✅ ${sucessos} grupo(s) importado(s) com sucesso! Total: ${totalCotas} cotas.`);
+            } else if (sucessos > 0 && falhas > 0) {
+                showToast('warning', `⚠️ ${sucessos} grupo(s) importado(s), ${falhas} com erro.`);
+            } else {
+                showToast('error', `❌ Falha ao importar todos os grupos.`);
+            }
+            
         } catch (error) {
             console.error('Erro na extração:', error);
             showToast('error', 'Erro ao conectar com o servidor');
         } finally {
-            // Esconde loading
-            document.getElementById('loadingOverlay').classList.remove('active');
+            // Esconde loading após 1 segundo
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.remove('active');
+            }, 1000);
         }
     }
     
@@ -2290,6 +2402,218 @@
         // Auto-scroll
         logElement.scrollTop = logElement.scrollHeight;
     }
+    
+    // ========== AUTOMATIZAR TODOS OS GRUPOS DO DIA 8 ==========
+    window.automatizarTodosDia8 = async function() {
+        // Filtra grupos do dia 8
+        const gruposDia8 = gruposData.filter(g => (g.dia || 8) === 8);
+        
+        if (gruposDia8.length === 0) {
+            showToast('warning', 'Nenhum grupo do Dia 8 encontrado');
+            return;
+        }
+        
+        const confirmacao = confirm(
+            `🚀 Automatizar ${gruposDia8.length} grupo(s) do Dia 8?\n\n` +
+            `Grupos: ${gruposDia8.map(g => g.numero).join(', ')}\n\n` +
+            `Isso executará a automação de lances para todos esses grupos sequencialmente.`
+        );
+        
+        if (!confirmacao) return;
+        
+        // Desabilita botão durante execução
+        const btnAutomatizar = document.getElementById('btnAutomatizarDia8');
+        const textoOriginal = btnAutomatizar.innerHTML;
+        btnAutomatizar.disabled = true;
+        btnAutomatizar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
+        
+        let sucessos = 0;
+        let falhas = 0;
+        
+        try {
+            // Processa cada grupo sequencialmente
+            for (let i = 0; i < gruposDia8.length; i++) {
+                const grupo = gruposDia8[i];
+                const grupoNumero = grupo.numero;
+                
+                showToast('info', `[${i + 1}/${gruposDia8.length}] Automatizando grupo ${grupoNumero}...`);
+                
+                try {
+                    // Coleta estados dos checkboxes deste grupo
+                    const checkboxStates = {};
+                    const cards = document.querySelectorAll(`.grupo-section[data-grupo="${grupoNumero}"] .cota-card`);
+                    
+                    cards.forEach(card => {
+                        const cotaNumber = card.dataset.cota;
+                        if (card.classList.contains('completed')) {
+                            checkboxStates[cotaNumber] = 'completed';
+                        } else if (card.classList.contains('processing')) {
+                            checkboxStates[cotaNumber] = 'processing';
+                        } else if (card.classList.contains('error')) {
+                            checkboxStates[cotaNumber] = 'error';
+                        }
+                    });
+                    
+                    // Chama API de automação
+                    const response = await fetch(`/api/cotas/automatizar-lance/${grupoNumero}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            checkbox_states: checkboxStates
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        sucessos++;
+                        showToast('success', `✅ Grupo ${grupoNumero}: ${result.message}`);
+                    } else {
+                        falhas++;
+                        showToast('error', `❌ Grupo ${grupoNumero}: ${result.error}`);
+                    }
+                    
+                } catch (error) {
+                    falhas++;
+                    console.error(`Erro no grupo ${grupoNumero}:`, error);
+                    showToast('error', `❌ Grupo ${grupoNumero}: Erro de conexão`);
+                }
+                
+                // Delay entre grupos para não sobrecarregar
+                if (i < gruposDia8.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+            
+            // Resultado final
+            if (sucessos > 0 && falhas === 0) {
+                showToast('success', `🎉 Todos os ${sucessos} grupos do Dia 8 foram automatizados com sucesso!`);
+            } else if (sucessos > 0 && falhas > 0) {
+                showToast('warning', `⚠️ ${sucessos} grupos concluídos, ${falhas} com erro`);
+            } else {
+                showToast('error', `❌ Falha ao automatizar todos os grupos`);
+            }
+            
+            // Recarrega grupos para atualizar visualização
+            await loadGrupos();
+            
+        } catch (error) {
+            console.error('Erro na automatização em lote:', error);
+            showToast('error', 'Erro ao executar automatização em lote');
+        } finally {
+            // Restaura botão
+            btnAutomatizar.disabled = false;
+            btnAutomatizar.innerHTML = textoOriginal;
+        }
+    };
+    
+    // ========== AUTOMATIZAR TODOS OS GRUPOS DO DIA 16 ==========
+    window.automatizarTodosDia16 = async function() {
+        // Filtra grupos do dia 16
+        const gruposDia16 = gruposData.filter(g => g.dia === 16);
+        
+        if (gruposDia16.length === 0) {
+            showToast('warning', 'Nenhum grupo do Dia 16 encontrado');
+            return;
+        }
+        
+        const confirmacao = confirm(
+            `🚀 Automatizar ${gruposDia16.length} grupo(s) do Dia 16?\n\n` +
+            `Grupos: ${gruposDia16.map(g => g.numero).join(', ')}\n\n` +
+            `Isso executará a automação de lances para todos esses grupos sequencialmente.`
+        );
+        
+        if (!confirmacao) return;
+        
+        // Desabilita botão durante execução
+        const btnAutomatizar = document.getElementById('btnAutomatizarDia16');
+        const textoOriginal = btnAutomatizar.innerHTML;
+        btnAutomatizar.disabled = true;
+        btnAutomatizar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
+        
+        let sucessos = 0;
+        let falhas = 0;
+        
+        try {
+            // Processa cada grupo sequencialmente
+            for (let i = 0; i < gruposDia16.length; i++) {
+                const grupo = gruposDia16[i];
+                const grupoNumero = grupo.numero;
+                
+                showToast('info', `[${i + 1}/${gruposDia16.length}] Automatizando grupo ${grupoNumero}...`);
+                
+                try {
+                    // Coleta estados dos checkboxes deste grupo
+                    const checkboxStates = {};
+                    const cards = document.querySelectorAll(`.grupo-section[data-grupo="${grupoNumero}"] .cota-card`);
+                    
+                    cards.forEach(card => {
+                        const cotaNumber = card.dataset.cota;
+                        if (card.classList.contains('completed')) {
+                            checkboxStates[cotaNumber] = 'completed';
+                        } else if (card.classList.contains('processing')) {
+                            checkboxStates[cotaNumber] = 'processing';
+                        } else if (card.classList.contains('error')) {
+                            checkboxStates[cotaNumber] = 'error';
+                        }
+                    });
+                    
+                    // Chama API de automação
+                    const response = await fetch(`/api/cotas/automatizar-lance/${grupoNumero}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            checkbox_states: checkboxStates
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        sucessos++;
+                        showToast('success', `✅ Grupo ${grupoNumero}: ${result.message}`);
+                    } else {
+                        falhas++;
+                        showToast('error', `❌ Grupo ${grupoNumero}: ${result.error}`);
+                    }
+                    
+                } catch (error) {
+                    falhas++;
+                    console.error(`Erro no grupo ${grupoNumero}:`, error);
+                    showToast('error', `❌ Grupo ${grupoNumero}: Erro de conexão`);
+                }
+                
+                // Delay entre grupos para não sobrecarregar
+                if (i < gruposDia16.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+            
+            // Resultado final
+            if (sucessos > 0 && falhas === 0) {
+                showToast('success', `🎉 Todos os ${sucessos} grupos do Dia 16 foram automatizados com sucesso!`);
+            } else if (sucessos > 0 && falhas > 0) {
+                showToast('warning', `⚠️ ${sucessos} grupos concluídos, ${falhas} com erro`);
+            } else {
+                showToast('error', `❌ Falha ao automatizar todos os grupos`);
+            }
+            
+            // Recarrega grupos para atualizar visualização
+            await loadGrupos();
+            
+        } catch (error) {
+            console.error('Erro na automatização em lote:', error);
+            showToast('error', 'Erro ao executar automatização em lote');
+        } finally {
+            // Restaura botão
+            btnAutomatizar.disabled = false;
+            btnAutomatizar.innerHTML = textoOriginal;
+        }
+    };
     
     // Botão de parar automação
     document.getElementById('btnStopAutomation').addEventListener('click', async function() {
