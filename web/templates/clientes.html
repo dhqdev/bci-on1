@@ -1190,10 +1190,7 @@
                     
                     <div class="form-group">
                         <label for="clienteDia">Dia de Vencimento *</label>
-                        <select id="clienteDia" required>
-                            <option value="08">Dia 08</option>
-                            <option value="16">Dia 16</option>
-                        </select>
+                        <input type="text" id="clienteDia" required readonly disabled style="background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-size: 1rem;" />
                     </div>
                 </div>
                 
@@ -1782,7 +1779,7 @@ function abrirModalCliente(clientId = null, dia = '08') {
             }
             
             document.getElementById('clienteContato').value = cliente.contato || '';
-            document.getElementById('clienteDia').value = diaEncontrado;
+            document.getElementById('clienteDia').value = diaEncontrado === '16' ? 'Dia 16' : 'Dia 08';
             
             // ========== PREENCHE DADOS FINANCEIROS ==========
             preencherDadosFinanceiros(cliente);
@@ -1792,16 +1789,16 @@ function abrirModalCliente(clientId = null, dia = '08') {
             
         } else {
             console.error('Cliente não encontrado:', clientId);
-            document.getElementById('clienteDia').value = dia;
+            document.getElementById('clienteDia').value = dia === '16' ? 'Dia 16' : 'Dia 08';
             
             // Limpa dados financeiros e histórico
             document.getElementById('modalDadosFinanceiros').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">Cliente não encontrado</p>';
             document.getElementById('modalHistoricoWhatsApp').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9rem;">Nenhum envio registrado</p>';
         }
     } else {
-        title.textContent = 'Novo Cliente';
-        document.getElementById('clienteId').value = '';
-        document.getElementById('clienteDia').value = dia;
+    title.textContent = 'Novo Cliente';
+    document.getElementById('clienteId').value = '';
+    document.getElementById('clienteDia').value = dia === '16' ? 'Dia 16' : 'Dia 08';
         
         // Limpa campo de cotas/grupos ao criar novo
         const cotasGruposTextarea = document.getElementById('clienteCotasGrupos');
@@ -1966,7 +1963,9 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
     const nome = document.getElementById('clienteNome').value.trim();
     const email = document.getElementById('clienteEmail').value.trim();
     const contato = document.getElementById('clienteContato').value.trim();
-    const dia = document.getElementById('clienteDia').value;
+    // Extrai apenas o número do dia para salvar ("Dia 08" -> "08")
+    const diaTexto = document.getElementById('clienteDia').value;
+    const dia = diaTexto.includes('16') ? '16' : '08';
     
     if (!nome) {
         alert('Por favor, preencha o nome do cliente');

@@ -494,6 +494,13 @@
         color: #f59e0b !important;
         opacity: 1;
     }
+
+    /* Estado visual para cards pendentes com lance registrado */
+    .cota-card.pending .cota-checkbox {
+        opacity: 1 !important;
+        color: inherit !important;
+        animation: none !important;
+    }
     
     @keyframes pulse {
         0%, 100% { transform: scale(1); opacity: 1; }
@@ -1841,13 +1848,15 @@
                 // ========== NÃO RESTAURA STATUS SE JÁ TEM LANCE REGISTRADO ==========
                 const temLance = cota.lance_registrado && cota.lance_registrado.valor && cota.lance_registrado.modalidade;
                 
-                if (savedStatus && !temLance) {
-                    const card = document.querySelector(`.cota-card[data-cota="${cotaNormalizada}"]`);
-                    if (card) {
+                const card = document.querySelector(`.cota-card[data-cota="${cotaNormalizada}"]`);
+                if (card) {
+                    if (savedStatus && !temLance) {
                         card.classList.add(savedStatus);
                         console.log(`♻️ Checkbox restaurado: ${cotaNormalizada} -> ${savedStatus}`);
-                    } else {
-                        console.warn(`⚠️ Card não encontrado ao restaurar: ${cotaNormalizada}`);
+                    } else if (temLance && !savedStatus) {
+                        // Se tem lance registrado e não tem status salvo, adiciona 'pending'
+                        card.classList.add('pending');
+                        console.log(`🕓 Card ${cotaNormalizada} com lance registrado, setado como 'pending'`);
                     }
                 }
             });
