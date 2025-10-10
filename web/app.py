@@ -2008,6 +2008,109 @@ def api_clientes_delete(client_id):
         print(f"❌ Erro ao deletar cliente: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/api/clientes/delete-mes/<mes_relatorio>', methods=['POST', 'DELETE'])
+def api_clientes_delete_mes(mes_relatorio):
+    """Deleta todos os clientes de um mês específico"""
+    try:
+        clientes_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'clientes_data.json')
+        if not os.path.exists(clientes_filepath):
+            return jsonify({'success': False, 'error': 'Arquivo de clientes não encontrado'})
+            
+        with open(clientes_filepath, 'r', encoding='utf-8') as f:
+            clientes_data = json.load(f)
+        
+        total_deletados = 0
+        clientes_deletados = []
+        
+        # Remove clientes do mês especificado de ambos os dias
+        for dia_key in ['dia08', 'dia16']:
+            if dia_key in clientes_data:
+                original_count = len(clientes_data[dia_key])
+                
+                # Guarda os nomes dos clientes que serão deletados
+                for cliente in clientes_data[dia_key]:
+                    if cliente.get('mes_relatorio') == mes_relatorio:
+                        clientes_deletados.append({
+                            'nome': cliente.get('nome', ''),
+                            'client_id': cliente.get('client_id', ''),
+                            'task_id': cliente.get('task_id', ''),
+                            'dia': dia_key
+                        })
+                
+                # Remove clientes do mês
+                clientes_data[dia_key] = [
+                    c for c in clientes_data[dia_key] 
+                    if c.get('mes_relatorio') != mes_relatorio
+                ]
+                
+                deletados_neste_dia = original_count - len(clientes_data[dia_key])
+                total_deletados += deletados_neste_dia
+                
+                if deletados_neste_dia > 0:
+                    print(f"🗑️ {deletados_neste_dia} clientes deletados do {dia_key} (mês: {mes_relatorio})")
+        
+        # Salva clientes atualizados
+        with open(clientes_filepath, 'w', encoding='utf-8') as f:
+            json.dump(clientes_data, f, indent=2, ensure_ascii=False)
+        
+        # Remove boletos associados também
+        boletos_filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'boletos_data.json')
+        boletos_deletados = 0
+        
+        if os.path.exists(boletos_filepath):
+            try:
+                with open(boletos_filepath, 'r', encoding='utf-8-sig') as f:
+                    content = f.read().strip()
+                    if content.startswith('\ufeff'):
+                        content = content[1:]
+                    boletos_data = json.loads(content)
+                
+                # Remove boletos dos clientes deletados
+                for cliente_info in clientes_deletados:
+                    dia_key = cliente_info['dia']
+                    task_id = cliente_info['task_id']
+                    nome = cliente_info['nome']
+                    
+                    if dia_key in boletos_data:
+                        original_len = len(boletos_data[dia_key])
+                        
+                        boletos_data[dia_key] = [
+                            b for b in boletos_data[dia_key]
+                            if not (
+                                (task_id and b.get('task_id') == task_id) or
+                                (nome and b.get('nome', '').strip().lower() == nome.lower())
+                            )
+                        ]
+                        
+                        boletos_deletados += original_len - len(boletos_data[dia_key])
+                
+                # Salva boletos atualizados
+                with open(boletos_filepath, 'w', encoding='utf-8') as f:
+                    json.dump(boletos_data, f, indent=2, ensure_ascii=False)
+                    
+                if boletos_deletados > 0:
+                    print(f"🗑️ {boletos_deletados} boletos também foram removidos")
+                    
+            except Exception as e:
+                print(f"⚠️ Erro ao deletar boletos associados: {e}")
+        
+        mensagem = f'{total_deletados} cliente(s) deletado(s) do mês {mes_relatorio}'
+        if boletos_deletados > 0:
+            mensagem += f' ({boletos_deletados} boleto(s) também removido(s))'
+        
+        print(f"✅ {mensagem}")
+        
+        return jsonify({
+            'success': True, 
+            'message': mensagem,
+            'total_deletados': total_deletados,
+            'boletos_deletados': boletos_deletados
+        })
+        
+    except Exception as e:
+        print(f"❌ Erro ao deletar clientes do mês: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/api/clientes/sync-from-boletos', methods=['POST'])
 def api_clientes_sync_from_boletos():
     """Sincroniza clientes a partir dos boletos existentes"""

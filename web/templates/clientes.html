@@ -890,7 +890,31 @@
         border-radius: 12px;
         font-size: 0.75rem;
         font-weight: 700;
+    }
+
+    .btn-delete-month {
+        background: transparent;
+        border: 1px solid rgba(245, 101, 101, 0.3);
+        color: #f56565;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 4px;
         margin-left: auto;
+    }
+
+    .btn-delete-month:hover {
+        background: rgba(245, 101, 101, 0.15);
+        border-color: #f56565;
+        transform: translateY(-1px);
+    }
+
+    .btn-delete-month i {
+        font-size: 0.7rem;
     }
 
     /* Campo de pesquisa no kanban */
@@ -1385,6 +1409,15 @@ function renderClientes(data) {
                             <i class="fas fa-calendar-alt"></i>
                             ${mes.nome}
                             <span class="kanban-count" id="countMes${mes.chave}">${clientesMes.length}</span>
+                            ${clientesMes.length > 0 ? `
+                                <button 
+                                    class="btn-delete-month" 
+                                    onclick="deletarClientesMes('${mes.chave}', '${mes.nome}')"
+                                    title="Deletar todos os clientes de ${mes.nome}">
+                                    <i class="fas fa-trash"></i>
+                                    Limpar
+                                </button>
+                            ` : ''}
                         </div>
                         ${isCurrentMonth ? `
                         <div class="kanban-month-subtitle">
@@ -2226,14 +2259,70 @@ async function excluirCliente(clientId) {
         setStatus('success', result.message || 'Cliente e boleto excluídos!');
         console.log('✅ Cliente excluído com sucesso!');
         
-        // Aguarda um pouco antes de recarregar para mostrar a mensagem
-        await new Promise(resolve => setTimeout(resolve, 500));
         await refreshClientes();
         
     } catch (error) {
         console.error('❌ Erro ao excluir cliente:', error);
         setStatus('error', error.message);
         alert('Erro ao excluir: ' + error.message);
+    }
+}
+
+async function deletarClientesMes(mesChave, mesNome) {
+    console.log('🗑️ Tentando deletar todos os clientes do mês:', mesChave);
+    
+    // Conta quantos clientes serão deletados
+    const clientes08 = clientesData.dia08 || [];
+    const clientes16 = clientesData.dia16 || [];
+    const todosClientes = [...clientes08, ...clientes16];
+    const clientesDoMes = todosClientes.filter(c => c.mes_relatorio === mesChave);
+    const totalClientes = clientesDoMes.length;
+    
+    if (totalClientes === 0) {
+        alert('Não há clientes para deletar neste mês.');
+        return;
+    }
+    
+    const mensagemConfirmacao = `⚠️ ATENÇÃO: Esta ação irá deletar TODOS os ${totalClientes} cliente(s) de ${mesNome}!\n\n` +
+                               `Os boletos associados também serão removidos.\n\n` +
+                               `Esta ação NÃO pode ser desfeita!\n\n` +
+                               `Tem certeza que deseja continuar?`;
+    
+    if (!confirm(mensagemConfirmacao)) {
+        console.log('❌ Deleção cancelada pelo usuário');
+        return;
+    }
+    
+    try {
+        setStatus('loading', `Deletando ${totalClientes} cliente(s) de ${mesNome}...`);
+        
+        console.log('📡 Enviando requisição DELETE para:', `/api/clientes/delete-mes/${mesChave}`);
+        
+        const response = await fetch(`/api/clientes/delete-mes/${mesChave}`, {
+            method: 'DELETE'
+        });
+        
+        console.log('📥 Resposta recebida:', response.status, response.statusText);
+        
+        const result = await response.json();
+        console.log('📋 Resultado:', result);
+        
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Erro ao deletar clientes do mês');
+        }
+        
+        const mensagemSucesso = `✅ ${result.message || `${result.total_deletados} cliente(s) deletado(s)!`}`;
+        setStatus('success', mensagemSucesso);
+        console.log('✅ Clientes do mês deletados com sucesso!');
+        
+        alert(mensagemSucesso);
+        
+        await refreshClientes();
+        
+    } catch (error) {
+        console.error('❌ Erro ao deletar clientes do mês:', error);
+        setStatus('error', error.message);
+        alert('Erro ao deletar clientes: ' + error.message);
     }
 }
 
