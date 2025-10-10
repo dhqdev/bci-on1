@@ -1322,6 +1322,106 @@
     </div>
 </div>
 
+<!-- Modal Automação Dia 08 -->
+<div class="modal fade automation-modal" id="modalAutomacaoDia08" tabindex="-1" aria-labelledby="modalAutomacaoDia08Label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAutomacaoDia08Label">
+                    <i class="fas fa-robot me-2"></i>
+                    Automação de Lances - Dia 08
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Estatísticas -->
+                <div class="automation-stats">
+                    <div class="stat-box">
+                        <div class="stat-box-label">Total</div>
+                        <div class="stat-box-value" id="statTotalDia08">0</div>
+                    </div>
+                    <div class="stat-box success">
+                        <div class="stat-box-label">Sucesso</div>
+                        <div class="stat-box-value" id="statSuccessDia08">0</div>
+                    </div>
+                    <div class="stat-box error">
+                        <div class="stat-box-label">Falhas</div>
+                        <div class="stat-box-value" id="statFailedDia08">0</div>
+                    </div>
+                </div>
+                
+                <!-- Log de Progresso -->
+                <div class="automation-log" id="automationLogDia08">
+                    <div class="automation-log-item">Aguardando início da automação...</div>
+                </div>
+                
+                <!-- Controles -->
+                <div class="automation-controls">
+                    <button type="button" class="btn-close-automation" id="btnCloseAutomationDia08" style="display: none;">
+                        <i class="fas fa-check me-2"></i>
+                        Fechar
+                    </button>
+                    <div style="flex: 1;"></div>
+                    <button type="button" class="btn-stop-automation" id="btnStopAutomationDia08" style="display: none;">
+                        <i class="fas fa-stop me-2"></i>
+                        Parar Automação
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Automação Dia 16 -->
+<div class="modal fade automation-modal" id="modalAutomacaoDia16" tabindex="-1" aria-labelledby="modalAutomacaoDia16Label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAutomacaoDia16Label">
+                    <i class="fas fa-robot me-2"></i>
+                    Automação de Lances - Dia 16
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Estatísticas -->
+                <div class="automation-stats">
+                    <div class="stat-box">
+                        <div class="stat-box-label">Total</div>
+                        <div class="stat-box-value" id="statTotalDia16">0</div>
+                    </div>
+                    <div class="stat-box success">
+                        <div class="stat-box-label">Sucesso</div>
+                        <div class="stat-box-value" id="statSuccessDia16">0</div>
+                    </div>
+                    <div class="stat-box error">
+                        <div class="stat-box-label">Falhas</div>
+                        <div class="stat-box-value" id="statFailedDia16">0</div>
+                    </div>
+                </div>
+                
+                <!-- Log de Progresso -->
+                <div class="automation-log" id="automationLogDia16">
+                    <div class="automation-log-item">Aguardando início da automação...</div>
+                </div>
+                
+                <!-- Controles -->
+                <div class="automation-controls">
+                    <button type="button" class="btn-close-automation" id="btnCloseAutomationDia16" style="display: none;">
+                        <i class="fas fa-check me-2"></i>
+                        Fechar
+                    </button>
+                    <div style="flex: 1;"></div>
+                    <button type="button" class="btn-stop-automation" id="btnStopAutomationDia16" style="display: none;">
+                        <i class="fas fa-stop me-2"></i>
+                        Parar Automação
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Loading Overlay -->
 <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-content">
@@ -1936,7 +2036,24 @@
                         </button>
                     </div>
                 </div>
-                <div class="cotas-grid">
+                
+                <!-- Campo de Pesquisa do Grupo -->
+                <div class="search-container-grupo" style="padding: 12px 16px; background: var(--bg-primary); border-bottom: 1px solid var(--border-color);">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 14px;"></i>
+                        <input 
+                            type="search" 
+                            class="search-input-grupo" 
+                            placeholder="Buscar por nome, cota, valor, contrato, status..." 
+                            oninput="filtrarCotasGrupo(this, '${grupo.numero}')"
+                            style="width: 100%; padding: 10px 12px 10px 36px; font-size: 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary);">
+                        <span class="search-count" id="countGrupo${grupo.numero}" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text-secondary); font-weight: 500;">
+                            ${grupo.cotas.length} de ${grupo.cotas.length}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="cotas-grid" data-grupo-grid="${grupo.numero}">
                     ${grupo.cotas.map(cota => renderCotaCard(cota)).join('')}
                 </div>
             </div>
@@ -2404,6 +2521,10 @@
     }
     
     // ========== AUTOMATIZAR TODOS OS GRUPOS DO DIA 8 ==========
+    // ========== AUTOMATIZAR TODOS OS GRUPOS DO DIA 8 ==========
+    let automationModalDia08, automationModalDia16;
+    let automationRunningDia08 = false, automationRunningDia16 = false;
+    
     window.automatizarTodosDia8 = async function() {
         // Filtra grupos do dia 8
         const gruposDia8 = gruposData.filter(g => (g.dia || 8) === 8);
@@ -2421,22 +2542,49 @@
         
         if (!confirmacao) return;
         
+        // Inicializa modal
+        if (!automationModalDia08) {
+            automationModalDia08 = new bootstrap.Modal(document.getElementById('modalAutomacaoDia08'));
+        }
+        
+        // Configura estatísticas
+        document.getElementById('statTotalDia08').textContent = gruposDia8.length;
+        document.getElementById('statSuccessDia08').textContent = '0';
+        document.getElementById('statFailedDia08').textContent = '0';
+        
+        // Limpa log
+        const logElement = document.getElementById('automationLogDia08');
+        logElement.innerHTML = '<div class="automation-log-item">Iniciando automação...</div>';
+        
+        // Configura botões
+        document.getElementById('btnStopAutomationDia08').style.display = 'inline-flex';
+        document.getElementById('btnCloseAutomationDia08').style.display = 'none';
+        
         // Desabilita botão durante execução
         const btnAutomatizar = document.getElementById('btnAutomatizarDia8');
         const textoOriginal = btnAutomatizar.innerHTML;
         btnAutomatizar.disabled = true;
         btnAutomatizar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
         
+        // Abre modal
+        automationModalDia08.show();
+        
+        automationRunningDia08 = true;
         let sucessos = 0;
         let falhas = 0;
         
         try {
             // Processa cada grupo sequencialmente
             for (let i = 0; i < gruposDia8.length; i++) {
+                if (!automationRunningDia08) {
+                    addAutomationLogDia08('⚠️ Automação interrompida pelo usuário', 'warning');
+                    break;
+                }
+                
                 const grupo = gruposDia8[i];
                 const grupoNumero = grupo.numero;
                 
-                showToast('info', `[${i + 1}/${gruposDia8.length}] Automatizando grupo ${grupoNumero}...`);
+                addAutomationLogDia08(`[${i + 1}/${gruposDia8.length}] 🤖 Processando grupo ${grupoNumero}...`, 'info');
                 
                 try {
                     // Coleta estados dos checkboxes deste grupo
@@ -2469,16 +2617,19 @@
                     
                     if (result.success) {
                         sucessos++;
-                        showToast('success', `✅ Grupo ${grupoNumero}: ${result.message}`);
+                        document.getElementById('statSuccessDia08').textContent = sucessos;
+                        addAutomationLogDia08(`✅ Grupo ${grupoNumero}: ${result.message}`, 'success');
                     } else {
                         falhas++;
-                        showToast('error', `❌ Grupo ${grupoNumero}: ${result.error}`);
+                        document.getElementById('statFailedDia08').textContent = falhas;
+                        addAutomationLogDia08(`❌ Grupo ${grupoNumero}: ${result.error}`, 'error');
                     }
                     
                 } catch (error) {
                     falhas++;
+                    document.getElementById('statFailedDia08').textContent = falhas;
                     console.error(`Erro no grupo ${grupoNumero}:`, error);
-                    showToast('error', `❌ Grupo ${grupoNumero}: Erro de conexão`);
+                    addAutomationLogDia08(`❌ Grupo ${grupoNumero}: Erro de conexão`, 'error');
                 }
                 
                 // Delay entre grupos para não sobrecarregar
@@ -2489,11 +2640,11 @@
             
             // Resultado final
             if (sucessos > 0 && falhas === 0) {
-                showToast('success', `🎉 Todos os ${sucessos} grupos do Dia 8 foram automatizados com sucesso!`);
+                addAutomationLogDia08(`🎉 Todos os ${sucessos} grupos do Dia 8 foram automatizados com sucesso!`, 'success');
             } else if (sucessos > 0 && falhas > 0) {
-                showToast('warning', `⚠️ ${sucessos} grupos concluídos, ${falhas} com erro`);
+                addAutomationLogDia08(`⚠️ ${sucessos} grupos concluídos, ${falhas} com erro`, 'warning');
             } else {
-                showToast('error', `❌ Falha ao automatizar todos os grupos`);
+                addAutomationLogDia08(`❌ Falha ao automatizar todos os grupos`, 'error');
             }
             
             // Recarrega grupos para atualizar visualização
@@ -2501,8 +2652,12 @@
             
         } catch (error) {
             console.error('Erro na automatização em lote:', error);
-            showToast('error', 'Erro ao executar automatização em lote');
+            addAutomationLogDia08('❌ Erro ao executar automatização em lote', 'error');
         } finally {
+            automationRunningDia08 = false;
+            // Mostra botão fechar
+            document.getElementById('btnStopAutomationDia08').style.display = 'none';
+            document.getElementById('btnCloseAutomationDia08').style.display = 'inline-flex';
             // Restaura botão
             btnAutomatizar.disabled = false;
             btnAutomatizar.innerHTML = textoOriginal;
@@ -2527,22 +2682,49 @@
         
         if (!confirmacao) return;
         
+        // Inicializa modal
+        if (!automationModalDia16) {
+            automationModalDia16 = new bootstrap.Modal(document.getElementById('modalAutomacaoDia16'));
+        }
+        
+        // Configura estatísticas
+        document.getElementById('statTotalDia16').textContent = gruposDia16.length;
+        document.getElementById('statSuccessDia16').textContent = '0';
+        document.getElementById('statFailedDia16').textContent = '0';
+        
+        // Limpa log
+        const logElement = document.getElementById('automationLogDia16');
+        logElement.innerHTML = '<div class="automation-log-item">Iniciando automação...</div>';
+        
+        // Configura botões
+        document.getElementById('btnStopAutomationDia16').style.display = 'inline-flex';
+        document.getElementById('btnCloseAutomationDia16').style.display = 'none';
+        
         // Desabilita botão durante execução
         const btnAutomatizar = document.getElementById('btnAutomatizarDia16');
         const textoOriginal = btnAutomatizar.innerHTML;
         btnAutomatizar.disabled = true;
         btnAutomatizar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
         
+        // Abre modal
+        automationModalDia16.show();
+        
+        automationRunningDia16 = true;
         let sucessos = 0;
         let falhas = 0;
         
         try {
             // Processa cada grupo sequencialmente
             for (let i = 0; i < gruposDia16.length; i++) {
+                if (!automationRunningDia16) {
+                    addAutomationLogDia16('⚠️ Automação interrompida pelo usuário', 'warning');
+                    break;
+                }
+                
                 const grupo = gruposDia16[i];
                 const grupoNumero = grupo.numero;
                 
-                showToast('info', `[${i + 1}/${gruposDia16.length}] Automatizando grupo ${grupoNumero}...`);
+                addAutomationLogDia16(`[${i + 1}/${gruposDia16.length}] 🤖 Processando grupo ${grupoNumero}...`, 'info');
                 
                 try {
                     // Coleta estados dos checkboxes deste grupo
@@ -2575,16 +2757,19 @@
                     
                     if (result.success) {
                         sucessos++;
-                        showToast('success', `✅ Grupo ${grupoNumero}: ${result.message}`);
+                        document.getElementById('statSuccessDia16').textContent = sucessos;
+                        addAutomationLogDia16(`✅ Grupo ${grupoNumero}: ${result.message}`, 'success');
                     } else {
                         falhas++;
-                        showToast('error', `❌ Grupo ${grupoNumero}: ${result.error}`);
+                        document.getElementById('statFailedDia16').textContent = falhas;
+                        addAutomationLogDia16(`❌ Grupo ${grupoNumero}: ${result.error}`, 'error');
                     }
                     
                 } catch (error) {
                     falhas++;
+                    document.getElementById('statFailedDia16').textContent = falhas;
                     console.error(`Erro no grupo ${grupoNumero}:`, error);
-                    showToast('error', `❌ Grupo ${grupoNumero}: Erro de conexão`);
+                    addAutomationLogDia16(`❌ Grupo ${grupoNumero}: Erro de conexão`, 'error');
                 }
                 
                 // Delay entre grupos para não sobrecarregar
@@ -2595,11 +2780,11 @@
             
             // Resultado final
             if (sucessos > 0 && falhas === 0) {
-                showToast('success', `🎉 Todos os ${sucessos} grupos do Dia 16 foram automatizados com sucesso!`);
+                addAutomationLogDia16(`🎉 Todos os ${sucessos} grupos do Dia 16 foram automatizados com sucesso!`, 'success');
             } else if (sucessos > 0 && falhas > 0) {
-                showToast('warning', `⚠️ ${sucessos} grupos concluídos, ${falhas} com erro`);
+                addAutomationLogDia16(`⚠️ ${sucessos} grupos concluídos, ${falhas} com erro`, 'warning');
             } else {
-                showToast('error', `❌ Falha ao automatizar todos os grupos`);
+                addAutomationLogDia16(`❌ Falha ao automatizar todos os grupos`, 'error');
             }
             
             // Recarrega grupos para atualizar visualização
@@ -2607,15 +2792,38 @@
             
         } catch (error) {
             console.error('Erro na automatização em lote:', error);
-            showToast('error', 'Erro ao executar automatização em lote');
+            addAutomationLogDia16('❌ Erro ao executar automatização em lote', 'error');
         } finally {
+            automationRunningDia16 = false;
+            // Mostra botão fechar
+            document.getElementById('btnStopAutomationDia16').style.display = 'none';
+            document.getElementById('btnCloseAutomationDia16').style.display = 'inline-flex';
             // Restaura botão
             btnAutomatizar.disabled = false;
             btnAutomatizar.innerHTML = textoOriginal;
         }
     };
     
-    // Botão de parar automação
+    // Funções helper para adicionar logs
+    function addAutomationLogDia08(message, type = 'info') {
+        const logElement = document.getElementById('automationLogDia08');
+        const logItem = document.createElement('div');
+        logItem.className = `automation-log-item ${type}`;
+        logItem.textContent = message;
+        logElement.appendChild(logItem);
+        logElement.scrollTop = logElement.scrollHeight;
+    }
+    
+    function addAutomationLogDia16(message, type = 'info') {
+        const logElement = document.getElementById('automationLogDia16');
+        const logItem = document.createElement('div');
+        logItem.className = `automation-log-item ${type}`;
+        logItem.textContent = message;
+        logElement.appendChild(logItem);
+        logElement.scrollTop = logElement.scrollHeight;
+    }
+    
+    // Botão de parar automação (modal original)
     document.getElementById('btnStopAutomation').addEventListener('click', async function() {
         if (!currentAutomationGrupo) return;
         
@@ -2653,6 +2861,93 @@
             automationModal.hide();
         }
     });
+    
+    // Botões do modal Dia 08
+    document.getElementById('btnStopAutomationDia08').addEventListener('click', function() {
+        if (confirm('Deseja realmente parar a automação do Dia 08? O grupo atual será concluído antes de parar.')) {
+            automationRunningDia08 = false;
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Parando...';
+            addAutomationLogDia08('⏹️ Parando automação...', 'warning');
+        }
+    });
+    
+    document.getElementById('btnCloseAutomationDia08').addEventListener('click', function() {
+        if (automationModalDia08) {
+            automationModalDia08.hide();
+        }
+    });
+    
+    // Botões do modal Dia 16
+    document.getElementById('btnStopAutomationDia16').addEventListener('click', function() {
+        if (confirm('Deseja realmente parar a automação do Dia 16? O grupo atual será concluído antes de parar.')) {
+            automationRunningDia16 = false;
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Parando...';
+            addAutomationLogDia16('⏹️ Parando automação...', 'warning');
+        }
+    });
+    
+    document.getElementById('btnCloseAutomationDia16').addEventListener('click', function() {
+        if (automationModalDia16) {
+            automationModalDia16.hide();
+        }
+    });
+    
+    // ========== FUNÇÕES DE PESQUISA ==========
+    
+    /**
+     * Filtra cotas dentro de um grupo específico
+     * @param {HTMLInputElement} inputElement - Elemento input da pesquisa
+     * @param {string} grupoNumero - Número do grupo a filtrar
+     */
+    window.filtrarCotasGrupo = function(inputElement, grupoNumero) {
+        const searchTerm = inputElement.value.toLowerCase().trim();
+        const grupoGrid = document.querySelector(`[data-grupo-grid="${grupoNumero}"]`);
+        
+        if (!grupoGrid) {
+            console.warn(`⚠️ Grid do grupo ${grupoNumero} não encontrado`);
+            return;
+        }
+        
+        const cotaCards = grupoGrid.querySelectorAll('.cota-card');
+        let visibleCount = 0;
+        
+        cotaCards.forEach(card => {
+            const cardText = card.textContent.toLowerCase();
+            const isVisible = searchTerm === '' || cardText.includes(searchTerm);
+            
+            card.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
+        });
+        
+        // Atualiza contador
+        const counter = document.getElementById(`countGrupo${grupoNumero}`);
+        if (counter) {
+            counter.textContent = `${visibleCount} de ${cotaCards.length}`;
+        }
+        
+        // Mensagem quando nenhuma cota encontrada
+        let emptyMessage = grupoGrid.querySelector('.empty-search-message');
+        
+        if (visibleCount === 0 && searchTerm !== '') {
+            if (!emptyMessage) {
+                emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-search-message';
+                emptyMessage.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <i class="fas fa-search" style="font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                        <p style="margin: 0;">Nenhuma cota encontrada para "<strong>${searchTerm}</strong>"</p>
+                    </div>
+                `;
+                grupoGrid.appendChild(emptyMessage);
+            }
+        } else if (emptyMessage) {
+            emptyMessage.remove();
+        }
+    };
+    
+    // ========== FIM FUNÇÕES DE PESQUISA ==========
     
     // ========== FIM FUNÇÕES DE AUTOMAÇÃO ==========
     

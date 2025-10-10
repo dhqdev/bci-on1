@@ -262,7 +262,43 @@ def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
             (By.CSS_SELECTOR, ".cotas-table table tbody")
         ))
         
-        # Extrai todas as linhas da tabela
+        # ========== CORREÇÃO: SCROLL COMPLETO DA TABELA ==========
+        # Força scroll até o final para garantir que todas as linhas sejam carregadas (lazy loading)
+        if progress_callback:
+            progress_callback(f"🔄 Carregando todas as linhas da tabela (scroll completo)...")
+        
+        try:
+            # Scroll gradual para forçar carregamento de todas as linhas
+            last_row_count = 0
+            scroll_attempts = 0
+            max_scroll_attempts = 10
+            
+            while scroll_attempts < max_scroll_attempts:
+                rows = table.find_elements(By.TAG_NAME, "tr")
+                current_row_count = len(rows)
+                
+                if current_row_count > last_row_count:
+                    # Ainda está carregando mais linhas
+                    last_row_count = current_row_count
+                    # Scroll até a última linha
+                    if rows:
+                        driver.execute_script("arguments[0].scrollIntoView(true);", rows[-1])
+                        time.sleep(1)
+                    scroll_attempts += 1
+                else:
+                    # Não há mais linhas sendo carregadas
+                    break
+            
+            # Volta para o topo da tabela
+            if rows:
+                driver.execute_script("arguments[0].scrollIntoView(true);", rows[0])
+                time.sleep(0.5)
+                
+        except Exception as e:
+            if progress_callback:
+                progress_callback(f"⚠️ Aviso ao fazer scroll: {e}")
+        
+        # Re-obtém todas as linhas após scroll completo
         rows = table.find_elements(By.TAG_NAME, "tr")
         total_cotas = len(rows)
         
@@ -302,36 +338,83 @@ def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
         for idx, cota_basica in enumerate(cotas_basicas, 1):
             nome = cota_basica['nome']
             cota_number = cota_basica['cota']
+            linha_index = cota_basica['index']  # Índice salvo da primeira passagem
             
             try:
                 if progress_callback:
                     progress_callback(f"  📌 [{idx}/{total_cotas}] {nome} - Cota {cota_number}")
                 
-                # Re-obtém a tabela sempre (garantir que está atualizada)
+                # Re-obtém a tabela e linhas
                 table = wait.until(EC.presence_of_element_located(
                     (By.CSS_SELECTOR, ".cotas-table table tbody")
                 ))
                 rows = table.find_elements(By.TAG_NAME, "tr")
                 
-                # Procura a linha correta pelo número da cota
+                # ========== BUSCA PELA COTA (MAIS CONFIÁVEL EM TABELAS DINÂMICAS) ==========
+                # Sempre busca pela cota, não pelo índice (tabela pode reordenar)
                 target_row = None
-                for row in rows:
-                    cells = row.find_elements(By.TAG_NAME, "td")
-                    if len(cells) >= 5:
-                        row_cota = cells[4].text.strip()
-                        if row_cota == cota_number:
-                            target_row = row
-                            break
                 
+                # Primeiro, tenta encontrar nas linhas já carregadas
+                for row in rows:
+                    try:
+                        cells = row.find_elements(By.TAG_NAME, "td")
+                        if len(cells) >= 5:
+                            row_cota = cells[4].text.strip()
+                            if row_cota == cota_number:
+                                target_row = row
+                                break
+                    except:
+                        continue
+                
+                # Se não encontrou, faz scroll e tenta novamente
                 if not target_row:
                     if progress_callback:
-                        progress_callback(f"      ⚠️  Linha da cota {cota_number} não encontrada, pulando...")
-                    # Adiciona sem dados financeiros
+                        progress_callback(f"      🔄 Cota {cota_number} não visível, fazendo scroll completo...")
+                    
+                    try:
+                        # Scroll completo novamente para carregar todas as linhas
+                        last_row_count = len(rows)
+                        for _ in range(10):
+                            if rows:
+                                driver.execute_script("arguments[0].scrollIntoView(true);", rows[-1])
+                                time.sleep(1.5)
+                            rows = table.find_elements(By.TAG_NAME, "tr")
+                            if len(rows) > last_row_count:
+                                last_row_count = len(rows)
+                            else:
+                                break
+                        
+                        # Volta para o topo
+                        if rows:
+                            driver.execute_script("arguments[0].scrollIntoView(true);", rows[0])
+                            time.sleep(0.5)
+                        
+                        # Busca novamente após scroll
+                        for row in rows:
+                            try:
+                                cells = row.find_elements(By.TAG_NAME, "td")
+                                if len(cells) >= 5:
+                                    row_cota = cells[4].text.strip()
+                                    if row_cota == cota_number:
+                                        target_row = row
+                                        if progress_callback:
+                                            progress_callback(f"      ✅ Cota {cota_number} encontrada após scroll!")
+                                        break
+                            except:
+                                continue
+                    except Exception as scroll_error:
+                        if progress_callback:
+                            progress_callback(f"      ⚠️  Erro ao fazer scroll: {scroll_error}")
+                
+                # Se ainda não encontrou, pula
+                if not target_row:
+                    if progress_callback:
+                        progress_callback(f"      ⚠️  Cota {cota_number} não encontrada mesmo após scroll, pulando...")
                     result['cotas'].append(cota_basica)
                     continue
                 
                 if progress_callback:
-                    progress_callback(f"      ➡️  Clicando na linha para acessar extrato...")
+                    progress_callback(f"      ➡️  Clicando na cota {cota_number} para acessar extrato...")
                 
                 # Clica na linha (onclick vai para o extrato)
                 driver.execute_script("arguments[0].scrollIntoView(true);", target_row)
@@ -384,7 +467,7 @@ def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
                 
                 # ========== CORREÇÃO BUG #1: NAVEGAÇÃO MELHORADA ==========
                 driver.get(SERVOPA_PAINEL_URL)
-                time.sleep(3)  # Aumentado para garantir carregamento completo
+                time.sleep(5)  # Aumentado ainda mais para garantir carregamento
                 
                 # Re-preenche grupo e busca novamente COM RETRY
                 tentativas = 0
@@ -407,13 +490,50 @@ def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
                         # Clica em buscar
                         buscar_button = wait.until(EC.element_to_be_clickable((By.ID, "btn_representante_cota")))
                         buscar_button.click()
-                        time.sleep(4)  # Aumentado para garantir carregamento da tabela
+                        time.sleep(8)  # AUMENTADO MUITO - espera tabela carregar completamente
                         
                         # Verifica se tabela carregou
                         table_check = driver.find_element(By.CSS_SELECTOR, ".cotas-table table tbody")
                         rows_check = table_check.find_elements(By.TAG_NAME, "tr")
                         
                         if len(rows_check) > 0:
+                            # ========== SCROLL COMPLETO MUITO AGRESSIVO ==========
+                            # Garante que TODAS as linhas estão carregadas
+                            if progress_callback:
+                                progress_callback(f"      🔄 Recarregando tabela completa ({len(rows_check)} linhas iniciais)...")
+                            
+                            try:
+                                # Faz scroll múltiplas vezes para garantir
+                                for scroll_round in range(3):
+                                    last_row_count = len(rows_check)
+                                    scroll_attempts = 0
+                                    
+                                    while scroll_attempts < 15:  # Aumentado de 5 para 15
+                                        rows_check = table_check.find_elements(By.TAG_NAME, "tr")
+                                        current_count = len(rows_check)
+                                        
+                                        if current_count > last_row_count or scroll_attempts < 10:
+                                            last_row_count = current_count
+                                            if rows_check and len(rows_check) > 0:
+                                                # Scroll até o final
+                                                driver.execute_script("arguments[0].scrollIntoView(true);", rows_check[-1])
+                                                time.sleep(1.2)  # Aumentado
+                                            scroll_attempts += 1
+                                        else:
+                                            break
+                                
+                                # Volta para o topo
+                                rows_check = table_check.find_elements(By.TAG_NAME, "tr")
+                                if rows_check:
+                                    driver.execute_script("arguments[0].scrollIntoView(true);", rows_check[0])
+                                    time.sleep(0.5)
+                                
+                                if progress_callback:
+                                    progress_callback(f"      ✅ Tabela recarregada: {len(rows_check)} linhas prontas")
+                            except Exception as scroll_err:
+                                if progress_callback:
+                                    progress_callback(f"      ⚠️ Aviso no scroll: {scroll_err}")
+                            
                             busca_sucesso = True
                             if progress_callback and tentativas > 0:
                                 progress_callback(f"      ✅ Tabela recarregada com sucesso (tentativa {tentativas + 1})")
@@ -422,13 +542,13 @@ def extract_cotas_from_grupo(driver, grupo_number, progress_callback=None):
                             if tentativas < max_tentativas:
                                 if progress_callback:
                                     progress_callback(f"      ⚠️  Tabela vazia, tentando novamente... ({tentativas}/{max_tentativas})")
-                                time.sleep(2)
+                                time.sleep(3)
                     except Exception as retry_error:
                         tentativas += 1
                         if tentativas < max_tentativas:
                             if progress_callback:
                                 progress_callback(f"      ⚠️  Erro ao recarregar tabela, tentando novamente... ({tentativas}/{max_tentativas})")
-                            time.sleep(2)
+                            time.sleep(3)
                         else:
                             if progress_callback:
                                 progress_callback(f"      ❌ Falha ao recarregar tabela após {max_tentativas} tentativas")

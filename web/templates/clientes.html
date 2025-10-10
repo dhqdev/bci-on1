@@ -893,6 +893,54 @@
         margin-left: auto;
     }
 
+    /* Campo de pesquisa no kanban */
+    .kanban-search-container {
+        margin-top: 12px;
+        position: relative;
+    }
+
+    .kanban-search-input {
+        width: 100%;
+        padding: 8px 12px 8px 34px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+
+    .kanban-search-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .kanban-search-input::placeholder {
+        color: var(--text-tertiary);
+    }
+
+    .kanban-search-container .fa-search {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-tertiary);
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+
+    .kanban-search-count {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        pointer-events: none;
+    }
+
     .kanban-column-body {
         padding: 12px;
         flex: 1;
@@ -1336,15 +1384,26 @@ function renderClientes(data) {
                         <div class="kanban-month-title">
                             <i class="fas fa-calendar-alt"></i>
                             ${mes.nome}
-                            <span class="kanban-count">${clientesMes.length}</span>
+                            <span class="kanban-count" id="countMes${mes.chave}">${clientesMes.length}</span>
                         </div>
                         ${isCurrentMonth ? `
                         <div class="kanban-month-subtitle">
                             Mês Atual
                         </div>
                         ` : ''}
+                        <div class="kanban-search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="search" 
+                                   class="kanban-search-input" 
+                                   placeholder="Buscar cliente..." 
+                                   oninput="filtrarClientesMes('${mes.chave}', this.value)">
+                            <span class="kanban-search-count" id="searchCountMes${mes.chave}">
+                                ${clientesMes.length} de ${clientesMes.length}
+                            </span>
+                        </div>
                     </div>
                     <div class="kanban-column-body" 
+                         data-mes-body="${mes.chave}"
                          ondrop="dropCliente(event, '${mes.chave}')" 
                          ondragover="allowDrop(event)"
                          ondragleave="removeDragOver(event)">
@@ -1549,6 +1608,69 @@ function removeDragOver(event) {
         column.classList.remove('drag-over');
     }
 }
+
+// ========== FUNÇÃO DE PESQUISA POR MÊS ==========
+
+/**
+ * Filtra clientes dentro de uma coluna específica do kanban
+ * @param {string} mesChave - Chave do mês no formato YYYY-MM
+ * @param {string} searchTerm - Termo de pesquisa
+ */
+function filtrarClientesMes(mesChave, searchTerm) {
+    const termo = searchTerm.toLowerCase().trim();
+    const columnBody = document.querySelector(`[data-mes-body="${mesChave}"]`);
+    
+    if (!columnBody) {
+        console.warn(`⚠️ Coluna do mês ${mesChave} não encontrada`);
+        return;
+    }
+    
+    const clienteCards = columnBody.querySelectorAll('.cliente-card-compact');
+    let visibleCount = 0;
+    const totalCount = clienteCards.length;
+    
+    clienteCards.forEach(card => {
+        const cardText = card.textContent.toLowerCase();
+        const isVisible = termo === '' || cardText.includes(termo);
+        
+        card.style.display = isVisible ? '' : 'none';
+        if (isVisible) visibleCount++;
+    });
+    
+    // Atualiza contador de pesquisa
+    const searchCounter = document.getElementById(`searchCountMes${mesChave}`);
+    if (searchCounter) {
+        searchCounter.textContent = `${visibleCount} de ${totalCount}`;
+    }
+    
+    // Atualiza contador do header (badge)
+    const headerCounter = document.getElementById(`countMes${mesChave}`);
+    if (headerCounter) {
+        headerCounter.textContent = visibleCount;
+    }
+    
+    // Mensagem quando nenhum cliente encontrado
+    let emptyMessage = columnBody.querySelector('.empty-search-message-mes');
+    
+    if (visibleCount === 0 && termo !== '' && totalCount > 0) {
+        if (!emptyMessage) {
+            emptyMessage = document.createElement('div');
+            emptyMessage.className = 'empty-search-message-mes';
+            emptyMessage.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+                    <p style="margin: 0; font-size: 0.85rem;">Nenhum cliente encontrado</p>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--text-tertiary);">para "<strong>${termo}</strong>"</p>
+                </div>
+            `;
+            columnBody.appendChild(emptyMessage);
+        }
+    } else if (emptyMessage) {
+        emptyMessage.remove();
+    }
+}
+
+// ========== FIM FUNÇÃO DE PESQUISA ==========
 
 async function dropCliente(event, mesChave) {
     event.preventDefault();
